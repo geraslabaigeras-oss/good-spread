@@ -25,7 +25,7 @@ export const RosterInput = z.object({
   }).optional().nullable(),
 });
 export type RosterInput = z.infer<typeof RosterInput>;
-export type RosterPerson = RosterInput & { id: string; createdAt: string; source?: 'talent-book'; instagram?: string | null; heightCm?: number | null; statsText?: string | null; rateIsEstimate?: boolean; board?: string | null };
+export type RosterPerson = RosterInput & { id: string; createdAt: string; source?: 'talent-book'; instagram?: string | null; heightCm?: number | null; statsText?: string | null; rateIsEstimate?: boolean; board?: string | null; tier?: 'top' | 'mid' };
 
 export const ROLE_LABEL: Record<RosterInput['role'], string> = { model: 'Model', photographer: 'Photographer', mua: 'Hair & makeup', stylist: 'Stylist' };
 
