@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
-import Grainient from '@/components/Grainient';
+import { motion } from 'motion/react';
 import { TextAnimate } from '@/components/ui/text-animate';
 import { Card, Carousel } from '@/components/ui/apple-cards-carousel';
 
@@ -47,6 +47,24 @@ function Pill({ children, dark }: { children: React.ReactNode; dark?: boolean })
   );
 }
 
+/** A photo that floats in gently and then drifts up and down. */
+function Float({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  return (
+    <motion.div className={`absolute z-10 ${className ?? ''}`} initial={{ opacity: 0, y: 30, scale: 0.94 }} animate={{ opacity: 1, y: [0, -10, 0], scale: 1 }}
+      transition={{ opacity: { duration: 0.9, delay }, scale: { duration: 0.9, delay }, y: { duration: 6, delay: delay + 0.9, repeat: Infinity, ease: 'easeInOut' } }}>
+      <div className="relative">{children}</div>
+    </motion.div>
+  );
+}
+
+function Chip({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <span className={`absolute inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-white px-3.5 py-2 text-[13px] text-neutral-800 shadow-[0_8px_24px_rgba(0,0,0,.1)] ${className ?? ''}`}>
+      <span className="flex size-4 items-center justify-center rounded-full bg-neutral-950 text-[9px] text-white">✓</span>{children}
+    </span>
+  );
+}
+
 function Panel({ pill, title, children }: { pill: string; title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-[28px] bg-white/45 p-7 shadow-[inset_0_0_0_1px_rgba(255,255,255,.7),0_18px_48px_rgba(80,60,40,.07)] backdrop-blur-xl">
@@ -57,7 +75,7 @@ function Panel({ pill, title, children }: { pill: string; title: string; childre
   );
 }
 
-export function Landing({ cap, routes, best, people, moment }: Props) {
+export function Landing({ cap, stills, routes, best, people, moment }: Props) {
   const steps = [
     { k: 'Brief', t: 'Drop a reference. You get the look, palette, light and shot list.' },
     { k: 'Plans', t: `${routes.length} ways to make it, each costed against the €${cap.toLocaleString('en-US')} cap.` },
@@ -67,33 +85,51 @@ export function Landing({ cap, routes, best, people, moment }: Props) {
 
   return (
     <div className="bg-[#efeee9] font-sans text-neutral-900">
-      {/* Hero: React Bits Grainient, a slow-moving grainy fog (one WebGL canvas, 1x pixel ratio for smoothness) */}
-      <section className="relative h-[100svh] w-full overflow-hidden">
-        <div className="absolute inset-0">
-          <Grainient colors={['#efeee9', '#cfd7dc', '#8f9ca6', '#e6e3dc']} lightMode grainAnimated grainAmount={0.12} speed={0.3} flow={1.2} softness={0.9} dpr={1} />
-        </div>
-
-        <header className="absolute inset-x-0 top-0 z-30 mx-auto flex h-20 max-w-7xl items-center justify-between px-6 text-[13px] text-neutral-700">
-          <span className="font-medium text-neutral-900">good spread®</span>
-          <nav className="flex items-center gap-7">
+      {/* Hero: editorial serif + floating real photos in shapes with live chips (after the team's own good-spread hero) */}
+      <section className="relative h-[100svh] min-h-[720px] w-full overflow-hidden bg-[#f7f6f3]">
+        <Grain />
+        <header className="absolute inset-x-0 top-0 z-30 mx-auto flex h-20 max-w-7xl items-center justify-between px-6 text-[14px] text-neutral-700">
+          <span className="font-medium text-neutral-900">good spread</span>
+          <nav className="flex items-center gap-8">
             <a href="#how" className="hidden hover:text-neutral-950 md:inline">How it works</a>
             <Link href="/people" className="hidden hover:text-neutral-950 md:inline">Your people</Link>
-            <Link href="/new" className="rounded-full bg-neutral-900 px-4 py-2 text-white">Start a shoot</Link>
+            <Link href="/new" className="rounded-full bg-neutral-950 px-5 py-2.5 text-white">Start a shoot</Link>
           </nav>
         </header>
 
-        <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center px-6 text-center">
-          <TextAnimate animation="blurIn" by="word" as="h1" className="max-w-4xl text-4xl font-light leading-[1.05] tracking-[-0.03em] text-neutral-900 md:text-6xl">
-            The production planner for fashion shoots.
-          </TextAnimate>
-          <TextAnimate animation="blurIn" by="word" delay={0.35} as="p" className="mt-6 max-w-xl text-[16px] leading-7 text-neutral-600">
-            Turn a reference into a costed shoot plan with your team. When a flight, a model or the budget changes, it prices three fixes, and after you approve one, everyone on set gets their new call time.
-          </TextAnimate>
-          <div className="pointer-events-auto mt-9 flex items-center gap-3 text-[13px]">
-            <Link href="/new" className="rounded-full bg-neutral-900 px-5 py-2.5 text-white">Start a shoot</Link>
-            <Link href="/people" className="rounded-full bg-white/50 px-5 py-2.5 text-neutral-800 shadow-[inset_0_0_0_1px_rgba(255,255,255,.7)] backdrop-blur-md">Add your people</Link>
+        {/* floating photos: circle, arch, ticket, rounded */}
+        <Float className="left-[8%] top-[24%] hidden md:block" delay={0.1}>
+          <img src={u('photo-1590972381381-c863cbbf9dd2', 500)} alt="" className="size-40 rounded-full object-cover object-top shadow-[0_20px_50px_rgba(0,0,0,.12)]" />
+          <Chip className="-bottom-5 left-[-30px]">Brief read · {stills} stills · {eur(cap)}</Chip>
+        </Float>
+        <Float className="left-[44%] top-[8%] hidden md:block" delay={0.25}>
+          <img src={u('photo-1613915617430-8ab0fd7c6baf', 400)} alt="" className="h-40 w-32 rounded-[22px] object-cover object-top shadow-[0_20px_50px_rgba(0,0,0,.12)]" />
+        </Float>
+        <Float className="right-[9%] top-[20%] hidden md:block" delay={0.4}>
+          <img src="/photos/loc/loc-court2.jpg" alt="" className="h-52 w-44 rounded-t-full object-cover shadow-[0_20px_50px_rgba(0,0,0,.12)]" />
+          <Chip className="-bottom-4 right-[-10px]">Pilies courtyard · scouted</Chip>
+        </Float>
+        <Float className="bottom-[9%] left-[11%] hidden md:block" delay={0.55}>
+          <div className="relative h-32 w-48 overflow-hidden rounded-[18px] shadow-[0_20px_50px_rgba(0,0,0,.12)] [mask-image:radial-gradient(circle_at_0_50%,transparent_12px,black_13px),radial-gradient(circle_at_100%_50%,transparent_12px,black_13px)] [mask-composite:intersect]">
+            <img src={u('photo-1692180142575-c31fcd106b5b', 500)} alt="" className="size-full object-cover" />
           </div>
-          <p className="mt-6 text-[12px] text-neutral-500">Producers plan it. Talent lives it.</p>
+        </Float>
+        <Float className="bottom-[8%] right-[13%] hidden md:block" delay={0.7}>
+          <img src={u('photo-1550872199-63f4382fe925', 500)} alt="" className="h-40 w-36 rounded-[44px] object-cover object-top shadow-[0_20px_50px_rgba(0,0,0,.12)]" />
+          <Chip className="-top-4 left-[-40px]">Call moved {moment.call} → {moment.newCall}</Chip>
+        </Float>
+
+        <div className="relative z-20 flex h-full flex-col items-center justify-center px-6 text-center">
+          <TextAnimate animation="blurInUp" by="word" as="h1" className="max-w-4xl font-[family-name:var(--font-instrument)] text-5xl leading-[1.02] tracking-[-0.02em] text-neutral-950 md:text-[84px]">
+            Your shoot, produced by an agent that makes the calls.
+          </TextAnimate>
+          <TextAnimate animation="blurIn" by="word" delay={0.5} as="p" className="mt-6 max-w-xl text-[17px] leading-7 text-neutral-700">
+            Drop the brief. It scouts real locations, prices three plans, and the minute a flight slips it re-plans the call sheet and texts everyone.
+          </TextAnimate>
+          <div className="mt-9 flex items-center gap-3 text-[15px]">
+            <Link href="/new" className="rounded-full bg-neutral-950 px-7 py-3.5 text-white">Start a shoot</Link>
+            <Link href="/people" className="rounded-full bg-white/70 px-7 py-3.5 text-neutral-900 shadow-[inset_0_0_0_1px_rgba(0,0,0,.12)]">Add your people</Link>
+          </div>
         </div>
       </section>
 
