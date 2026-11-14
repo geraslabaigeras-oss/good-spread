@@ -38,11 +38,11 @@ function travelFor(r: RosterPerson): Partial<Record<City, TravelTemplate>> {
   const out: Partial<Record<City, TravelTemplate>> = {};
   for (const c of CITIES) {
     if (c === r.city) continue;
-    // Early flight on the shoot day, landing 08:10; duration estimated from distance. Number is TBC until booked.
+    // Early flight on the shoot day, landing 07:10; duration estimated from distance. Number is TBC until booked.
     const a = AIRPORTS[IATA[r.city]], b = AIRPORTS[IATA[c]];
     const km = a && b ? 6371 * 2 * Math.asin(Math.sqrt(Math.sin(((b.lat - a.lat) * Math.PI) / 360) ** 2 + Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(((b.lon - a.lon) * Math.PI) / 360) ** 2)) : 1500;
     const mins = Math.round((km / 750) * 60 + 35);
-    out[c] = { number: 'TBC', from: IATA[r.city], to: IATA[c], departMin: 490 - mins, arriveMin: 490, transferMin: 30, flight: r.flightCost ?? 220, taxi: 30 };
+    out[c] = { number: 'TBC', from: IATA[r.city], to: IATA[c], departMin: 430 - mins, arriveMin: 430, transferMin: 30, flight: r.flightCost ?? 220, taxi: 30 };
   }
   return out;
 }
