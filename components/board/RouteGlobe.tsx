@@ -11,7 +11,7 @@ import { AIRPORTS } from '@/lib/airports';
 const ReactGlobe = dynamic(() => import('react-globe.gl'), { ssr: false });
 
 type Leg = { id: string; from: string; to: string; label: string; callsign?: string | null; departMin: number; arriveMin: number; dateISO: string };
-type LivePlane = { id: string; callsign: string; lat: number; lon: number; altM: number | null; heading: number | null; onGround: boolean };
+type LivePlane = { id: string; callsign: string; lat: number; lon: number; altM: number | null; heading: number | null; onGround: boolean; distKm: number; speedKmh: number | null };
 
 const R = (d: number) => (d * Math.PI) / 180;
 const D = (r: number) => (r * 180) / Math.PI;
@@ -58,7 +58,8 @@ function makePlane(color: string, scale: number) {
 const fetcher = (u: string) => fetch(u).then((r) => (r.ok ? r.json() : null));
 
 /** The team's flights on a globe: route, a 3D plane riding it (live position when it is in the air), and real traffic near the arrival airport. */
-export function RouteGlobe({ legs, height = 460 }: { legs: Leg[]; height?: number }) {
+export type LiveDemo = { callsign: string; distKm: number; altM: number | null; speedKmh: number | null } | null;
+export function RouteGlobe({ legs, height = 460, progress = 0.6, demoLive = false, onLive, title = 'Travel', note }: { legs: Leg[]; height?: number; progress?: number; demoLive?: boolean; onLive?: (d: LiveDemo) => void; title?: string; note?: string }) {
   const ref = useRef<GlobeMethods | undefined>(undefined);
   const box = useRef<HTMLDivElement>(null);
   const [w, setW] = useState(600);
@@ -108,17 +109,28 @@ export function RouteGlobe({ legs, height = 460 }: { legs: Leg[]; height?: numbe
   }, [ready, radar, routes]);
 
   const live = radar?.planes ?? [];
+  // demo: borrow a real plane in the air near the destination and treat it as the first traveller's flight
+  const stand = useMemo(() => demoLive ? live.filter((p) => !p.onGround && (p.altM ?? 0) > 300 && p.distKm > 15).sort((a, b) => a.distKm - b.distKm)[0] ?? null : null, [demoLive, live]);
+  useEffect(() => { onLive?.(stand ? { callsign: stand.callsign || 'Unknown', distKm: stand.distKm, altM: stand.altM, speedKmh: stand.speedKmh } : null); }, [stand?.id, stand?.distKm]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!stand || !ref.current) return;
+    (ref.current as unknown as { resumeAnimation?: () => void }).resumeAnimation?.();
+    ref.current.pointOfView({ lat: stand.lat, lng: stand.lon, altitude: 0.35 }, 1400);
+  }, [stand?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const objects = useMemo(() => {
-    const ours = routes.map((r) => {
+    const ours = routes.map((r, k) => {
+      if (stand && k === 0) return { id: `team-${r.l.id}`, lat: stand.lat, lng: stand.lon, alt: 0.02, heading: stand.heading ?? 0, team: true, live: true };
       const found = r.l.callsign ? live.find((p) => p.callsign === r.l.callsign && !p.onGround) : undefined;
       if (found) return { id: `team-${r.l.id}`, lat: found.lat, lng: found.lon, alt: 0.02, heading: found.heading ?? bearing(r.a, r.b), team: true, live: true };
-      const p = slerp(r.a, r.b, 0.6), ahead = slerp(r.a, r.b, 0.61);
-      return { id: `team-${r.l.id}`, lat: p.lat, lng: p.lon, alt: ARC(0.6, r.peak), heading: bearing(p, ahead), team: true, live: false };
+      const t = Math.min(0.97, Math.max(0.03, progress));
+      const p = slerp(r.a, r.b, t), ahead = slerp(r.a, r.b, t + 0.01);
+      return { id: `team-${r.l.id}`, lat: p.lat, lng: p.lon, alt: ARC(t, r.peak), heading: bearing(p, ahead), team: true, live: false };
     });
     const traffic = live.filter((p) => !p.onGround && !routes.some((r) => r.l.callsign === p.callsign)).slice(0, 6)
       .map((p) => ({ id: p.id, lat: p.lat, lng: p.lon, alt: 0.006 + Math.min(0.02, (p.altM ?? 0) / 600000), heading: p.heading ?? 0, team: false, live: true }));
     return [...ours, ...traffic];
-  }, [routes, live]);
+  }, [routes, live, stand, progress]);
 
 
 
@@ -132,9 +144,9 @@ export function RouteGlobe({ legs, height = 460 }: { legs: Leg[]; height?: numbe
       <div className="absolute left-6 top-5 z-10">
         <div className="flex items-center gap-2 text-[17px] font-medium">
           <span className={`relative flex size-2 ${anyLive ? '' : 'opacity-60'}`}>{anyLive && <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />}<span className={`relative inline-flex size-2 rounded-full ${anyLive ? 'bg-emerald-500' : 'bg-neutral-400'}`} /></span>
-          Travel
+          {title}
         </div>
-        <div className="mt-0.5 text-[13px] text-neutral-600">{anyLive ? 'Live position from the plane itself' : 'Planned route. The plane goes live when it takes off.'}{live.length ? ` · ${live.filter((p) => !p.onGround).length} planes near ${dest} now` : ''}</div>
+        <div className="mt-0.5 text-[13px] text-neutral-600">{stand ? `Live: ${stand.callsign || 'a real flight'} standing in, ${stand.distKm} km from ${dest}` : note ?? (anyLive ? 'Live position from the plane itself' : 'Planned route. The plane goes live when it takes off.')}</div>
       </div>
       {!ready && <div className="absolute inset-0 z-[5] flex items-center justify-center"><div className="flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-[13px] text-neutral-600"><span className="size-1.5 animate-pulse rounded-full bg-neutral-500" /> Loading the route</div></div>}
       <ReactGlobe

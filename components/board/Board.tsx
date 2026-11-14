@@ -16,7 +16,7 @@ import { Decision } from './Decision';
 import { Inbox } from './Inbox';
 import { BudgetPanel } from './BudgetPanel';
 import { Activity } from './Activity';
-import { Arrivals } from './Arrivals';
+import { TravelBand } from './TravelBand';
 import { DelayAlert } from './DelayAlert';
 import { MessageThread } from './MessageThread';
 import { WeatherCard } from './WeatherCard';
@@ -57,6 +57,7 @@ function BoardInner({ slug }: { slug: string }) {
   const [approving, setApproving] = useState<Approving | null>(null);
   const [justApproved, setJustApproved] = useState<Applied | null>(null);
   const [telling, setTelling] = useState<Change[] | null>(null);
+  const [happenOpen, setHappenOpen] = useState(false);
   const busy = useRef(false);
 
   /** Runs a call; after 3 s without an answer, says so (DESIGN §4.2). */
@@ -152,7 +153,6 @@ function BoardInner({ slug }: { slug: string }) {
 
   const team = data.people.filter((x) => x.role !== 'producer');
   // Demo: the first traveller's flight now lands 10:45 (what a live flight status feed would report)
-  const [happenOpen, setHappenOpen] = useState(false);
   const models = team.filter((x) => x.role === 'model');
   const sendUpdate = async (body: Record<string, unknown>) => {
     setHappenOpen(false);
@@ -286,40 +286,44 @@ function BoardInner({ slug }: { slug: string }) {
           <div className="mt-10"><Decision production={p} pending={null} approving={null} applied={applied} countUp={!!animateVersion} onApprove={approve} /></div>
         )}
 
-        {/* Today: schedule on the left with the weather; on the right arrivals when people fly, otherwise weather and budget */}
+        {p.travel.length > 0 && <TravelBand p={p} />}
+
+        {/* Today: the day as a timeline; weather and budget beside it */}
         <div className="mt-8 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
           <div className="flex min-w-0 flex-col gap-5">
           <div id="schedule" className="rounded-[28px] bg-white/70 p-6 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">
               <div className="flex justify-between border-b border-black/[0.06] pb-4"><span className="text-[17px] font-medium">Day schedule</span><span className="truncate pl-4 text-[14px] text-neutral-500">{p.studio.name.split(',')[0]}</span></div>
-              <div className="mt-2">
+              <div className="relative mt-4">
+                <span className="absolute bottom-3 left-[83px] top-3 w-px bg-neutral-200" />
                 {rows.map((r, i) => {
                   const person = data.people.find((x) => x.id === r.personId);
+                  const tone = r.late ? 'bg-red-500' : r.kind === 'land' ? 'bg-[#6f93c7]' : r.was ? 'bg-neutral-950' : 'bg-white ring-2 ring-neutral-300';
                   return (
-                    <div key={i} className="flex items-center gap-4 rounded-2xl px-2 py-2.5 transition-colors hover:bg-white">
-                      <span className={`w-[64px] shrink-0 rounded-full py-0.5 text-center text-[17px] tabular-nums ${r.was ? 'bg-neutral-950 text-white' : 'text-neutral-900'}`}>{fmt(r.at)}</span>
-                      {r.kind === 'land'
-                        ? <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#e3eaf3] text-neutral-700"><Plane className="size-4" /></span>
-                        : person?.photo ? <img src={person.photo} alt="" className="size-10 shrink-0 rounded-full object-cover object-top" /> : <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-[14px]">{r.name[0]}</span>}
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[16px]">{r.kind === 'land' ? `${r.name.split(' ')[0]} lands` : r.name}{r.role && <span className="text-neutral-400"> · {r.role}</span>}</span>
-                        <span className="block truncate text-[13px] text-neutral-500">{r.what}</span>
+                    <div key={i} className="relative flex items-center gap-4 py-2">
+                      <span className="w-[64px] shrink-0 text-right">
+                        <span className={`block text-[18px] tabular-nums leading-6 ${r.was ? 'font-medium' : ''}`}>{fmt(r.at)}</span>
+                        {r.was && <span className="block text-[12px] text-neutral-400 line-through">{r.was}</span>}
                       </span>
-                      {r.was && <span className="shrink-0 rounded-full bg-neutral-100 px-2.5 py-0.5 text-[12px] text-neutral-500 line-through">{r.was}</span>}
-                      {r.late && <span className="shrink-0 rounded-full bg-red-50 px-2.5 py-0.5 text-[12px] text-red-700">Late</span>}
+                      <span className={`relative z-[1] ml-[2px] size-3 shrink-0 rounded-full ${tone}`} />
+                      <div className={`flex min-w-0 flex-1 items-center gap-3 rounded-2xl px-3 py-2.5 transition-colors ${r.was || r.late ? 'bg-white shadow-[0_6px_20px_rgba(0,0,0,.06)]' : 'hover:bg-white/80'}`}>
+                        {r.kind === 'land'
+                          ? <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#e3eaf3] text-neutral-700"><Plane className="size-4" /></span>
+                          : person?.photo ? <img src={person.photo} alt="" className="size-10 shrink-0 rounded-full object-cover object-top" /> : <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-[14px]">{r.name[0]}</span>}
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[16px]">{r.kind === 'land' ? `${r.name.split(' ')[0]} lands` : r.name}{r.role && <span className="text-neutral-400"> · {r.role}</span>}</span>
+                          <span className="block truncate text-[13px] text-neutral-500">{r.what}</span>
+                        </span>
+                        {r.was && <span className="shrink-0 rounded-full bg-neutral-950 px-2.5 py-0.5 text-[12px] text-white">Moved</span>}
+                        {r.late && <span className="shrink-0 rounded-full bg-red-50 px-2.5 py-0.5 text-[12px] text-red-700">Late</span>}
+                      </div>
                     </div>
                   );
                 })}
               </div>
             </div>
-            {p.travel.length > 0 && <div className="-mt-5">{(() => { const c = CITY[p.city ?? 'Vilnius'] ?? CITY.Vilnius; const ext = p.blocks.find((b) => b.kind === 'shoot'); return <WeatherCard lat={c.lat} lng={c.lng} dateISO={p.dateISO} place={p.studio.name.split(',')[0]} exteriorAt={ext ? `the exterior look at ${fmt(ext.startMin)}` : undefined} />; })()}</div>}
           </div>
           <div className="flex min-w-0 flex-col gap-5">
-            {p.travel.length > 0 ? (
-              <>
-                <Arrivals p={p} />
-                <RouteGlobe legs={p.travel.map((t) => ({ id: t.personId, from: t.from, to: t.to, label: nameOf(t.personId), callsign: callsignFor(t.number), departMin: t.departMin, arriveMin: t.arriveMin, dateISO: p.dateISO }))} height={320} />
-              </>
-            ) : (() => { const c = CITY[p.city ?? 'Vilnius'] ?? CITY.Vilnius; const ext = p.blocks.find((b) => b.kind === 'shoot'); return <WeatherCard compact lat={c.lat} lng={c.lng} dateISO={p.dateISO} place={p.studio.name.split(',')[0]} exteriorAt={ext ? `the exterior look at ${fmt(ext.startMin)}` : undefined} />; })()}
+            {(() => { const c = CITY[p.city ?? 'Vilnius'] ?? CITY.Vilnius; const ext = p.blocks.find((b) => b.kind === 'shoot'); return <WeatherCard compact lat={c.lat} lng={c.lng} dateISO={p.dateISO} place={p.studio.name.split(',')[0]} exteriorAt={ext ? `the exterior look at ${fmt(ext.startMin)}` : undefined} />; })()}
             <div id="budget" className="rounded-[28px] bg-white/70 p-6 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">
               <div className="flex justify-between"><span className="text-[17px] font-medium">Budget</span><span className="text-[14px] text-neutral-500">{fmtDate(p.dateISO).slice(4, 10)}</span></div>
               <div className="mt-6 flex items-baseline gap-3"><span className="text-[34px] font-light tabular-nums">{fmtEur(Math.round(b.total))}</span><span className="text-[20px] font-light text-neutral-500">of {fmtEur(b.cap)}</span></div>
@@ -342,7 +346,6 @@ function BoardInner({ slug }: { slug: string }) {
           <PeopleStrip people={team} version={p.version} changedIds={justApproved?.version === p.version ? justApproved.changedIds ?? [] : []} />
         </section>
 
-        <div className="mt-10"><Timeline production={p} conflicts={data.conflicts} /></div>
 
         <div id="inbox" className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
           <Inbox slug={slug} onChanged={() => mutate()} slow={slow} />

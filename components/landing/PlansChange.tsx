@@ -13,7 +13,7 @@ const img = (id: string) => `https://images.unsplash.com/${id}?fm=jpg&q=60&w=200
 
 function Roll({ value, className }: { value: string; className?: string }) {
   return (
-    <span className={`inline-flex overflow-hidden ${className ?? ''}`}>
+    <span className={`relative inline-flex overflow-hidden py-[0.12em] leading-[1.1] ${className ?? ''}`}>
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.span key={value} initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '-100%', opacity: 0 }} transition={{ duration: 0.52, ease }}>{value}</motion.span>
       </AnimatePresence>
@@ -36,10 +36,10 @@ function useChapter(delay = 900) {
   return { ref, on, replay: () => setRun((n) => n + 1) };
 }
 
-function Chapter({ n, title, sub, children, cref, onReplay }: { n: string; title: React.ReactNode; sub: string; children: React.ReactNode; cref: React.RefObject<HTMLDivElement | null>; onReplay: () => void }) {
+function Chapter({ n, title, sub, children, cref, onReplay, flip, stack }: { n: string; title: React.ReactNode; sub: string; children: React.ReactNode; cref: React.RefObject<HTMLDivElement | null>; onReplay: () => void; flip?: boolean; stack?: boolean }) {
   return (
-    <div ref={cref} className="grid min-h-[560px] grid-cols-1 items-center gap-10 py-14 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)]">
-      <div>
+    <div ref={cref} className={`grid min-h-[560px] grid-cols-1 items-center gap-10 py-14 ${stack ? '' : flip ? 'lg:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)]' : 'lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)]'}`}>
+      <div className={`${flip ? 'lg:order-2' : ''} ${stack ? 'text-center' : ''}`}>
         <div className="text-[14px] text-neutral-500">{n}</div>
         <h3 className="mt-2 text-[52px] font-medium leading-[1.02] tracking-[-0.04em]">{title}</h3>
         <p className="mt-3 text-[18px] text-neutral-500">{sub}</p>
@@ -113,7 +113,7 @@ export function PlansChange() {
         </Chapter>
 
         {/* 2. Flight */}
-        <Chapter n="09:40 · Flight status" cref={flight.ref} onReplay={flight.replay} title={<>Flight late.</>} sub="Driver and call move. Nobody else does.">
+        <Chapter flip n="09:40 · Flight status" cref={flight.ref} onReplay={flight.replay} title={<>Flight late.</>} sub="Driver and call move. Nobody else does.">
           <div className="gs-paper relative overflow-hidden rounded-[20px] bg-white p-7 shadow-[0_0_0_0.5px_rgba(0,0,0,.08),0_30px_70px_rgba(20,40,90,.12)]">
             <AnimatePresence>{flight.on && (
               <motion.div initial={{ y: -16, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ type: 'spring', stiffness: 240, damping: 20, delay: 1.3 }}
@@ -141,7 +141,7 @@ export function PlansChange() {
               {[['Lands', flight.on ? '10:45' : '10:20'], ['Driver at VNO', flight.on ? '10:50' : '10:25'], ['Her call', flight.on ? '13:15' : '12:45']].map(([k, v], i) => (
                 <div key={k}>
                   <div className="text-[12px] text-neutral-500">{k}</div>
-                  <div className="text-[38px] font-light tabular-nums tracking-[-0.02em]"><Roll value={v} className={flight.on && i === 2 ? 'rounded-xl bg-neutral-950 px-2 text-white' : ''} /></div>
+                  <div className="text-[38px] font-light tabular-nums tracking-[-0.02em]"><span className={`inline-block rounded-xl px-2 transition-colors duration-500 ${flight.on && i === 2 ? 'bg-neutral-950 text-white' : '-mx-2'}`}><Roll value={v} /></span></div>
                 </div>
               ))}
             </div>
@@ -149,32 +149,31 @@ export function PlansChange() {
         </Chapter>
 
         {/* 3. Everyone told */}
-        <Chapter n="09:41 · Messages" cref={told.ref} onReplay={told.replay} title={<>Everyone knows.</>} sub="One tap. One message each.">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-            <div className="relative h-[360px]">
+        <Chapter stack n="09:41 · Messages" cref={told.ref} onReplay={told.replay} title={<>Everyone knows.</>} sub="One tap. One message each.">
+          <div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {msgs.map((m, i) => (
-                <motion.div key={m.who} initial={false} animate={told.on ? { opacity: 1, y: i * 104, scale: 1 } : { opacity: 0, y: -40, scale: 0.96 }} transition={{ type: 'spring', stiffness: 220, damping: 22, delay: told.on ? 0.2 + i * 0.55 : 0 }}
-                  className="absolute inset-x-0 top-0 rounded-[18px] bg-white/95 p-4 shadow-[0_18px_40px_rgba(0,0,0,.12),0_0_0_0.5px_rgba(0,0,0,.06)]">
+                <motion.div key={m.who} initial={false} animate={told.on ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: -24, scale: 0.96 }} transition={{ type: 'spring', stiffness: 220, damping: 22, delay: told.on ? 0.2 + i * 0.5 : 0 }}
+                  className="rounded-[20px] bg-white/95 p-5 text-left shadow-[0_18px_40px_rgba(0,0,0,.10),0_0_0_0.5px_rgba(0,0,0,.06)]">
                   <div className="flex items-center justify-between text-[12px] text-neutral-500"><span className="inline-flex items-center gap-1.5"><BrandLogo name={m.app} size={14} /> {m.app === 'gmail' ? 'Gmail' : m.app === 'imessage' ? 'iMessage' : 'WhatsApp'}</span><span>now</span></div>
-                  <div className="mt-1 text-[14px] font-medium">To {m.who}</div>
-                  <div className="text-[14px] leading-5 text-neutral-700">{m.text}</div>
+                  <div className="mt-2 text-[15px] font-medium">To {m.who}</div>
+                  <div className="mt-0.5 text-[14px] leading-5 text-neutral-700">{m.text}</div>
                 </motion.div>
               ))}
             </div>
-            <div className="gs-paper flex flex-col justify-between rounded-[20px] bg-white p-6 shadow-[0_0_0_0.5px_rgba(0,0,0,.08)]">
-              <div>
-                <div className="text-[15px] text-neutral-500">Seen by</div>
-                <div className="mt-1 text-[64px] font-light leading-none tabular-nums tracking-[-0.03em]"><Roll value={`${seen} of 5`} /></div>
+            <div className="gs-paper mt-4 flex flex-wrap items-center justify-between gap-6 rounded-[20px] bg-white p-6 text-left shadow-[0_0_0_0.5px_rgba(0,0,0,.08)]">
+              <div className="flex items-center gap-6">
+                <div><div className="text-[13px] text-neutral-500">Seen by</div><div className="text-[48px] font-light leading-none tabular-nums tracking-[-0.03em]"><Roll value={`${seen} of 5`} /></div></div>
+                <div className="flex -space-x-3">
+                  {CAST.map((c, i) => (
+                    <span key={c} className="relative">
+                      <img src={img(c)} alt="" className={`size-12 rounded-full object-cover object-top ring-4 ring-white transition-all duration-500 ${i < seen ? '' : 'grayscale opacity-40'}`} />
+                      {i < seen && <span className="absolute -bottom-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-[#0a84ff] text-white ring-2 ring-white"><CheckCheck className="size-3" /></span>}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="mt-6 flex -space-x-3">
-                {CAST.map((c, i) => (
-                  <span key={c} className="relative">
-                    <img src={img(c)} alt="" className={`size-12 rounded-full object-cover object-top ring-4 ring-white transition-all duration-500 ${i < seen ? '' : 'grayscale opacity-40'}`} />
-                    {i < seen && <span className="absolute -bottom-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-[#0a84ff] text-white ring-2 ring-white"><CheckCheck className="size-3" /></span>}
-                  </span>
-                ))}
-              </div>
-              <div className={`mt-6 flex items-center gap-2 rounded-2xl px-4 py-3 text-[14px] transition-colors duration-500 ${seen >= 5 ? 'bg-emerald-50 text-emerald-800' : 'bg-neutral-100 text-neutral-500'}`}>
+              <div className={`flex items-center gap-2 rounded-full px-4 py-2.5 text-[14px] transition-colors duration-500 ${seen >= 5 ? 'bg-emerald-50 text-emerald-800' : 'bg-neutral-100 text-neutral-500'}`}>
                 <Plane className="size-4" /> {seen >= 5 ? 'Fixed in 40 s · 0 messages typed' : 'Sending…'}
               </div>
             </div>
