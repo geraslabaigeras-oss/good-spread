@@ -30,7 +30,7 @@ export function Decision({
   return (
     <section className="section flex h-full flex-col">
       <SectionHead
-        label="Decisions"
+        label="Needs you"
         meta={pending ? `from ${pending.source}` : applied ? `v${applied.version}` : undefined}
       />
       <div className="relative min-h-0 flex-1">
@@ -70,24 +70,13 @@ export function Decision({
                     {p.people.some((x) => x.id.startsWith('open-')) && <span className="text-grey-1"> · {p.people.filter((x) => x.id.startsWith('open-')).length} to book</span>}
                   </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-[13px] font-medium">Travel today</div>
-                  {p.travel.length === 0 && <p className="mt-2 text-[13px] text-grey-1">Nobody flies in. Everyone is local.</p>}
-                  <div className="mt-2 grid gap-2 md:grid-cols-2">
-                    {p.travel.map((t) => {
-                      const who = p.people.find((x) => x.id === t.personId);
-                      return (
-                        <div key={t.personId} className="rounded-2xl bg-neutral-50 p-4 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">
-                          <div className="flex items-center justify-between text-[12px] text-grey-1"><span>{t.number}</span><span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">On time</span></div>
-                          <div className="mt-2 flex items-center justify-between text-[22px] font-light tabular-nums">
-                            <span>{t.from}</span><span className="mx-2 h-px flex-1 bg-neutral-300" /><span className="text-[14px]">✈</span><span className="mx-2 h-px flex-1 bg-neutral-300" /><span>{t.to}</span>
-                          </div>
-                          <div className="mt-1 flex justify-between text-[12px] text-grey-1"><span>Departs {fmt(t.departMin)}</span><span>Lands {fmt(t.arriveMin)}</span></div>
-                          <div className="mt-2 text-[13px]">{who?.name ?? t.personId} · then {t.transferMin} min to set</div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                <div className="min-w-0 flex-1 rounded-[20px] bg-[#f3f6fa] p-5">
+                  <div className="text-[15px] font-medium">How this works</div>
+                  <ol className="mt-2 space-y-1.5 text-[14px] text-neutral-600">
+                    <li>1. A flight moves or someone runs late: drop the PDF, screenshot or message below, or they tap &ldquo;Running late&rdquo; on their phone.</li>
+                    <li>2. good spread reads it, finds what breaks in the day, and shows three fixes here with the exact cost.</li>
+                    <li>3. You approve one. Everyone affected gets their new time by text.</li>
+                  </ol>
                 </div>
               </div>
             </motion.div>

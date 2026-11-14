@@ -9,7 +9,7 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 const noop = () => () => {};
 const lastSlug = () => { try { return localStorage.getItem('gs-last-slug') ?? 'jacket-campaign'; } catch { return 'jacket-campaign'; } };
 
-export function Stage({ children, backdrop, voice = true }: { children: React.ReactNode; backdrop?: string | null; voice?: boolean }) {
+export function Stage({ children, backdrop, voice = false }: { children: React.ReactNode; backdrop?: string | null; voice?: boolean }) {
   return (
     <div className="stage">
       {/* living background: one slow grainy colour field (React Bits Grainient), 1x pixel ratio, no blur on top */}

@@ -8,7 +8,7 @@ import type { BoardState, PublicPending } from '@/lib/server/views';
 import type { Change, Receipt } from '@/lib/types';
 import { fmtDate, fmtEur } from '@/lib/format';
 import { useReveal, APPROVE } from '@/lib/motion';
-import { Button, ToastProvider, useToast, Wordmark } from '@/components/kit';
+import { Button, ToastProvider, useToast } from '@/components/kit';
 import { Stage } from '@/components/glass/Stage';
 import { PeopleStrip } from './PeopleStrip';
 import { Timeline } from './Timeline';
@@ -16,6 +16,12 @@ import { Decision } from './Decision';
 import { Inbox } from './Inbox';
 import { BudgetPanel } from './BudgetPanel';
 import { Activity } from './Activity';
+import { FlightCard } from './FlightCard';
+import { LiveRadar, callsignFor } from './LiveRadar';
+import { IATA, type City } from '@/data/catalog';
+import { callTime } from '@/lib/engine';
+import { fmt } from '@/lib/format';
+import { NumberTicker } from '@/components/ui/number-ticker';
 
 const fetcher = async (url: string) => {
   const r = await fetch(url, { cache: 'no-store' });
@@ -127,70 +133,86 @@ function BoardInner({ slug }: { slug: string }) {
         : null;
   const animateVersion = justApproved?.version === p.version ? p.version : null;
 
+  const team = data.people.filter((x) => x.role !== 'producer');
+  const confirmed = team.filter((x) => x.booking === 'confirmed').length;
+  const delayedIds = new Map(data.conflicts.filter((c) => (c.code === 'ARRIVAL' || c.code === 'LATE') && c.personId).map((c) => [c.personId!, c.deltaMin]));
+  const calls = team.map((x) => callTime(p, x.id)).filter((m): m is number => m != null);
+  const firstCall = calls.length ? Math.min(...calls) : null;
+  const wrapAt = p.blocks.length ? Math.max(...p.blocks.map((b) => b.endMin)) : null;
+  const airport = p.travel[0]?.to ?? IATA[(p.city ?? 'Vilnius') as City] ?? 'VNO';
+  const watch = p.travel.map((t) => ({ callsign: callsignFor(t.number), label: `${p.people.find((x) => x.id === t.personId)?.name ?? ''}, ${t.number}` })).filter((w): w is { callsign: string; label: string } => !!w.callsign);
+  const b = data.budget;
+
   return (
-    <motion.div className="board-root board-dark" variants={parent} initial="hidden" animate="shown">
-      {/* Header (§3.1) */}
-      <motion.header variants={item} style={{ gridArea: 'header' }} className="flex min-w-0 items-center justify-between border-b border-hairline">
-        <div className="flex min-w-0 items-center gap-3">
-          <Wordmark />
-          <span className="font-mono text-[12px] text-grey-2">/</span>
-          <div className="min-w-0">
-            <div className="flex items-center gap-3">
-              <h1 className="truncate font-serif text-[28px] leading-8 tracking-[-0.01em]">{p.title}</h1>
-              <span className="inline-flex h-[22px] items-center rounded-full border border-hairline-strong px-2 font-mono text-[12px] leading-4 num">v{p.version}</span>
-            </div>
-            <div className="truncate font-mono text-[12px] leading-4 text-grey-1 num">
-              {fmtDate(p.dateISO)} · {p.studio.name} · cap {fmtEur(p.budget.cap)}
-            </div>
-          </div>
+    <motion.div className="board-dark mx-auto max-w-[1480px] px-8 pb-16" variants={parent} initial="hidden" animate="shown" style={{ ['--row-h' as string]: '40px', ['--bar-h' as string]: '28px', ['--label-w' as string]: '120px' }}>
+      {/* Header */}
+      <motion.header variants={item} className="flex flex-wrap items-end justify-between gap-6 pt-8">
+        <div className="min-w-0">
+          <div className="text-[14px] text-neutral-500">{fmtDate(p.dateISO)} · {p.studio.name}</div>
+          <h1 className="mt-1 truncate text-[52px] font-light leading-[1] tracking-[-0.03em]">{p.title}</h1>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Button variant="ghost" onClick={() => window.open(`/wrap/${slug}`, '_blank')}>
-            Wrap <ArrowUpRight strokeWidth={1.5} />
+          <Button variant="ghost" onClick={() => window.open(`/wrap/${slug}`, '_blank')} title="What each person is paid after the shoot">
+            Payments <ArrowUpRight strokeWidth={1.5} />
           </Button>
           {slug === 'jacket-campaign' && (
-            <Button variant="ghost" size="sm" className="text-grey-1" onClick={(e) => reset(e.shiftKey)} title="Shift-click for full reset">
-              <RotateCcw strokeWidth={1.5} /> Reset
+            <Button variant="ghost" size="sm" className="text-grey-1" onClick={(e) => reset(e.shiftKey)} title="Back to the start of the sample">
+              <RotateCcw strokeWidth={1.5} /> Start over
             </Button>
           )}
         </div>
       </motion.header>
 
-      <motion.div variants={item} style={{ gridArea: 'people' }} className="min-w-0">
-        <PeopleStrip people={data.people.filter((x) => x.role !== 'producer')} version={p.version} changedIds={justApproved?.version === p.version ? justApproved.changedIds ?? [] : []} />
+      {/* The day in four numbers */}
+      <motion.div variants={item} className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {[
+          { k: 'Team confirmed', v: <><NumberTicker value={confirmed} className="text-inherit" /><span className="text-neutral-400">/{team.length}</span></>, sub: team.length - confirmed ? `${team.length - confirmed} still to book or delayed` : 'Everyone is booked' },
+          { k: 'Flying in', v: <NumberTicker value={p.travel.length} className="text-inherit" />, sub: p.travel.length ? `First lands ${fmt(Math.min(...p.travel.map((t) => t.arriveMin)))}` : 'Everyone is local' },
+          { k: 'First call', v: firstCall != null ? fmt(firstCall) : '—', sub: wrapAt != null ? `Wrap ${fmt(wrapAt)}, booked until ${fmt(p.studio.bookedUntilMin)}` : '' },
+          { k: 'Budget', v: <>€<NumberTicker value={Math.round(b.total)} className="text-inherit" /></>, sub: b.remaining >= 0 ? `${fmtEur(Math.round(b.remaining))} left of ${fmtEur(b.cap)}` : `${fmtEur(Math.round(-b.remaining))} over the cap`, bad: b.remaining < 0 },
+        ].map((t) => (
+          <div key={t.k} className="rounded-[24px] bg-white/80 p-5 shadow-[0_1px_2px_rgba(0,0,0,.04),0_16px_40px_rgba(20,40,90,.06)]">
+            <div className="text-[13px] text-neutral-500">{t.k}</div>
+            <div className={`mt-2 text-[44px] font-light leading-none tracking-[-0.03em] tabular-nums ${t.bad ? 'text-red-600' : ''}`}>{t.v}</div>
+            <div className="mt-2 text-[13px] text-neutral-500">{t.sub}</div>
+          </div>
+        ))}
       </motion.div>
 
-      <div className="board-main">
-        <motion.div variants={item} className="min-h-0 min-w-0">
-          <Timeline production={p} conflicts={data.conflicts} />
-        </motion.div>
-        <div />
-        <motion.div variants={item} className="min-h-0 min-w-0">
-          <Decision
-            production={p}
-            pending={approving ? approving.pending : data.pending}
-            approving={approving}
-            applied={approving ? null : applied}
-            countUp={!!animateVersion}
-            onApprove={approve}
-          />
-        </motion.div>
-      </div>
+      {/* Team */}
+      <motion.section variants={item} className="mt-10">
+        <h2 className="mb-4 text-[22px] font-light tracking-[-0.01em]">The team</h2>
+        <PeopleStrip people={team} version={p.version} changedIds={justApproved?.version === p.version ? justApproved.changedIds ?? [] : []} />
+      </motion.section>
 
-      <div className="board-side">
-        <motion.div variants={item} className="min-h-0 min-w-0">
-          <Inbox slug={slug} onChanged={() => mutate()} slow={slow} />
-        </motion.div>
-        <div />
-        <motion.div variants={item} className="min-h-0 min-w-0">
-          <BudgetPanel budget={data.budget} />
-        </motion.div>
-        <div />
-        <motion.div variants={item} className="min-h-0 min-w-0">
-          <Activity events={data.events} />
-        </motion.div>
-      </div>
+      <div className="mt-10 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_440px]">
+        <div className="flex min-w-0 flex-col gap-6">
+          <motion.div variants={item} className="min-h-[300px]">
+            <Decision production={p} pending={approving ? approving.pending : data.pending} approving={approving} applied={approving ? null : applied} countUp={!!animateVersion} onApprove={approve} />
+          </motion.div>
+          <motion.div variants={item} className="h-[360px]">
+            <Timeline production={p} conflicts={data.conflicts} />
+          </motion.div>
+          <motion.div variants={item}>
+            <Inbox slug={slug} onChanged={() => mutate()} slow={slow} />
+          </motion.div>
+        </div>
 
+        <div className="flex min-w-0 flex-col gap-6">
+          {p.travel.length > 0 && (
+            <motion.section variants={item}>
+              <h2 className="mb-3 text-[22px] font-light tracking-[-0.01em]">Travel</h2>
+              <div className="flex flex-col gap-4">
+                {p.travel.map((t) => <FlightCard key={t.personId} p={p} t={t} delayedBy={delayedIds.get(t.personId)} />)}
+              </div>
+            </motion.section>
+          )}
+          <motion.div variants={item}><LiveRadar airport={airport} watch={watch} /></motion.div>
+          <motion.div variants={item}><BudgetPanel budget={b} /></motion.div>
+          <motion.div variants={item} className="max-h-[320px]"><Activity events={data.events} /></motion.div>
+        </div>
+      </div>
     </motion.div>
   );
+
 }

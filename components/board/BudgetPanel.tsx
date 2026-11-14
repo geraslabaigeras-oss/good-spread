@@ -14,7 +14,7 @@ export function BudgetPanel({ budget: b }: { budget: BudgetSummary }) {
 
   return (
     <section className="section flex h-full flex-col">
-      <SectionHead label="Budget" meta={`${b.lines.length + 1} lines`} />
+      <SectionHead label="Budget" meta="Rate card = agreed price · Quote = from the supplier · Estimate = our guess" />
       <div className="shrink-0">
         <BudgetLine size="sm" total={b.total} cap={b.cap} segments={[...ORDER.map((c) => ({ value: b.byCategory[c] - (c === 'crew' || c === 'talent' || c === 'studio' ? otBy(c) : 0), color: CAT_COLOR[c] })), { value: b.overtime, color: '#b8742a' }]} />
       </div>

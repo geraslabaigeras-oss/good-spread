@@ -14,11 +14,11 @@ const SPAN = END - START;
 const x = (m: number) => ((Math.min(Math.max(m, START), END) - START) / SPAN) * 100;
 
 const BAR: Record<Block['kind'], string> = {
-  shoot: 'bg-ink text-paper',
-  hmu: 'bg-[#cbbca8] text-ink',
-  setup: 'bg-[#e6e2dc] text-ink',
-  wrap: 'bg-[#e6e2dc] text-ink',
-  lunch: 'bg-transparent border border-dashed border-hairline-strong text-grey-1',
+  shoot: 'bg-neutral-900 text-white',
+  hmu: 'bg-[#bcd0ea] text-neutral-900',
+  setup: 'bg-[#e4e9f0] text-neutral-700',
+  wrap: 'bg-[#e4e9f0] text-neutral-700',
+  lunch: 'bg-transparent border border-dashed border-neutral-300 text-neutral-500',
 };
 
 const ROLE: Record<string, string> = { producer: 'producer', model: 'model', photographer: 'photo', mua: 'hmu', stylist: 'stylist' };
@@ -30,9 +30,9 @@ function looksLabel(ids?: string[]) {
 }
 
 function barLabel(b: Block) {
-  if (b.kind === 'shoot') return `SHOOT${looksLabel(b.lookIds)}`;
-  if (b.kind === 'hmu') return 'HMU';
-  return b.kind.toUpperCase();
+  if (b.kind === 'shoot') return `Shoot${looksLabel(b.lookIds)}`;
+  if (b.kind === 'hmu') return 'Make-up';
+  return b.kind === 'setup' ? 'Set-up' : b.kind === 'wrap' ? 'Wrap' : 'Lunch';
 }
 
 /** layoutId = `${personId}-${kind}-${nth}` so a person's nth hmu slides between times (§5.7). */
@@ -70,7 +70,13 @@ export function Timeline({ production: p, conflicts }: { production: Production;
 
   return (
     <section className="section flex h-full flex-col">
-      <SectionHead label="Day" meta="07:00–18:00" />
+      <SectionHead label="The day" meta={
+        <span className="flex flex-wrap items-center gap-x-3 gap-y-1 font-sans">
+          {([['bg-neutral-900', 'Shooting'], ['bg-[#bcd0ea]', 'Hair & makeup'], ['bg-[#e4e9f0]', 'Set-up / wrap'], ['border border-dashed border-neutral-400', 'Lunch'], ['bg-amber-100', 'After booked hours (overtime)']] as const).map(([c, l]) => (
+            <span key={l} className="inline-flex items-center gap-1.5"><span className={`inline-block h-2.5 w-4 rounded-sm ${c}`} />{l}</span>
+          ))}
+        </span>
+      } />
       <div className="relative min-h-0 flex-1">
         {/* Track overlay: after-hours, gridlines, booked-until line */}
         <div className="pointer-events-none absolute inset-y-0 right-0" style={{ left: 'var(--label-w)' }}>

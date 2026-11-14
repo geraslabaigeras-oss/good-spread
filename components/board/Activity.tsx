@@ -14,7 +14,7 @@ export function Activity({ events }: { events: BoardState['events'] }) {
   const seen = initial.current;
   return (
     <section className="section flex h-full flex-col">
-      <SectionHead label="Activity" />
+      <SectionHead label="What happened" />
       <div className="scroll-thin min-h-0 flex-1 overflow-y-auto">
         <AnimatePresence initial={false}>
           {events.map((e) => (

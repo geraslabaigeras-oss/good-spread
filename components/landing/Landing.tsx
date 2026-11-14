@@ -4,7 +4,6 @@
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import Grainient from '@/components/Grainient';
-import { VoiceOrb } from '@/components/voice-orb';
 import { TextAnimate } from '@/components/ui/text-animate';
 import { Card, Carousel } from '@/components/ui/apple-cards-carousel';
 import { Safari } from '@/components/ui/safari';
@@ -256,7 +255,6 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
         </div>
       </section>
 
-      <VoiceOrb />
 
       {/* Aceternity Apple Cards Carousel with real photography */}
       <section className="py-20">

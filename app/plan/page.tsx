@@ -84,7 +84,7 @@ export default function Strategies() {
   const photoFor = (city: string, kind: string) => (draft.place?.image && kind !== 'Destination' ? draft.place.image : cityPhotos[city]);
 
   return (
-    <Stage>
+    <Stage voice>
       <TopBar step={2} right={<span className="text-[13px] text-grey-1">Cap {fmtEur(draft.cap)}</span>} />
       <div className="mx-auto max-w-[1280px] px-8 pb-16">
         <div className="flex flex-wrap items-end justify-between gap-6 pt-6">

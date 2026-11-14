@@ -103,7 +103,7 @@ export function Inbox({ slug, onChanged, slow }: { slug: string; onChanged: () =
 
   return (
     <section className="section flex h-full flex-col">
-      <SectionHead label="Inbox" meta="PDF · screenshot · text" />
+      <SectionHead label="Something changed?" meta="Drop a flight PDF, a screenshot or paste a message" />
       <div className="relative min-h-0 flex-1">
         {phase !== 'card' ? (
           <div

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { BoardState } from '@/lib/server/views';
 import { APPROVE, chipFade, chipFlip } from '@/lib/motion';
 import { catalogPerson } from '@/data/catalog';
+import { Plane } from 'lucide-react';
 
 type P = BoardState['people'][number];
 const ROLE: Record<string, string> = { model: 'Model', photographer: 'Photographer', mua: 'Hair & makeup', stylist: 'Stylist' };
@@ -35,48 +36,50 @@ export function PeopleStrip({ people, version, changedIds }: { people: P[]; vers
   const order = changed ? people.filter((x) => changed.from.has(x.id) || changedIds.includes(x.id)).map((x) => x.id) : [];
 
   return (
-    <div className="grid h-full grid-cols-5 gap-3.5" style={{ perspective: 400 }}>
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
       {people.map((x) => {
         const idx = order.indexOf(x.id);
         const delay = idx >= 0 ? (APPROVE.stripStart + idx * APPROVE.stripStagger) / 1000 : 0;
         const from = changed?.from.get(x.id);
         const showFrom = changed && changed.from.has(x.id) && from && x.call;
+        const photo = x.photo ?? catalogPerson(x.id)?.photo;
+        const open = x.booking === 'to_book';
         return (
-          <div key={x.id} className="relative isolate flex min-w-0 items-center gap-3 overflow-hidden rounded-[20px] bg-white px-3 shadow-[0_0_0_1px_rgb(0_0_0/0.06),0_1px_2px_rgb(0_0_0/0.06),0_12px_32px_rgb(80_60_40/0.05)]">
-            <Avatar id={x.id} name={x.name} photo={x.photo} />
-            <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
+          <div key={x.id} className="relative isolate overflow-hidden rounded-[24px] bg-white shadow-[0_1px_2px_rgba(0,0,0,.04),0_16px_40px_rgba(20,40,90,.07)]">
             {idx >= 0 && changed && (
               <motion.div
                 key={`hl-${changed.version}`}
-                className="pointer-events-none absolute inset-0 -z-10 bg-action-tint"
+                className="pointer-events-none absolute inset-0 z-10 bg-sky-200/40"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: [0, 1, 1, 0], transition: { duration: reduce ? 1.7 : 1.5, times: [0, 0.01, reduce ? 0.88 : 0.2, 1], ease: 'linear', delay } }}
               />
             )}
-            <div className="flex items-center justify-between gap-2">
-              <span className="truncate text-[15px] font-medium leading-5 tracking-[-0.005em]">{x.name}</span>
-              <span className="shrink-0 font-serif text-[26px] leading-7 num">
-                {showFrom ? (
-                  <motion.span initial={{ opacity: 1 }} animate={{ opacity: 1 }}>
-                    <span className="text-grey-1 line-through decoration-1">{from}</span> → {x.call}
-                  </motion.span>
-                ) : (
-                  x.call ?? '—'
-                )}
-              </span>
-            </div>
-            <div className="flex items-center justify-between gap-2">
-              <span className="truncate text-[12px] text-grey-1">{ROLE[x.role] ?? x.role}</span>
-              <span className="relative inline-flex">
+            <div className="relative h-44 overflow-hidden bg-[#e3eaf3]">
+              {photo
+                ? <img src={photo} alt="" className="size-full object-cover object-top" /> // eslint-disable-line @next/next/no-img-element
+                : <span className={`absolute inset-0 flex items-center justify-center text-[72px] font-light ${open ? 'text-neutral-400' : 'text-neutral-500'}`}>{open ? '+' : x.name[0]}</span>}
+              <span className="absolute left-3 top-3">
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.span key={x.booking} variants={reduce ? chipFade : chipFlip} initial="initial" animate="animate" exit="exit"
-                    className={`inline-flex h-6 items-center rounded-full px-2.5 text-[11px] font-medium ${x.booking === 'confirmed' ? 'bg-emerald-50 text-emerald-700' : x.booking === 'delayed' ? 'bg-red-50 text-red-700' : 'bg-neutral-100 text-neutral-500'}`}>
+                    className={`inline-flex h-7 items-center gap-1.5 rounded-full bg-white/90 px-2.5 text-[12px] font-medium backdrop-blur ${x.booking === 'confirmed' ? 'text-emerald-700' : x.booking === 'delayed' ? 'text-red-700' : 'text-neutral-600'}`}>
+                    <span className={`size-1.5 rounded-full ${x.booking === 'confirmed' ? 'bg-emerald-500' : x.booking === 'delayed' ? 'bg-red-500' : 'bg-neutral-400'}`} />
                     {x.booking === 'confirmed' ? 'Confirmed' : x.booking === 'delayed' ? 'Delayed' : 'To book'}
                   </motion.span>
                 </AnimatePresence>
               </span>
             </div>
-            {x.flight && <div className="truncate text-[11px] text-grey-1">✈ {x.flight.number} · {x.flight.from}→{x.flight.to} · lands {x.flight.lands}</div>}
+            <div className="p-4">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="truncate text-[16px] font-medium">{x.name}</span>
+                <span className="shrink-0 text-[12px] text-neutral-500">{ROLE[x.role] ?? x.role}</span>
+              </div>
+              <div className="mt-2 text-[12px] text-neutral-500">Call time</div>
+              <div className="text-[30px] font-light leading-9 tracking-[-0.02em] tabular-nums">
+                {showFrom ? <span><span className="text-neutral-400 line-through decoration-1">{from}</span> {x.call}</span> : (x.call ?? '—')}
+              </div>
+              <div className="mt-1 flex h-5 items-center gap-1 truncate text-[12px] text-neutral-500">
+                {x.flight ? <><Plane className="size-3" /> {x.flight.from} → {x.flight.to}, lands {x.flight.lands}</> : 'Local'}
+              </div>
             </div>
           </div>
         );
