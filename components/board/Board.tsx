@@ -200,8 +200,8 @@ function BoardInner({ slug }: { slug: string }) {
 
         {/* Headline */}
         <motion.div id="plan" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="mt-12">
-          <h1 className="text-[52px] font-normal leading-[1.05] tracking-[-0.03em]">{dateLabel}</h1>
-          <p className="text-[44px] font-light leading-[1.1] tracking-[-0.03em] text-neutral-500">{headline}</p>
+          <h1 className="text-[52px] font-normal leading-[1.1] tracking-[-0.03em]">{dateLabel}</h1>
+          <p className="mt-2 text-[40px] font-light leading-[1.15] tracking-[-0.03em] text-neutral-500">{headline}</p>
         </motion.div>
 
         {/* Decisions when something broke */}
@@ -270,7 +270,7 @@ function BoardInner({ slug }: { slug: string }) {
           <PeopleStrip people={team} version={p.version} changedIds={justApproved?.version === p.version ? justApproved.changedIds ?? [] : []} />
         </section>
 
-        <div className="mt-10 h-[360px]"><Timeline production={p} conflicts={data.conflicts} /></div>
+        <div className="mt-10"><Timeline production={p} conflicts={data.conflicts} /></div>
 
         <div id="inbox" className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
           <Inbox slug={slug} onChanged={() => mutate()} slow={slow} />

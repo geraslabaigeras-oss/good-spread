@@ -124,7 +124,7 @@ export function Inbox({ slug, onChanged, slow }: { slug: string; onChanged: () =
               if (f) { e.preventDefault(); sendFile(f); }
             }}
             className={cn(
-              'flex h-full flex-col items-center justify-center rounded-[20px] px-5 text-center transition-all duration-[160ms] ease-[cubic-bezier(.4,0,.2,1)]',
+              'flex min-h-[220px] h-full flex-col items-center justify-center rounded-[20px] px-5 py-8 text-center transition-all duration-[160ms] ease-[cubic-bezier(.4,0,.2,1)]',
               zoneState === 'idle' && 'border border-dashed border-hairline-strong bg-paper',
               zoneState === 'drag-over' && 'border-[1.5px] border-solid border-action bg-action-tint',
               zoneState === 'reading' && 'border border-solid border-hairline bg-paper',

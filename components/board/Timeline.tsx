@@ -21,7 +21,7 @@ const BAR: Record<Block['kind'], string> = {
   lunch: 'bg-transparent border border-dashed border-neutral-300 text-neutral-500',
 };
 
-const ROLE: Record<string, string> = { producer: 'producer', model: 'model', photographer: 'photo', mua: 'hmu', stylist: 'stylist' };
+const ROLE: Record<string, string> = { producer: 'Producer', model: 'Model', photographer: 'Photographer', mua: 'Make-up', stylist: 'Stylist' };
 
 function looksLabel(ids?: string[]) {
   if (!ids?.length) return '';
@@ -69,15 +69,15 @@ export function Timeline({ production: p, conflicts }: { production: Production;
   const booked = p.studio.bookedUntilMin;
 
   return (
-    <section className="section flex h-full flex-col">
+    <section className="section flex flex-col" style={{ ['--row-h' as string]: '56px', ['--bar-h' as string]: '32px', ['--label-w' as string]: '150px' }}>
       <SectionHead label="The day" meta={
         <span className="flex flex-wrap items-center gap-x-3 gap-y-1 font-sans">
-          {([['bg-neutral-900', 'Shooting'], ['bg-[#bcd0ea]', 'Hair & makeup'], ['bg-[#e4e9f0]', 'Set-up / wrap'], ['border border-dashed border-neutral-400', 'Lunch'], ['bg-amber-100', 'After booked hours (overtime)']] as const).map(([c, l]) => (
+          {([['bg-neutral-900', 'Shooting'], ['bg-[#bcd0ea]', 'Make-up'], ['bg-[#e4e9f0]', 'Set-up / wrap'], ['border border-dashed border-neutral-400', 'Lunch'], ['bg-amber-100', 'After booked hours (overtime)']] as const).map(([c, l]) => (
             <span key={l} className="inline-flex items-center gap-1.5"><span className={`inline-block h-2.5 w-4 rounded-sm ${c}`} />{l}</span>
           ))}
         </span>
       } />
-      <div className="relative min-h-0 flex-1">
+      <div className="relative">
         {/* Track overlay: after-hours, gridlines, booked-until line */}
         <div className="pointer-events-none absolute inset-y-0 right-0" style={{ left: 'var(--label-w)' }}>
           <div className="absolute inset-y-0 right-0 bg-after-hours" style={{ left: `${x(booked)}%` }} />
@@ -88,20 +88,14 @@ export function Timeline({ production: p, conflicts }: { production: Production;
         </div>
 
         {/* Axis row (20) */}
-        <div className="relative flex h-5 items-center">
+        <div className="relative mb-2 flex h-5 items-center">
           <div className="shrink-0" style={{ width: 'var(--label-w)' }} />
           <div className="relative h-full flex-1">
-            {hours.slice(0, -1).filter((h) => h < booked || h >= booked + 120).map((h) => (
-              <span key={h} className="absolute top-0.5 pl-1 font-mono text-[11px] leading-[14px] text-grey-1 num" style={{ left: `${x(h)}%` }}>
-                {fmt(h).slice(0, 2)}
+            {hours.slice(0, -1).map((h) => (
+              <span key={h} className="absolute top-0 -translate-x-1/2 text-[12px] leading-[14px] text-neutral-500 tabular-nums" style={{ left: `${x(h)}%` }}>
+                {fmt(h)}
               </span>
             ))}
-            <span
-              className="absolute top-0.5 whitespace-nowrap bg-after-hours pl-1 font-mono text-[10px] font-medium leading-[14px] text-ink"
-              style={{ left: `${x(booked)}%` }}
-            >
-              Booked until {fmt(booked)}
-            </span>
           </div>
         </div>
 
@@ -112,20 +106,20 @@ export function Timeline({ production: p, conflicts }: { production: Production;
             const t = p.travel.find((tr) => tr.personId === person.id);
             const arrivalConflict = c?.code === 'ARRIVAL';
             return (
-              <div key={person.id} className="relative flex items-center" style={{ height: 'var(--row-h)' }}>
-                <div className="flex min-w-0 shrink-0 flex-col pr-3" style={{ width: 'var(--label-w)' }}>
-                  <span className={cn('truncate text-[13px] font-medium leading-4', c && 'text-conflict')}>{person.name.split(' (')[0]}</span>
-                  <span className="font-mono text-[10px] leading-3 text-grey-1">{ROLE[person.role]}</span>
+              <div key={person.id} className="relative flex items-center border-t border-black/[0.05]" style={{ height: 'var(--row-h)' }}>
+                <div className="flex min-w-0 shrink-0 flex-col justify-center gap-0.5 pr-4" style={{ width: 'var(--label-w)' }}>
+                  <span className={cn('truncate text-[15px] font-medium leading-5', c && 'text-conflict')}>{person.name.split(' (')[0]}</span>
+                  <span className="truncate text-[12px] leading-4 text-neutral-500">{ROLE[person.role]}</span>
                 </div>
                 <div className="relative h-full flex-1">
                   {/* Travel: line from depart to arrive, then hollow transfer bar */}
                   {t && t.arriveMin > START && (
                     <>
                       <span
-                        className="absolute top-0 whitespace-nowrap font-mono text-[10px] leading-3 text-grey-1 num"
-                        style={{ left: `${x(Math.max(t.departMin, START))}%` }}
+                        className="absolute top-1 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] leading-3 text-neutral-500"
+                        style={{ left: `${x(Math.max(t.departMin, START))}%`, maxWidth: `${x(t.arriveMin + t.transferMin) - x(Math.max(t.departMin, START))}%` }}
                       >
-                        {t.number} · lands {fmt(t.arriveMin)}
+                        {t.number} lands {fmt(t.arriveMin)}
                       </span>
                       <div
                         className={cn('absolute top-[calc(50%-1px)] h-0.5', arrivalConflict ? 'bg-conflict' : 'bg-ink')}
@@ -156,8 +150,8 @@ export function Timeline({ production: p, conflicts }: { production: Production;
                         style={{ left: `${l}%`, width: `calc(${w}% - 2px)`, top: 'calc((var(--row-h) - var(--bar-h)) / 2)', height: 'var(--bar-h)' }}
                         title={`${barLabel(b)} ${fmt(b.startMin)}–${fmt(b.endMin)}`}
                       >
-                        <span className="block h-full overflow-hidden whitespace-nowrap pl-2.5 text-[11.5px] font-medium leading-[var(--bar-h)]">
-                          {barLabel(b)}
+                        <span className="block h-full overflow-hidden text-ellipsis whitespace-nowrap px-2 text-[12px] font-medium leading-[var(--bar-h)]">
+                          {b.endMin - b.startMin < 40 && b.kind !== 'shoot' ? '' : barLabel(b)}
                         </span>
                         {otFrom != null && <span className="absolute bottom-0 right-0 h-[3px] rounded-b-[9px] bg-overtime" style={{ left: `${otFrom}%` }} />}
                         {(isConflict || (arrivalConflict && c?.blockId === b.id)) && (
@@ -184,6 +178,12 @@ export function Timeline({ production: p, conflicts }: { production: Production;
             );
           })}
         </LayoutGroup>
+        <div className="relative mt-2 flex h-6">
+          <div className="shrink-0" style={{ width: 'var(--label-w)' }} />
+          <div className="relative flex-1">
+            <span className="absolute top-1 -translate-x-1/2 whitespace-nowrap rounded-full bg-neutral-950 px-2.5 py-0.5 text-[11px] font-medium text-white" style={{ left: `${x(booked)}%` }}>Booked until {fmt(booked)}</span>
+          </div>
+        </div>
       </div>
     </section>
   );

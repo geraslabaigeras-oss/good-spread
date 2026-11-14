@@ -209,8 +209,8 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
             </Feature>
             <Feature title="Re-plans the minute a flight slips" tag="Engine" date="Shoot day" light>
               <div className="flex h-full flex-col items-center justify-center bg-white px-6 text-center">
-                <div className="text-[13px] font-semibold">good spread</div>
-                <div className="text-[28px] tracking-[-0.02em]">Three fixes, priced</div>
+                <div className="text-[13px] font-semibold leading-5">good spread</div>
+                <div className="mt-1 text-[28px] leading-9 tracking-[-0.02em]">Three fixes, priced</div>
                 <div className="mt-5 grid w-full grid-cols-3 divide-x divide-white/15 rounded-2xl bg-neutral-900 py-4 text-white">
                   {moment.fixes.map((f) => (
                     <div key={f.label} className="flex flex-col items-center gap-1.5 px-2">
