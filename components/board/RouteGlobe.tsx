@@ -103,34 +103,15 @@ export function RouteGlobe({ legs, height = 460 }: { legs: Leg[]; height?: numbe
     const ours = routes.map((r) => {
       const found = r.l.callsign ? live.find((p) => p.callsign === r.l.callsign && !p.onGround) : undefined;
       if (found) return { id: `team-${r.l.id}`, lat: found.lat, lng: found.lon, alt: 0.02, heading: found.heading ?? bearing(r.a, r.b), team: true, live: true };
-      return { id: `team-${r.l.id}`, lat: r.a.lat, lng: r.a.lon, alt: ARC(0, r.peak), heading: bearing(r.a, r.b), team: true, live: false };
+      const p = slerp(r.a, r.b, 0.6), ahead = slerp(r.a, r.b, 0.61);
+      return { id: `team-${r.l.id}`, lat: p.lat, lng: p.lon, alt: ARC(0.6, r.peak), heading: bearing(p, ahead), team: true, live: false };
     });
     const traffic = live.filter((p) => !p.onGround && !routes.some((r) => r.l.callsign === p.callsign)).slice(0, 25)
       .map((p) => ({ id: p.id, lat: p.lat, lng: p.lon, alt: 0.006 + Math.min(0.02, (p.altM ?? 0) / 600000), heading: p.heading ?? 0, team: false, live: true }));
     return [...ours, ...traffic];
   }, [routes, live]);
 
-  // Route preview: move the team plane in place every frame (no React re-render, no globe rebuild).
-  useEffect(() => {
-    let raf = 0; const t0 = performance.now();
-    const tick = (now: number) => {
-      const g = ref.current;
-      if (g) routes.forEach((r) => {
-        const obj = planes.current.get(`team-${r.l.id}`);
-        const o = objects.find((x) => x.id === `team-${r.l.id}`);
-        if (!obj || !o || o.live || !obj.parent) return;
-        const t = ((now - t0) / 14000) % 1;
-        const p = slerp(r.a, r.b, t), ahead = slerp(r.a, r.b, Math.min(1, t + 0.01));
-        const c = g.getCoords(p.lat, p.lon, ARC(t, r.peak));
-        obj.parent.position.set(c.x, c.y, c.z);
-        obj.parent.setRotationFromEuler(new THREE.Euler(R(-p.lat), R(p.lon), 0, 'YXZ'));
-        obj.rotation.set(0, 0, R(-bearing(p, ahead)));
-      });
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [routes, objects]);
+
 
   const teamObj = useMemo(() => makePlane('#0d0d0d', 1.1), []);
   const trafficObj = useMemo(() => makePlane('#7d8ea3', 0.55), []);
@@ -144,7 +125,7 @@ export function RouteGlobe({ legs, height = 460 }: { legs: Leg[]; height?: numbe
           <span className={`relative flex size-2 ${anyLive ? '' : 'opacity-60'}`}>{anyLive && <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />}<span className={`relative inline-flex size-2 rounded-full ${anyLive ? 'bg-emerald-500' : 'bg-neutral-400'}`} /></span>
           Travel
         </div>
-        <div className="mt-0.5 text-[13px] text-neutral-600">{anyLive ? 'Live position from the plane itself' : 'Route preview. The plane goes live when it takes off.'}{live.length ? ` · ${live.filter((p) => !p.onGround).length} planes near ${dest} now` : ''}</div>
+        <div className="mt-0.5 text-[13px] text-neutral-600">{anyLive ? 'Live position from the plane itself' : 'Planned route. The plane goes live when it takes off.'}{live.length ? ` · ${live.filter((p) => !p.onGround).length} planes near ${dest} now` : ''}</div>
       </div>
       <ReactGlobe
         ref={ref}

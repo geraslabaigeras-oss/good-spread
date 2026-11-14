@@ -18,7 +18,7 @@ const Body = z.object({
   inboxId: z.string().max(80),
   source: z.string().max(200),
   update: UpdateSchema.nullish(),
-  manual: z.object({ personId: z.string().max(40), time: z.string().max(5) }).optional(),
+  manual: z.object({ personId: z.string().max(90), time: z.string().max(5) }).optional(),
 });
 
 export async function POST(req: Request) {

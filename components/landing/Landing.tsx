@@ -12,6 +12,8 @@ import { DevicePhone } from '@/components/device-phone';
 import { MessagesScreen } from '@/components/messages-screen';
 import { BrandLogo } from '@/components/brand-logo';
 import { HeroDrop } from '@/components/hero-drop';
+import { BeforeAfter } from './BeforeAfter';
+import { PlansChange } from './PlansChange';
 import { flagUrl } from '@/lib/agencies';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { NumberTicker } from '@/components/ui/number-ticker';
@@ -139,12 +141,12 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
         </header>
 
         <div className="relative z-20 mx-auto max-w-4xl px-6 pt-14 text-center">
-          <TextAnimate animation="blurInUp" by="word" as="h1" className="font-[family-name:var(--font-inter)] text-5xl font-light leading-[1.04] tracking-[-0.035em] text-neutral-950 md:text-[76px]">
-            Your shoot, produced by an agent that makes the calls.
-          </TextAnimate>
-          <TextAnimate animation="blurIn" by="word" delay={0.5} as="p" className="mx-auto mt-6 max-w-xl text-[17px] leading-7 text-neutral-600">
-            Stay creative. We organise the rest: real locations, your people, agency calls, the budget, and every change on the day.
-          </TextAnimate>
+          <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.2, 0.7, 0.2, 1] }} className="text-5xl font-normal leading-[1.02] tracking-[-0.04em] text-neutral-950 md:text-[84px]">
+            Stay creative.<br /><span className="text-neutral-400">Production&rsquo;s handled.</span>
+          </motion.h1>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.6 }} className="mx-auto mt-6 max-w-xl text-[17px] leading-7 text-neutral-600">
+            Drop your references. We find the models, crew and places, call their agents, plan the day and the budget, and keep everyone updated when something changes.
+          </motion.p>
           <div className="mt-9 flex items-center justify-center gap-3 text-[15px]">
             <Link href="/new" className="rounded-full bg-neutral-950 px-7 py-3.5 text-white">Start a shoot</Link>
             <Link href="/people" className="rounded-full bg-white px-7 py-3.5 text-neutral-900 shadow-[inset_0_0_0_1px_rgba(0,0,0,.1)]">Add your people</Link>
@@ -157,8 +159,11 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
         </div>
       </section>
 
+      <BeforeAfter />
+      <PlansChange />
+
       {/* How it works, shown: the real board on a laptop and the real crew page on a phone (Magic UI Safari + iPhone frames) */}
-      <section id="how" className="relative overflow-hidden bg-[linear-gradient(180deg,#f6f7f8_0%,#eef1f3_55%,#dfe5ea_100%)] px-4 py-24 md:px-10">
+      <section id="how" className="relative overflow-hidden bg-[linear-gradient(180deg,#f7f7f7_0%,#f0f0f0_55%,#e4e4e4_100%)] px-4 py-24 md:px-10">
         <Grain />
         <div className="relative z-[2] mx-auto max-w-6xl">
           <div className="grid items-end gap-6 md:grid-cols-2">
@@ -195,14 +200,14 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
 
           <div className="mt-12 grid gap-4 md:grid-cols-3">
             <Feature title="Scouts real places for the look" tag="Location scout" date="Brief">
-              <div className="relative h-full bg-[radial-gradient(120%_90%_at_10%_10%,#ffffff_0%,#e3ebf5_40%,#b9cbe0_75%,#8ea8c6_100%)]">
+              <div className="relative h-full bg-[radial-gradient(120%_90%_at_10%_10%,#ffffff_0%,#ececec_40%,#cfd0d1_75%,#b0b1b2_100%)]">
                 <Grain />
                 <div className="absolute left-6 top-6 text-[34px] leading-none tracking-[-0.03em] text-neutral-900">Locations</div>
                 <div className="absolute bottom-6 right-6 text-[34px] leading-none tracking-[-0.03em] text-neutral-800">Vilnius · Riga</div>
               </div>
             </Feature>
             <Feature title="Calls agencies in their language" tag="Voice" date="Team">
-              <div className="relative flex h-full items-center justify-center bg-[radial-gradient(90%_70%_at_75%_15%,#ffffff_0%,transparent_60%),radial-gradient(80%_80%_at_20%_85%,#9fb8d8_0%,transparent_65%),linear-gradient(135deg,#dfe8f4,#a9bfdb)]">
+              <div className="relative flex h-full items-center justify-center bg-[radial-gradient(90%_70%_at_75%_15%,#ffffff_0%,transparent_60%),radial-gradient(80%_80%_at_20%_85%,#bdbebf_0%,transparent_65%),linear-gradient(135deg,#e9e9e9,#c6c7c8)]">
                 <Grain />
                 <div className="relative flex items-center gap-3 text-[40px] tracking-[-0.03em] text-neutral-900">Calls <span className="rounded-full border-2 border-neutral-900 px-3 py-0.5 text-[24px]">FR · IT · SE</span></div>
               </div>
@@ -226,7 +231,7 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
 
           <div className="mt-4 grid gap-4 md:grid-cols-[1.4fr_1fr]">
             <div className="relative min-h-[460px] rounded-[28px] p-8">
-              <div className="absolute inset-0 overflow-hidden rounded-[28px] bg-[radial-gradient(120%_100%_at_20%_0%,#ffffff_0%,#e6eef8_35%,#c4d4e8_70%,#9db5d3_100%)]"><Grain /></div>
+              <div className="absolute inset-0 overflow-hidden rounded-[28px] bg-[radial-gradient(120%_100%_at_20%_0%,#ffffff_0%,#efefef_35%,#d6d7d8_70%,#bbbcbd_100%)]"><Grain /></div>
               <div className="relative mx-auto flex max-w-[420px] flex-col gap-3 pt-6 [perspective:900px]">
                 <motion.span animate={{ y: [0, -6, 0] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} style={{ rotateY: -12, rotateX: 6 }} className="-mr-6 self-end rounded-full border border-neutral-900/15 bg-white/70 px-4 py-2 text-[14px] text-neutral-900 shadow-[0_20px_40px_rgba(0,0,0,.25)] backdrop-blur md:-mr-24">Bonjour, je suis l&rsquo;assistant de la production. Votre mannequin est-elle disponible le 21 ?</motion.span>
                 <motion.span animate={{ y: [0, 6, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }} style={{ rotateY: 10, rotateX: 4 }} className="-ml-4 self-start rounded-2xl bg-white px-4 py-2.5 text-[14px] text-neutral-900 shadow-[0_30px_60px_rgba(0,0,0,.35)] md:-ml-20">Oui, elle est disponible. Tarif journalier 600 €, usage web 12 mois.</motion.span>
@@ -262,7 +267,7 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
         <Carousel
           items={[
             { c: 'Brief', t: 'Drop a reference. Get the brief.' },
-            { c: 'Plans', t: `${routes.length} ways to make it, each costed.` },
+            { c: 'Casting', t: 'Pick models and crew. The AI calls their agents.' },
             { c: 'Team', t: 'Book the people you actually work with.' },
             { c: 'Shoot day', t: 'A flight lands late. Three fixes, priced.' },
             { c: 'On set', t: 'Everyone has their day on their phone.' },
@@ -273,15 +278,19 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
         />
       </section>
 
-      {/* Trelli close */}
-      <section className="px-4 pb-10 md:px-10">
-        <div className="relative mx-auto flex h-[70vh] max-w-7xl flex-col items-center justify-center overflow-hidden rounded-[36px] bg-[linear-gradient(180deg,#d4d3d1_0%,#8e8e8b_38%,#3a3a37_72%,#1f1f1d_100%)] text-center text-white">
-          <Grain />
-          <div className="relative z-[3]">
-            <p className="text-4xl font-light tracking-[-0.03em] md:text-6xl">Plan your next shoot.</p>
-            <p className="mt-4 text-[15px] text-white/70">Start with one reference image.</p>
-            <Link href="/new" className="mt-6 inline-block rounded-full bg-white px-5 py-2.5 text-neutral-900">Start a shoot</Link>
+      {/* Close: light, the drop is the call to action */}
+      <section className="relative bg-[#f7f7f7] px-6 py-28">
+        <div className="gs-grain" />
+        <div className="gs-paper relative mx-auto grid max-w-[1280px] grid-cols-1 items-center gap-10 rounded-[16px] bg-white p-10 shadow-[0_0_0_0.5px_rgba(0,0,0,.08),0_14px_40px_rgba(0,0,0,.05)] md:grid-cols-2">
+          <div>
+            <h2 className="text-[48px] font-normal leading-[1.05] tracking-[-0.035em]">Drop in your references. <span className="text-neutral-400">Stay creative.</span></h2>
+            <p className="mt-4 max-w-md text-[16px] leading-7 text-neutral-600">A few images are enough. You get the team, the places, the flights, call times and the budget, kept current.</p>
+            <Link href="/new" className="mt-8 inline-flex h-12 items-center rounded-full bg-neutral-950 px-6 text-[15px] font-medium text-white">Start a shoot</Link>
           </div>
+          <Link href="/new" className="flex h-[280px] flex-col items-center justify-center gap-2 rounded-[16px] border border-dashed border-neutral-300 bg-[#f7f7f7] text-center transition-colors hover:border-neutral-500">
+            <span className="text-[17px]">Drop references here</span>
+            <span className="text-[13px] text-neutral-500">Photos, a moodboard, a campaign you like</span>
+          </Link>
         </div>
       </section>
 

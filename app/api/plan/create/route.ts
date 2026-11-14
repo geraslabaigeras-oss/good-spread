@@ -14,7 +14,7 @@ async function newSlug(title: string): Promise<string> {
     if (!(await getProduction(slug))) return slug;
   }
 }
-import { candidates, catalogLocation, locationCandidates } from '@/data/catalog';
+import { candidates, catalogLocation, locationCandidates, setBriefPrefs } from '@/data/catalog';
 
 const Brief = z.object({
   title: z.string().max(120), brand: z.string().max(120), garment: z.string().max(80), summary: z.string().max(600),
@@ -24,8 +24,10 @@ const Brief = z.object({
 });
 
 const Body = z.object({
+  scoutCity: z.string().max(40).optional().nullable(),
+  shortlist: z.array(z.string().max(90)).max(40).optional().nullable(),
   strategy: z.enum(['local', 'destination', 'hybrid']),
-  picks: z.object({ models: z.array(z.string().max(40)).min(1).max(3), photographer: z.string().max(40), location: z.string().max(40) }),
+  picks: z.object({ models: z.array(z.string().max(90)).min(1).max(3), photographer: z.string().max(90), location: z.string().max(90) }),
   brief: Brief,
   deliverables: z.object({ stills: z.number().int().min(1).max(200), motion: z.number().int().min(0).max(50), usageMonths: z.number().int().min(1).max(60), usage: z.string().max(60), deadlineISO: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }),
   cap: z.number().int().min(500).max(1000000),
@@ -42,6 +44,7 @@ export async function POST(req: Request) {
     const parsed = await parseJson(req, Body);
     if ('error' in parsed) return parsed.error;
     const b = parsed.data;
+    setBriefPrefs({ city: b.scoutCity ?? undefined, shortlist: b.shortlist ?? undefined });
     const okModels = new Set(candidates(b.strategy, 'model').map((c) => c.id));
     const okPhotos = new Set(candidates(b.strategy, 'photographer').map((c) => c.id));
     const okLocs = new Set(locationCandidates(b.strategy).map((l) => l.id));

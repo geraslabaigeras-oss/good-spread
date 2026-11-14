@@ -2,6 +2,7 @@
 export const BRAND = {
   whatsapp: { name: 'WhatsApp', color: '#25D366' },
   imessage: { name: 'iMessage', color: '#34DA50' },
+  gmail: { name: 'Gmail', color: '#EA4335' },
   elevenlabs: { name: 'ElevenLabs', color: '#000000' },
   twilio: { name: 'Twilio', color: '#F22F46' },
   claude: { name: 'Claude', color: '#D97757' },
