@@ -29,7 +29,7 @@ export function todayISO() {
 }
 
 export const emptyDraft = (): PlanDraft => ({
-  title: 'Jacket campaign (demo)',
+  title: '',
   brand: 'Vėtra outerwear (demo brand)',
   cap: DEMO_CAP,
   startISO: todayISO(),
