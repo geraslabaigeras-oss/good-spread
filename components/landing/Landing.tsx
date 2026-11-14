@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { Stage } from '@/components/glass/Stage';
+import { Globe, type GlobePin } from '@/components/glass/Globe';
 import { fmtEur } from '@/lib/format';
 
 type Props = {
@@ -13,12 +14,14 @@ type Props = {
   routes: { name: string; total: number; overCap: boolean }[];
   best: { name: string; total: number };
   people: number;
+  pins: GlobePin[];
+  total: number;
 };
 
 const ease = [0.16, 1, 0.3, 1] as const;
 const up = (d = 0) => ({ initial: { opacity: 0, y: 28 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, amount: 0.2 }, transition: { duration: 0.9, ease, delay: d } });
 
-export function Landing({ cap, stills, routes, best, people }: Props) {
+export function Landing({ cap, stills, routes, best, people, pins }: Props) {
   const par = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const on = () => { if (par.current) par.current.style.transform = `translate3d(0, ${Math.min(120, window.scrollY * 0.08)}px, 0)`; };
@@ -48,10 +51,10 @@ export function Landing({ cap, stills, routes, best, people }: Props) {
 
       {/* hero */}
       <section className="relative overflow-hidden pb-24 pt-16 md:pt-[120px]">
-        <div className="relative mx-auto grid w-[calc(100%-36px)] max-w-[1328px] items-end gap-10 md:w-[calc(100%-112px)] md:grid-cols-[8fr_4fr]">
+        <div className="relative mx-auto grid w-[calc(100%-36px)] max-w-[1328px] items-center gap-10 md:w-[calc(100%-112px)] md:grid-cols-[5fr_7fr]">
           <motion.div initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease }}>
             <span className="g-eyebrow mb-[26px]">Production planning for fashion shoots</span>
-            <h1 className="font-serif text-[clamp(48px,6.6vw,98px)] leading-[0.98] tracking-[-0.045em]">Producers plan it.<br />Talent lives it.</h1>
+            <h1 className="whitespace-nowrap font-serif text-[clamp(40px,4.9vw,76px)] leading-[0.98] tracking-[-0.045em]">Producers plan it.<br />Talent lives it.</h1>
             <p className="mt-8 max-w-[22em] font-serif text-[clamp(18px,1.6vw,22px)] leading-[1.35] tracking-[-0.02em] text-grey-1">
               Upload a reference. Get three costed plans, a team and a call sheet. When something changes, each person on set gets their new times by text.
             </p>
@@ -60,14 +63,15 @@ export function Landing({ cap, stills, routes, best, people }: Props) {
               <Link href="/board/jacket-campaign" className="text-[13px] text-grey-1 transition-colors hover:text-ink">or open the live board →</Link>
             </div>
           </motion.div>
-          <div ref={par} aria-hidden className="relative h-[380px] md:h-[560px]">
-            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.1, ease, delay: 0.35 }}
-              className="absolute right-[-10%] top-[22%] h-[64%] w-[42%] overflow-hidden rounded-[20px] shadow-[inset_0_0_0_1px_rgb(13_13_13/0.12)]">
-              <img src="/catalog/marta.jpg" alt="" className="size-full object-cover" style={{ objectPosition: '50% 20%' }} />
-            </motion.div>
-            <motion.div initial={{ opacity: 0, scale: 0.85, filter: 'blur(15px)' }} animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }} transition={{ opacity: { duration: 0.9, ease }, filter: { duration: 0.9, ease }, scale: { duration: 2.25, ease } }}
-              className="absolute right-[18%] top-0 h-full w-[62%] overflow-hidden rounded-[20px] shadow-[inset_0_0_0_1px_rgb(13_13_13/0.12)]">
-              <img src="/catalog/campaign.jpg" alt="" className="size-full object-cover" style={{ objectPosition: '45% 30%' }} />
+          <div ref={par} className="relative h-[460px] md:h-[640px] md:-mr-14">
+            <Globe pins={pins} arcs={[{ from: 'Milan', to: 'Vilnius', label: 'Ieva' }, { from: 'Vilnius', to: 'Lisbon', label: 'Lukas' }]} focus="Vilnius" hub="Vilnius" height="100%" altitude={1.05} spread={2.3} />
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease, delay: 0.8 }}
+              className="glass pointer-events-none absolute bottom-6 left-4 flex items-center gap-3 !rounded-[18px] py-2.5 pl-2.5 pr-5">
+              <img src="/catalog/ieva.jpg" alt="" className="size-10 rounded-full object-cover object-top" />
+              <div>
+                <div className="text-[13px] font-medium">Ieva · DA 641 Milan → Vilnius</div>
+                <div className="font-mono text-[11px] text-grey-1 num">lands 07:40 · call 09:00</div>
+              </div>
             </motion.div>
           </div>
         </div>

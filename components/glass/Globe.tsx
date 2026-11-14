@@ -28,12 +28,13 @@ type Props = {
   onPin?: (id: string) => void;
   height?: number | string;
   altitude?: number;
+  spread?: number;
 };
 
 const KIND_COLOR: Record<GlobePin['kind'], string> = { model: '#0d0d0d', photographer: '#6e6a69', crew: '#8fa1ad', location: '#c4ae92' };
 
 /** Spread pins that share a city on a small ring so they don't overlap. */
-function place(pins: GlobePin[]) {
+function place(pins: GlobePin[], spread = 1) {
   const byCity: Record<string, GlobePin[]> = {};
   pins.forEach((p) => (byCity[p.city] ??= []).push(p));
   return pins.map((p) => {
@@ -44,12 +45,12 @@ function place(pins: GlobePin[]) {
     const ang = (i / n) * Math.PI * 2 - Math.PI / 2;
     // two rings when crowded; longitude corrected for latitude so the ring stays round
     const ring = n > 7 && i % 2 ? 1.75 : 1;
-    const rad = n === 1 ? 0 : (1.2 + n * 0.28) * ring;
+    const rad = n === 1 ? 0 : (1.2 + n * 0.28) * ring * spread;
     return { ...p, lat: c.lat + Math.sin(ang) * rad, lng: c.lng + (Math.cos(ang) * rad) / Math.cos((c.lat * Math.PI) / 180) };
   });
 }
 
-export function Globe({ pins, arcs, focus, hub, onPin, height = 560, altitude = 1.55 }: Props) {
+export function Globe({ pins, arcs, focus, hub, onPin, height = 560, altitude = 1.55, spread = 1 }: Props) {
   const ref = useRef<GlobeMethods | undefined>(undefined);
   const box = useRef<HTMLDivElement>(null);
   const [w, setW] = useState(800);
@@ -79,7 +80,7 @@ export function Globe({ pins, arcs, focus, hub, onPin, height = 560, altitude = 
     [],
   );
 
-  const placed = useMemo(() => place(pins), [pins]);
+  const placed = useMemo(() => place(pins, spread), [pins, spread]);
   const arcData = useMemo(
     () => arcs.filter((a) => CITY[a.from] && CITY[a.to]).map((a) => ({
       startLat: CITY[a.from].lat, startLng: CITY[a.from].lng, endLat: CITY[a.to].lat, endLng: CITY[a.to].lng, label: a.label ?? '',
