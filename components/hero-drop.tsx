@@ -40,7 +40,7 @@ export function HeroDrop() {
         onClick={() => input.current?.click()}
         className={`relative flex h-[300px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[36px] transition-transform duration-300 ${drag ? 'scale-[1.01]' : ''}`}
       >
-        <div className="absolute inset-0"><Grainient colors={['#f4f7fb', '#d6e2f0', '#aec3dc', '#eef3f9']} grainAnimated grainAmount={0.12} speed={0.22} flow={1.1} softness={0.9} dpr={1} /></div>
+        <div className="absolute inset-0"><Grainient colors={['#f7f7f7', '#e9eaeb', '#d4d7da', '#f2f2f2']} grainAnimated grainAmount={0.12} speed={0.22} flow={1.1} softness={0.9} dpr={1} /></div>
         <div className="relative flex flex-col items-center text-center text-white">
           <span className="flex size-16 items-center justify-center rounded-full bg-white/20 ring-1 ring-white/40 backdrop-blur-sm"><ImagePlus className="size-7" strokeWidth={1.5} /></span>
           <p className="mt-4 font-[family-name:var(--font-inter)] text-[28px] font-light tracking-[-0.02em]">{busy ? 'Opening…' : 'Drop your moodboard'}</p>

@@ -1,0 +1,236 @@
+/* Good Spread design tokens.
+   Extracted 14 Nov 2026 from directions/vibe/gs-vibe-hero-v2.html and
+   directions/flighty/gs/gs-bento.html. Use only these values. Do not
+   invent colours, type, radii, shadows, motion or gradients.
+   img-eleven/tokens.css is a measured reference only; tokens from it
+   appear here only when v2 or the bento actually use them. */
+
+:root {
+  /* ---------- COLOUR ---------- */
+  --gs-ink: #0d0d0d;
+  --gs-paper: #ffffff;
+  --gs-page: #f7f7f7;            /* hero body, bento tiles, chip.w, phone chrome */
+  --gs-grey-1: #3a3a3a;          /* bento --g1, phone bezel hairline */
+  --gs-grey: #6b6b6b;            /* hero --grey, bento --g2 */
+  --gs-grey-3: #9a9a9a;          /* headline second line, bento --g3 */
+  --gs-line: #e8e8e8;            /* hero --line */
+  --gs-line-soft: rgba(13, 13, 13, .12); /* bento tile hairline */
+  --gs-line-row: #dcdcdc;        /* schedule row rules */
+  --gs-line-phone: #d7d7d7;      /* WhatsApp header / composer rule */
+  --gs-bar-track: #ececec;       /* hero budget track */
+  --gs-bar-track-2: #e4e4e4;     /* bento budget track */
+  --gs-mail-ink: #1f1f1f;
+  --gs-mail-muted: #5e5e5e;
+  --gs-mail-body: #3c3c3c;
+  --gs-mail-struck: #8a8a8a;
+  --gs-mail-lbl-bg: #ececec;
+  --gs-mail-lbl: #444;
+  --gs-mail-att-line: #dadada;
+  --gs-wave: #b9bec2;
+  --gs-wave-on: #8696a0;
+  --gs-mic: #1d9bf0;             /* voice-note knob / mic, WhatsApp UI only */
+  --gs-wa-bg: #eef0f1;
+  --gs-wa-out: #dcf8d6;
+  --gs-wa-meta: #667781;
+  --gs-wa-day: #54656f;
+  --gs-ios-blue: #007aff;
+  --gs-wa-ticks: #53bdeb;
+  --gs-wa-brand: #25D366;        /* bento notification icon only */
+  --gs-notify-muted: #8a8a8e;
+  --gs-notify-title: #3c3c43;
+  --gs-ph-mid: #e3e3e3;
+  --gs-ph-dark: #cfcfcf;
+  --gs-ph-figure: #bdbdbd;
+  --gs-changed-strike: #a8a8a8;
+
+  /* aliases used in the source files */
+
+  /* ---------- FONTS ---------- */
+  --gs-sans: "Host Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --gs-serif: "Newsreader", "Times New Roman", serif;
+  --gs-ui: Inter, -apple-system, "SF Pro Text", Helvetica, Roboto, Arial, sans-serif;
+    /* Inter / SF Pro only inside phone, mail and voice-note UI. Never as the brand typeface. */
+
+  /* Wordmark: "good" Host Grotesk 800 at -0.06em, then "spread" at 0.38×
+     on the same baseline, tracking -0.02em. Text only, no symbol.
+     Hero size 34px → spread 12.92px, gap 3px.
+     Bento / compact size 22px → spread 8.36px, gap 2px.
+     Minimum width 96px (or 24mm). Smaller, use the "g" mark. */
+  --gs-wm-weight: 800;
+  --gs-wm-size: 34px;
+  --gs-wm-size-sm: 22px;
+  --gs-wm-spread: 12.92px;       /* 34 × 0.38 */
+  --gs-wm-spread-sm: 8.36px;     /* 22 × 0.38 */
+  --gs-wm-track: -0.06em;
+  --gs-wm-track-spread: -0.02em;
+  --gs-wm-gap: 3px;
+  --gs-wm-gap-sm: 2px;
+  --gs-wm-min: 96px;
+
+  /* ---------- TYPE SCALE (as used in v2 + bento) ---------- */
+  --gs-h1-size: 56px;            /* hero h1: 400 56/60, tracking -0.045em */
+  --gs-h1-line: 60px;
+  --gs-h1-weight: 400;
+  --gs-h1-track: -0.045em;
+  --gs-h2-size: 44px;            /* bento h2: 400 44/48, tracking -0.045em */
+  --gs-h2-line: 48px;
+  --gs-h2-track: -0.045em;
+  --gs-h2-sm: 32px;              /* bento h2 under 640px: 32/36 */
+  --gs-h2-sm-line: 36px;
+  --gs-plan-title: 28px;         /* plan h2: 400 28/32, tracking -0.03em */
+  --gs-plan-title-line: 32px;
+  --gs-plan-title-track: -0.03em;
+  --gs-tile-title: 19px;         /* bento .gsb-tt: 500 19/24, tracking -0.02em */
+  --gs-tile-title-line: 24px;
+  --gs-sub-size: 16px;           /* hero .sub: 400 16/23 */
+  --gs-sub-line: 23px;
+  --gs-bento-sub: 15px;          /* .gsb-sub: 400 15/22 */
+  --gs-bento-sub-line: 22px;
+  --gs-nav-size: 14px;           /* hero nav: 500 14/20, gap 30px. Not IMG caps. */
+  --gs-nav-line: 20px;
+  --gs-nav-weight: 500;
+  --gs-nav-gap: 30px;
+  --gs-cta-size: 15px;           /* 500 15/44 */
+  --gs-cta-h: 44px;
+  --gs-cta-pad-x: 22px;
+  --gs-signin-h: 36px;
+  --gs-signin-pad-x: 16px;
+  --gs-kicker: 11px;             /* 500 11/14, uppercase */
+  --gs-kicker-line: 14px;
+  --gs-kicker-track: 0.08em;     /* hero .note and bento .gsb-k */
+  --gs-kicker-track-plan: 0.07em;/* plan .k, .sec, .bud */
+  --gs-sec-size: 10.5px;         /* section labels 500 10.5/14 */
+  --gs-row-size: 13.5px;         /* schedule rows 400 13.5/18 */
+  --gs-row-line: 18px;
+  --gs-name-size: 15px;          /* talent name: Newsreader italic 400 15/18 */
+  --gs-name-line: 18px;
+  --gs-agency-size: 11px;        /* 400 11/14 Host Grotesk grey */
+  --gs-chip-size: 11px;          /* 500 11/1 */
+  --gs-chip-h: 24px;             /* hero chip */
+  --gs-chip-h-sm: 22px;          /* bento chip */
+  --gs-chip-pad-x: 10px;
+  --gs-chip-pad-x-sm: 9px;
+  --gs-budget-num: 22px;         /* hero budget figure 400 22/26, tracking -0.02em */
+  --gs-budget-num-line: 26px;
+  --gs-call-big: 64px;           /* bento call time 300 64/64, tracking -0.05em */
+  --gs-budget-big: 52px;         /* bento budget 300 52/56, tracking -0.05em */
+  --gs-budget-big-line: 56px;
+  --gs-route-val: 26px;          /* route footer 400 26/30, tracking -0.03em */
+  --gs-route-val-line: 30px;
+  --gs-day-size: 22px;           /* weather plan day 400 22/26, tracking -0.03em */
+  --gs-day-line: 26px;
+
+  /* ---------- SPACING ---------- */
+  --gs-margin: 56px;             /* hero left/right, bento horizontal padding */
+  --gs-margin-top-wm: 34px;
+  --gs-margin-top-nav: 40px;
+  --gs-bento-pad-y: 48px;
+  --gs-bento-pad-x: 56px;
+  --gs-gap: 20px;                /* bento grid gap */
+  --gs-card-pad: 32px;           /* plan card */
+  --gs-tile-pad-y: 26px;
+  --gs-tile-pad-x: 28px;
+  --gs-bento-head-gap: 24px;
+  --gs-bento-head-mb: 28px;
+  --gs-mobile-pad: 40px 24px;
+  --gs-row-h: 36px;
+  --gs-w-row-h: 44px;
+  --gs-bar-h: 6px;
+
+  /* ---------- RADII ---------- */
+  --gs-r-card: 16px;             /* plan card, bento tiles */
+  --gs-r-mail: 12px;
+  --gs-r-forecast: 12px;
+  --gs-r-plan-inner: 14px;       /* weather-tile plan card */
+  --gs-r-voice: 10px;
+  --gs-r-row: 8px;               /* changed schedule row, day pill, k-ph */
+  --gs-r-cast-photo: 4px;
+  --gs-r-pill: 999px;
+  --gs-r-phone: 54px;
+  --gs-r-screen: 44px;
+  --gs-r-bubble: 9px;
+  --gs-r-notify: 18px;
+  --gs-r-island: 20px;
+  --gs-r-bar: 999px;
+  --gs-r-bar-sm: 3px;
+
+  /* ---------- HAIRLINES ---------- */
+  --gs-hairline: .5px;
+  --gs-hairline-phone-bezel: 1.5px;
+
+  /* ---------- SHADOWS (exact, from v2 and bento) ---------- */
+  --gs-shadow-signin: inset 0 0 0 .5px rgba(0, 0, 0, .18);
+  --gs-shadow-chip: inset 0 0 0 .5px rgba(0, 0, 0, .2);
+  --gs-shadow-tile: inset 0 0 0 .5px rgba(13, 13, 13, .12);
+  --gs-shadow-tile-hover: inset 0 0 0 .5px rgba(13, 13, 13, .28);
+  --gs-shadow-tear: inset 0 0 0 .5px rgba(0, 0, 0, .14), 0 1px 2px rgba(0, 0, 0, .04);
+  --gs-shadow-mail: inset 0 0 0 .5px rgba(0, 0, 0, .16), 0 10px 28px rgba(0, 0, 0, .07);
+  --gs-shadow-voice: inset 0 0 0 .5px rgba(0, 0, 0, .14), 0 8px 22px rgba(0, 0, 0, .06);
+  --gs-shadow-plan: inset 0 0 0 .5px rgba(0, 0, 0, .16), 0 1px 2px rgba(0, 0, 0, .03), 0 24px 56px rgba(0, 0, 0, .06);
+  --gs-shadow-phone: inset 0 0 0 1.5px #3a3a3a, 0 1px 2px rgba(0, 0, 0, .2), 0 30px 60px rgba(0, 0, 0, .14);
+  --gs-shadow-plan-inner: inset 0 0 0 .5px rgba(13, 13, 13, .12), 0 1px 2px rgba(13, 13, 13, .04);
+  --gs-shadow-notify: inset 0 0 0 .5px rgba(13, 13, 13, .08), 0 6px 18px rgba(13, 13, 13, .06);
+  --gs-shadow-wa-bubble: 0 1px .5px rgba(11, 20, 26, .12);
+  --gs-shadow-wa-day: 0 1px .5px rgba(11, 20, 26, .1);
+  --gs-shadow-forecast: inset 0 0 0 .5px rgba(13, 13, 13, .12);
+
+  /* ---------- GRADIENTS (exact, from v2 and bento) ---------- */
+  /* Weather-tile sky, painted in canvas as a vertical linear gradient.
+     Calm is flat page grey. Storm lerps to these two stops. */
+  --gs-gradient-sky-calm: linear-gradient(180deg, #f7f7f7 0%, #f7f7f7 100%);
+  --gs-gradient-sky-storm: linear-gradient(180deg, rgb(150, 154, 158) 0%, rgb(210, 212, 214) 100%);
+  /* Casting-card placeholder (no photos). Figure shapes on top are #bdbdbd. */
+  --gs-gradient-talent-ph: linear-gradient(180deg, #e3e3e3, #cfcfcf);
+  /* Cloud puffs are canvas radial gradients, not a single CSS value:
+     createRadialGradient(x, y, 0, x, y, r)
+     stop 0: rgba(c, c, c+4, a)  stop 1: rgba(c, c, c+4, 0)
+     c = 110..150, a = (.10 + .30 * storm) * puffAlpha, ellipse (r, r*.55).
+     See effects/weather.js. */
+  /* Lightning flash is a flat white fill at 0.55 * envelope, not a gradient. */
+  --gs-flash: rgb(255, 255, 255);
+
+  /* ---------- GRAIN + TEXTURE ---------- */
+  --gs-grain-image: url("/brand/grain.png");
+  --gs-paper-tx: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='.035 .6' numOctaves='2' seed='4'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23p)'/></svg>");
+  --gs-noise: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  --gs-grain-size: 256px;
+  --gs-grain-opacity: .08;       /* page .grain, multiply */
+  --gs-grain2-size: 330px;
+  --gs-grain2-opacity: .07;      /* page .grain2, multiply, --gs-noise */
+  --gs-paper-size: 300px, 180px; /* paper SVG + grain.png */
+  --gs-paper-opacity: .06;
+  --gs-photo-grain-size: 140px;
+  --gs-photo-grain-opacity: .28; /* overlay */
+  --gs-photo-filter: contrast(1.05) saturate(.88);
+  --gs-bento-grain-size: 240px;
+  --gs-bento-grain-opacity: .07;
+  --gs-tile-grain-size: 200px;
+  --gs-tile-grain-opacity: .06;
+
+  /* Phone wallpaper: a pale doodle SVG, not a gradient. Opacity .55 over #eef0f1. */
+  --gs-phone-wall: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' fill='none' stroke='%23c3c8cc' stroke-width='1' stroke-linecap='round'><circle cx='14' cy='16' r='5'/><path d='M50 8l7 7-7 7-7-7z'/><path d='M20 54c4-6 10-6 14 0M23 58c3 3 7 3 9 0'/><rect x='62' y='50' width='11' height='15' rx='2'/><path d='M8 82h12M78 28l5 5M83 28l-5 5'/><path d='M40 80l6-8 6 8z'/><circle cx='84' cy='84' r='3'/><path d='M30 30q4-6 8 0t8 0'/></svg>");
+  --gs-phone-wall-opacity: .55;
+
+  /* Forecast chip and notification banners in the current bento use backdrop
+     blur. That is the only glass in the system. Do not add more.
+     Forecast: rgba(255,255,255,.72) + blur(6px). Notify: rgba(255,255,255,.86) + blur(14px). */
+  --gs-forecast-bg: rgba(255, 255, 255, .72);
+  --gs-forecast-blur: 6px;
+  --gs-notify-bg: rgba(255, 255, 255, .86);
+  --gs-notify-blur: 14px;
+
+  /* ---------- MOTION ---------- */
+  --gs-ease: cubic-bezier(.2, .7, .2, 1);     /* bento content / row swaps */
+  --gs-ease-ui: cubic-bezier(.4, 0, .2, 1);   /* ElevenLabs hover, 150ms */
+  --gs-dur-ui: 150ms;
+  --gs-dur-reveal: 700ms;                     /* tile fade-up, 16px */
+  --gs-reveal-y: 16px;
+  --gs-stagger: 70ms;
+  --gs-dur-swap: 750ms;                       /* weather plan row swap */
+  --gs-dur-roll: 520ms;                       /* rolling digits, delay i * 35ms */
+  --gs-roll-stagger: 35ms;
+  --gs-dur-notify-in: 620ms;
+  --gs-dur-notify-out: 380ms;
+  --gs-notify-spring: linear(0, .09 6%, .33 14%, .83 30%, 1.02 40%, 1.04 47%, 1.01 60%, 1);
+  --gs-io-threshold: .2;
+}

@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "../styles/gs/tokens.css";
+@import "../styles/gs/effects.css";
 
 @custom-variant dark (&:is(.dark *)); /* keep only if shadcn installed it */
 

@@ -17,6 +17,7 @@ import { Inbox } from './Inbox';
 import { BudgetPanel } from './BudgetPanel';
 import { Activity } from './Activity';
 import { BoardingPass } from './BoardingPass';
+import { DelayAlert } from './DelayAlert';
 import { RouteGlobe } from './RouteGlobe';
 import { BrandLogo } from '@/components/brand-logo';
 import { callsignFor } from './LiveRadar';
@@ -137,6 +138,15 @@ function BoardInner({ slug }: { slug: string }) {
   const animateVersion = justApproved?.version === p.version ? p.version : null;
 
   const team = data.people.filter((x) => x.role !== 'producer');
+  // Demo: the first traveller's flight now lands 10:45 (what a live flight status feed would report)
+  const simulateDelay = async () => {
+    const t = p.travel[0];
+    if (!t) return;
+    const late = Math.max(t.arriveMin + 90, 645);
+    const hh = String(Math.floor(late / 60)).padStart(2, '0'), mm = String(late % 60).padStart(2, '0');
+    await fetch('/api/inbox/apply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slug, inboxId: `status-${Date.now()}`, source: `flight status ${t.number}`, manual: { personId: t.personId, time: `${hh}:${mm}` } }) });
+    await mutate();
+  };
   const b = data.budget;
   const changes: Change[] = applied?.changes ?? [];
   const changedBy = new Map(changes.map((c) => [c.personId, c]));
@@ -181,6 +191,7 @@ function BoardInner({ slug }: { slug: string }) {
 
   return (
     <div className="board-dark flex min-h-dvh">
+      <DelayAlert p={p} pending={data.pending} />
       {/* Sidebar */}
       <aside className="sticky top-0 hidden h-dvh w-[260px] shrink-0 flex-col border-r border-black/[0.06] bg-white/40 px-5 py-8 lg:flex">
         <a href="/" aria-label="good spread"><Wordmark className="h-[26px]" /></a>
@@ -205,6 +216,9 @@ function BoardInner({ slug }: { slug: string }) {
           <div className="text-[15px] text-neutral-500">Shoots <span className="mx-1.5">/</span> {p.title.replace(' (demo)', '')} <span className="mx-1.5">/</span> <span className="text-neutral-900">Plan</span></div>
           <div className="flex items-center gap-4">
             <span className={`border-b-2 pb-0.5 text-[17px] tabular-nums ${b.remaining < 0 ? 'border-red-600 text-red-600' : 'border-neutral-950'}`}>{fmtEur(Math.round(b.total))} <span className="text-neutral-400">/ {fmtEur(b.cap)}</span></span>
+            {p.travel.length > 0 && !data.pending && (
+              <button onClick={simulateDelay} className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-4 text-[14px] shadow-[inset_0_0_0_1px_rgba(0,0,0,.1)] hover:bg-neutral-50">✈ Simulate a flight delay</button>
+            )}
             <a href="#messages" className="inline-flex h-11 items-center rounded-full bg-neutral-950 px-5 text-[15px] font-medium text-white">Call sheet</a>
           </div>
         </div>
