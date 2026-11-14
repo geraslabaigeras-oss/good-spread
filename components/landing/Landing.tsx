@@ -124,7 +124,7 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
             Your shoot, produced by an agent that makes the calls.
           </TextAnimate>
           <TextAnimate animation="blurIn" by="word" delay={0.5} as="p" className="mt-6 max-w-xl text-[17px] leading-7 text-neutral-700">
-            Drop the brief. It scouts real locations, prices three plans, and the minute a flight slips it re-plans the call sheet and texts everyone.
+            Stay creative. We organise the rest: real locations, your people, agency calls, the budget, and every change on the day.
           </TextAnimate>
           <div className="mt-9 flex items-center gap-3 text-[15px]">
             <Link href="/new" className="rounded-full bg-neutral-950 px-7 py-3.5 text-white">Start a shoot</Link>

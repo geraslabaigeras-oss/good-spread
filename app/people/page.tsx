@@ -17,7 +17,8 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AGENCIES } from '@/lib/agencies';
+import { AGENCIES, flagUrl } from '@/lib/agencies';
+import { AgencyCall } from '@/components/agency-call';
 import { useDraft } from '@/lib/plan-store';
 import type { LookAnalysis } from '@/lib/ai/look';
 
@@ -160,7 +161,7 @@ export default function People() {
           <span className="mr-1 text-neutral-500">Agencies</span>
           {AGENCIES.map((ag) => (
             <a key={ag.name} href={ag.url} target="_blank" rel="noreferrer" title={ag.cities} className="inline-flex items-center gap-1 rounded-full bg-white/70 px-3 py-1 text-neutral-700 shadow-[inset_0_0_0_1px_rgba(0,0,0,.06)] transition-colors hover:bg-white hover:text-neutral-950">
-              {ag.name} <ArrowUpRight className="size-3" />
+              <img src={flagUrl(ag.cc)} alt="" className="h-3 w-4 rounded-[2px] object-cover" />{ag.name} <ArrowUpRight className="size-3" />
             </a>
           ))}
         </div>
@@ -173,7 +174,7 @@ export default function People() {
               <Button className="mt-6 rounded-full" onClick={() => setOpen(true)}><Plus /> Add person</Button>
             </div>
           )}
-          {shown.map((p, i) => <Row key={p.id} p={p} last={i === shown.length - 1} onRemove={() => remove(p.id)} />)}
+          {shown.map((p, i) => <Row key={p.id} p={p} last={i === shown.length - 1} onRemove={() => remove(p.id)} onChanged={() => mutate()} />)}
         </div>
       </main>
 
@@ -269,8 +270,15 @@ export default function People() {
   );
 }
 
-function Row({ p, last, onRemove }: { p: RosterPerson; last: boolean; onRemove: () => void }) {
+function Row({ p, last, onRemove, onChanged }: { p: RosterPerson; last: boolean; onRemove: () => void; onChanged: () => void }) {
   const text = availabilityText(p.name.split(' ')[0], ROLE_LABEL[p.role]);
+  const [calling, setCalling] = useState(false);
+  async function answer(a: 'available' | 'hold' | 'unavailable') {
+    const { id: _id, createdAt: _c, ...data } = p;
+    await fetch(`/api/people/${p.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...data, availability: a }) });
+    setCalling(false);
+    onChanged();
+  }
   return (
     <div className={`group flex items-center gap-4 px-5 py-4 ${last ? '' : 'border-b border-black/5'}`}>
       <Avatar className="size-12">
@@ -281,6 +289,7 @@ function Row({ p, last, onRemove }: { p: RosterPerson; last: boolean; onRemove: 
         <div className="flex items-center gap-2">
           <span className="truncate font-medium">{p.name}</span>
           {p.agency && <Badge variant="secondary" className="font-normal">{p.agency}{p.commissionPct ? ` · ${p.commissionPct}%` : ''}</Badge>}
+          {p.availability && <Badge className={`font-normal ${p.availability === 'available' ? 'bg-emerald-600 text-white' : p.availability === 'hold' ? 'bg-amber-500 text-white' : 'bg-neutral-300 text-neutral-700'}`}>{p.availability === 'available' ? 'Available' : p.availability === 'hold' ? 'On hold' : 'Not available'}</Badge>}
         </div>
         <div className="text-sm text-neutral-500">{ROLE_LABEL[p.role]} · {p.city} · €{p.dayRate}/day</div>
         {p.look && <div className="mt-1 truncate text-xs text-neutral-500">{[...p.look.vibe, ...p.look.bookShows].join(' · ')}</div>}
@@ -302,8 +311,10 @@ function Row({ p, last, onRemove }: { p: RosterPerson; last: boolean; onRemove: 
         {p.profileUrl && (
           <Button size="sm" variant="ghost" className="rounded-full" render={<a href={p.profileUrl} target="_blank" rel="noreferrer" />} nativeButton={false}>Profile <ArrowUpRight /></Button>
         )}
+        {p.role === 'model' && <Button size="sm" variant="outline" className="rounded-full bg-white" onClick={() => setCalling(true)}>Call agency</Button>}
         <Button size="icon-sm" variant="ghost" aria-label={`Remove ${p.name}`} className="text-neutral-400 opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100" onClick={onRemove}><Trash2 /></Button>
       </div>
+      {calling && <AgencyCall person={p} open={calling} onOpenChange={setCalling} onAnswer={answer} />}
     </div>
   );
 }
