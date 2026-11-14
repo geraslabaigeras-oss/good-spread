@@ -9,6 +9,7 @@ import { useDraft, thumb } from '@/lib/plan-store';
 import { VoiceBrief } from '@/components/voice';
 import { Marquee } from '@/components/ui/marquee';
 import { Slider } from '@/components/ui/slider';
+import { AnalysisStage } from '@/components/analysis-stage';
 
 // Free Unsplash-licensed editorial photos to start from.
 const REFS = ['photo-1550872199-63f4382fe925', 'photo-1613915617430-8ab0fd7c6baf', 'photo-1692180142575-c31fcd106b5b', 'photo-1508964801641-4b2410705b73', 'photo-1590972381381-c863cbbf9dd2', 'photo-1635262090780-2ed9e994fff4', 'photo-1603189343302-e603f7add05a', 'photo-1733322980454-62a1d5727460', 'photo-1739808914849-01ba195c4f93', 'photo-1645561305502-63a9ba09ab09'];
@@ -37,6 +38,7 @@ export default function NewBrief() {
   const [err, setErr] = useState<string | null>(null);
   const [drag, setDrag] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [stage, setStage] = useState<{ image: string; brief: CreativeBrief | null } | null>(null);
   const input = useRef<HTMLInputElement>(null);
 
   if (!draft) return <Stage><div /></Stage>;
@@ -61,6 +63,7 @@ export default function NewBrief() {
   async function read(useFiles: File[] = files, thumbs: string[] = d.refImages) {
     setBusy(true);
     setErr(null);
+    if (thumbs[0]) setStage({ image: thumbs[0], brief: null });
     try {
       const fd = new FormData();
       fd.set('title', d.title || 'Untitled campaign');
@@ -71,9 +74,11 @@ export default function NewBrief() {
       const j = await r.json();
       if (!r.ok) throw new Error(j.error ?? `HTTP ${r.status}`);
       setDraft({ ...d, refImages: thumbs, brief: j.brief as CreativeBrief, briefVia: j.via, dnaPreserve: {} });
+      setStage((st) => (st ? { ...st, brief: j.brief as CreativeBrief } : st));
       setEditing(false);
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'failed');
+      setStage(null);
     } finally {
       setBusy(false);
     }
@@ -87,6 +92,7 @@ export default function NewBrief() {
   return (
     <Stage backdrop={d.refImages[0]}>
       <TopBar step={1} />
+      <AnimatePresence>{stage && <AnalysisStage key="stage" image={stage.image} brief={stage.brief} onDone={() => setStage(null)} />}</AnimatePresence>
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-8 px-8 pb-16 pt-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
         {/* Reference */}
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }}>
