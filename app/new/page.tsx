@@ -9,6 +9,7 @@ import { useDraft, thumb } from '@/lib/plan-store';
 import { VoiceBrief } from '@/components/voice';
 import { Marquee } from '@/components/ui/marquee';
 import { Slider } from '@/components/ui/slider';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AnalysisStage } from '@/components/analysis-stage';
 
 // Free Unsplash-licensed editorial photos to start from.
@@ -93,9 +94,9 @@ export default function NewBrief() {
     <Stage backdrop={d.refImages[0]}>
       <TopBar step={1} />
       <AnimatePresence>{stage && <AnalysisStage key="stage" image={stage.image} brief={stage.brief} onDone={() => setStage(null)} />}</AnimatePresence>
-      <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-8 px-8 pb-16 pt-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+      <div className={`mx-auto grid gap-8 px-8 pb-16 pt-8 ${b ? 'max-w-[760px] grid-cols-1' : 'max-w-[1400px] grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]'}`}>
         {/* Reference */}
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }}>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }} className={b ? 'hidden' : ''}>
           <h1 className="font-serif text-[64px] leading-[0.95] tracking-[-0.03em]">
             Start with
             <br />
@@ -146,7 +147,7 @@ export default function NewBrief() {
         </motion.div>
 
         {/* Inputs → Brief */}
-        <div className="lg:pt-[150px]">
+        <div className={b ? '' : 'lg:pt-[150px]'}>
           <AnimatePresence mode="wait">
             {!b ? (
               <motion.div key="form" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.6, ease }} className="glass p-8">
@@ -175,8 +176,8 @@ export default function NewBrief() {
             ) : (
               <motion.div key="brief" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.7, ease }} className="glass p-8">
                 <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-grey-1">{d.briefVia === 'ai' || d.briefVia === 'cache' ? 'Brief read from your reference' : 'Example brief: upload a reference to read yours'}</span>
-                  <button onClick={() => setEditing(true)} className="text-[12px] text-grey-1 underline underline-offset-4 hover:text-ink">Edit the job</button>
+                  <span className="flex items-center gap-3">{d.refImages[0] && <img src={d.refImages[0]} alt="Reference" className="h-14 w-11 rounded-lg object-cover" />}<span className="text-[13px] text-grey-1">{d.briefVia === 'ai' || d.briefVia === 'cache' ? 'Read from your reference' : 'Example brief'}</span></span>
+                  <button onClick={() => setEditing(true)} className="text-[12px] text-grey-1 underline underline-offset-4 hover:text-ink">Change reference</button>
                 </div>
                 <motion.p initial={{ opacity: 0, filter: 'blur(8px)' }} animate={{ opacity: 1, filter: 'blur(0px)' }} transition={{ duration: 0.9, delay: 0.15 }} className="mt-4 font-serif text-[30px] leading-[1.15] tracking-[-0.01em]">
                   {b.summary}
@@ -195,15 +196,18 @@ export default function NewBrief() {
                     </motion.div>
                   ))}
                 </div>
-                <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 text-[14px]">
-                  <Info k="Garment" v={b.garment} />
-                  <Info k="Light" v={b.lighting} />
-                  <Info k="Setting" v={`${b.setting} · ${b.settingNote}`} />
-                  <Info k="Casting" v={b.casting} />
-                  <Info k="Styling" v={b.styling} span />
-                </div>
-                <div className="mt-6">
-                  <div className="g-label">Shot list</div>
+                <button onClick={() => router.push('/plan')} className="g-btn mt-7 w-full">See the plans →</button>
+                <Tabs defaultValue="locations" className="mt-7">
+                  <TabsList className="w-full">
+                    <TabsTrigger value="locations">Locations</TabsTrigger>
+                    <TabsTrigger value="shots">Shots</TabsTrigger>
+                    <TabsTrigger value="dna">Keep &amp; change</TabsTrigger>
+                    <TabsTrigger value="details">Details</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="locations">
+                <Scout brief={b} chosen={d.place} onChoose={(pl) => setDraft({ ...d, place: pl })} />
+                  </TabsContent>
+                  <TabsContent value="shots" className="pt-3">
                   <ol className="mt-2 grid grid-cols-1 gap-1 md:grid-cols-2">
                     {b.shotList.map((s, i) => (
                       <motion.li key={s} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 + i * 0.06 }} className="flex gap-3 text-[14px]">
@@ -211,10 +215,9 @@ export default function NewBrief() {
                       </motion.li>
                     ))}
                   </ol>
-                </div>
-
-                <div className="mt-7 border-t border-hairline pt-6">
-                  <div className="g-label">Production DNA · tap to move</div>
+                  </TabsContent>
+                  <TabsContent value="dna" className="pt-3">
+                  <p className="text-[13px] text-grey-1">Tap to move between must keep and can change.</p>
                   <LayoutGroup>
                     <div className="mt-3 grid grid-cols-2 gap-4">
                       {[true, false].map((col) => (
@@ -238,9 +241,17 @@ export default function NewBrief() {
                       ))}
                     </div>
                   </LayoutGroup>
+                  </TabsContent>
+                  <TabsContent value="details" className="pt-3">
+                <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[14px]">
+                  <Info k="Garment" v={b.garment} />
+                  <Info k="Light" v={b.lighting} />
+                  <Info k="Setting" v={`${b.setting} · ${b.settingNote}`} />
+                  <Info k="Casting" v={b.casting} />
+                  <Info k="Styling" v={b.styling} span />
                 </div>
-                <Scout brief={b} chosen={d.place} onChoose={(pl) => setDraft({ ...d, place: pl })} />
-                <button onClick={() => router.push('/plan')} className="g-btn mt-7 w-full">See three ways to produce it →</button>
+                  </TabsContent>
+                </Tabs>
               </motion.div>
             )}
           </AnimatePresence>

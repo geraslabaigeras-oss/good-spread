@@ -35,7 +35,7 @@ export function Scout({ brief, chosen, onChoose }: { brief: CreativeBrief; chose
   useEffect(() => { run(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [brief.summary]);
 
   return (
-    <div className="mt-7 border-t border-hairline pt-6">
+    <div className="pt-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 text-[15px] font-medium"><Sparkles className="size-4" /> Locations for this look</div>
