@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { Upload } from 'lucide-react';
 import type { Extraction, Update } from '@/lib/engine/updates';
-import { fmt } from '@/lib/format';
+import { fmt, fmtEur } from '@/lib/format';
 import { EASE, extractionCard, MS, useTypeIn } from '@/lib/motion';
 import { Button, SectionHead, useToast } from '@/components/kit';
 import { cn } from '@/lib/utils';
@@ -219,6 +219,7 @@ function fieldsFor(card: Card): [string, string][] {
     ];
   }
   if (u?.kind === 'late') return [['Person', name(u.personId)], ['Ready at', fmt(u.readyMin)], ['Reason', ex.delay?.reason ?? '—']];
+  if (u?.kind === 'cap') return [['Type', 'Budget change'], ['New cap', fmtEur(u.cap)], ['Read', ex.budget?.note ?? ex.summary]];
   if (u?.kind === 'log') return [['Type', ex.type], ['Read', ex.summary]];
   return [['Read', ex.summary]];
 }
@@ -277,12 +278,12 @@ function ExtractionCard({
         <Button variant="primary" disabled={applying || (!manual && !allTyped) || !timeOk || (!!manual && !manual.time)} onClick={onApply}>
           {applying ? 'Applying…' : isLog ? 'Log it' : 'Apply'}
         </Button>
-        {!manual && !isLog && card.update && (
+        {!manual && !isLog && card.update && card.update.kind !== 'cap' && (
           <Button
             variant="ghost"
             onClick={() => {
               const u = card.update!;
-              if (u.kind === 'log') return;
+              if (u.kind === 'log' || u.kind === 'cap') return;
               setManual({ personId: u.personId, time: fmt(u.kind === 'travel' ? u.arriveMin : u.readyMin) });
             }}
           >

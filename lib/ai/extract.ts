@@ -12,7 +12,7 @@ const TIMEOUT_MS = 8000;
 // The brief's `record_update` schema. Sonnet 5.5 rejects forced tool_choice, so the same
 // schema is enforced through structured outputs instead (see NOTES.md).
 const RecordUpdate = z.object({
-  type: z.enum(['flight', 'delay', 'booking', 'quote', 'unknown']),
+  type: z.enum(['flight', 'delay', 'booking', 'quote', 'budget', 'unknown']),
   personName: z.string().nullable(),
   flight: z
     .object({
@@ -30,6 +30,12 @@ const RecordUpdate = z.object({
       reason: z.string().nullable(),
     })
     .nullable(),
+  budget: z
+    .object({
+      newCap: z.number().nullable().describe('new total budget in EUR, only if stated'),
+      note: z.string().nullable(),
+    })
+    .nullable(),
   summary: z.string().describe('one short line of what was read'),
   confidence: z.number(),
 });
@@ -38,7 +44,7 @@ const SYSTEM =
   'Extract only facts present in the input. If a value is not present, return null. Never guess times. ' +
   'You read production inbox items for a fashion photoshoot (flight changes, delay messages, agency confirmations, studio quotes). ' +
   'type: "flight" for a flight booking or change with an arrival time; "delay" for a message saying someone is late or landing later; ' +
-  '"booking" for a talent/agency booking confirmation; "quote" for a price quote; otherwise "unknown". ' +
+  '"booking" for a talent/agency booking confirmation; "quote" for a price quote; "budget" when the client changes the total budget (newCap in EUR); otherwise "unknown". ' +
   'personName: the passenger or person the item is about, as written (first name is fine). ' +
   'Times are local 24h HH:MM. summary: one short line, e.g. "Ieva, DA 645, lands 10:45".';
 
@@ -83,8 +89,15 @@ async function callClaude(input: InboxInput): Promise<Extraction> {
   return res.parsed_output as Extraction;
 }
 
-/** Plain-code fallback for pasted text: "<name> ... 10:45". Only used when AI and cache both fail. */
+/** Plain-code fallback for pasted text: "<name> ... 10:45" or "budget … €4,400". Only used when AI and cache both fail. */
 function ruleExtract(text: string, names: string[]): Extraction | null {
+  if (/budget|cap\b/i.test(text)) {
+    const m = [...text.matchAll(/(?:€|eur\s*)?\s?(\d{1,3}(?:[,.\s]\d{3})+|\d{4,6})\s?(?:€|eur)?/gi)].pop();
+    if (m) {
+      const cap = Number(m[1].replace(/[,.\s]/g, ''));
+      if (cap >= 500) return { type: 'budget', personName: null, budget: { newCap: cap, note: text.slice(0, 120) }, summary: `Budget now €${cap.toLocaleString('en-US')} (read by rule)`, confidence: 0.5 };
+    }
+  }
   const name = names.find((n) => new RegExp(`\\b${n}\\b`, 'i').test(text.normalize('NFD').replace(/[̀-ͯ]/g, '')));
   const times = [...text.matchAll(/\b([01]?\d|2[0-3])[:.](\d{2})\b/g)];
   if (!name || !times.length) return null;

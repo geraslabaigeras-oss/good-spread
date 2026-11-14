@@ -9,5 +9,6 @@ export function receipt(pending: Pending, chosen: Fix, approvedAt: string | Date
     messagesTyped: 0,
     overtimeAvoided: Math.round(Math.max(0, cheapest - chosen.costDelta) * 100) / 100,
     fixedInSeconds: Math.max(0, Math.round(ms / 1000)),
+    ...(chosen.kind === 'BUDGET_PLAN' ? { saved: Math.round(-chosen.costDelta * 100) / 100 } : {}),
   };
 }

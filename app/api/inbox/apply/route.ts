@@ -9,6 +9,7 @@ const UpdateSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('travel'), personId: z.string().max(40), arriveMin: min, departMin: min.optional(), number: z.string().max(20).optional(), from: z.string().max(10).optional(), to: z.string().max(10).optional(), source: z.string().max(200) }),
   z.object({ kind: z.literal('late'), personId: z.string().max(40), readyMin: min, source: z.string().max(200) }),
   z.object({ kind: z.literal('log'), source: z.string().max(200), text: z.string().max(500) }),
+  z.object({ kind: z.literal('cap'), cap: z.number().int().min(500).max(1000000), source: z.string().max(200) }),
 ]);
 
 const Body = z.object({
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
       u = manualUpdate(row.data, manual.personId, t, source);
     }
     if (!u) return fail(400, 'no_update');
-    if (u.kind !== 'log' && !row.data.people.some((x) => x.id === u.personId)) return fail(400, 'unknown_person');
+    if ((u.kind === 'travel' || u.kind === 'late') && !row.data.people.some((x) => x.id === u.personId)) return fail(400, 'unknown_person');
 
     if (u.kind === 'log') {
       await logEvent(row.id, 'inbox_logged', { text: `Logged from ${source}: ${u.text}` });

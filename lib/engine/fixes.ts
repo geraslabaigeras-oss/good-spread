@@ -4,6 +4,8 @@ import { blocksFor, callTime, firstName, person, readyAt } from './schedule';
 import { spend } from './budget';
 import { detectConflicts, isTimingConflict } from './conflicts';
 import { diffPeople } from './diff';
+import { dnaViolations, evaluateDna } from './dna';
+import { proposeBudgetFixes } from './budgetfix';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 const clone = <T,>(x: T): T => structuredClone(x);
@@ -72,14 +74,16 @@ export function swapTalent(p: Production, outId: string, incoming: Person): Prod
 function finish(p: Production, kind: FixKind, label: string, detail: string, plan: Production, changesCreative: boolean): Fix | null {
   if (detectConflicts(plan).length > 0) return null;
   const changes = diffPeople(p, plan);
+  const dna = p.dna ? evaluateDna(p, plan) : undefined;
   return {
+    dna,
     id: kind.toLowerCase(),
     kind,
     label,
     detail,
     plan,
     costDelta: round2(spend(plan) - spend(p)),
-    changesCreative,
+    changesCreative: changesCreative || (dna ? dnaViolations(dna).length > 0 : false),
     peopleAffected: changes.map((c) => c.personId),
     changes,
   };
@@ -142,6 +146,8 @@ export function buildPending(p: Production, opts: { inboxId: string; source: str
   const conflicts = detectConflicts(p);
   if (!conflicts.length) return null;
   const target = conflicts.find(isTimingConflict);
-  const fixes = target ? rankFixes(proposeFixes(p, target)) : [];
+  const budgetOnly = !target && conflicts.every((c) => c.code === 'BUDGET');
+  // budget plans are already ranked by DNA, changes and closeness to the cap
+  const fixes = target ? rankFixes(proposeFixes(p, target)) : budgetOnly ? proposeBudgetFixes(p) : [];
   return { inboxId: opts.inboxId, createdAt: opts.createdAt, source: opts.source, conflicts, fixes, recommendedFixId: fixes[0]?.id ?? '' };
 }

@@ -4,10 +4,11 @@ import { callTime } from './schedule';
 
 /** Shape returned by the AI `record_update` tool (facts only). */
 export type Extraction = {
-  type: 'flight' | 'delay' | 'booking' | 'quote' | 'unknown';
+  type: 'flight' | 'delay' | 'booking' | 'quote' | 'budget' | 'unknown';
   personName?: string | null;
   flight?: { number?: string | null; from?: string | null; to?: string | null; departTime?: string | null; arriveTime?: string | null; date?: string | null } | null;
   delay?: { newEtaTime?: string | null; reason?: string | null } | null;
+  budget?: { newCap?: number | null; note?: string | null } | null;
   summary: string;
   confidence: number;
 };
@@ -16,6 +17,7 @@ export type Extraction = {
 export type Update =
   | { kind: 'travel'; personId: string; arriveMin: number; departMin?: number; number?: string; from?: string; to?: string; source: string }
   | { kind: 'late'; personId: string; readyMin: number; source: string }
+  | { kind: 'cap'; cap: number; source: string }
   | { kind: 'log'; source: string; text: string };
 
 const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
@@ -35,6 +37,10 @@ export function matchPerson(p: Production, name: string | null | undefined): Per
 /** Turn what the AI read into a concrete update. Returns null when it can't be applied. */
 export function toUpdate(p: Production, ex: Extraction, source: string): Update | null {
   if (ex.type === 'booking' || ex.type === 'quote') return { kind: 'log', source, text: ex.summary };
+  if (ex.type === 'budget') {
+    const cap = Number(ex.budget?.newCap);
+    return Number.isFinite(cap) && cap > 0 ? { kind: 'cap', cap: Math.round(cap), source } : null;
+  }
   const who = matchPerson(p, ex.personName);
   if (!who) return null;
   if (ex.type === 'flight') {
@@ -83,6 +89,8 @@ export function applyUpdate(p: Production, u: Update, nowISO: string): Productio
       source: u.source,
     } as const;
     next.travel = next.travel.filter((x) => x.personId !== u.personId).concat({ ...t });
+  } else if (u.kind === 'cap') {
+    next.budget.cap = u.cap;
   } else if (u.kind === 'late') {
     next.late = next.late.filter((x) => x.personId !== u.personId).concat({ personId: u.personId, readyMin: u.readyMin, reportedAt: nowISO });
   }

@@ -1,6 +1,6 @@
 import 'server-only';
 import type { Conflict, Production } from '@/lib/types';
-import { applyUpdate, buildPending, detectConflicts, fmt, person, receipt, type Update } from '@/lib/engine';
+import { applyUpdate, buildPending, detectConflicts, fmt, money, person, receipt, type Update } from '@/lib/engine';
 import { getProduction, insertRevision, logEvent, saveProduction, viewersFor, type ProdRow } from './db';
 import { sendSms, smsText } from './sms';
 
@@ -11,6 +11,7 @@ export function conflictShort(p: Production, c: Conflict): string {
   if (c.code === 'ARRIVAL' && t) return `Conflict: ${who} lands ${fmt(t.arriveMin)}`;
   if (c.code === 'LATE') return `Conflict: ${who} running late +${c.deltaMin} min`;
   if (c.code === 'UNAVAILABLE') return `Conflict: ${who} can’t make it`;
+  if (c.code === 'BUDGET') return `Conflict: over the ${money(p.budget.cap)} cap`;
   return `Conflict: ${c.message}`;
 }
 
@@ -32,6 +33,7 @@ export async function applyFact(row: ProdRow, u: Update, opts: { inboxId: string
 
 export function describeUpdate(p: Production, u: Update): string {
   if (u.kind === 'log') return u.text;
+  if (u.kind === 'cap') return `Budget cap ${money(p.budget.cap)} → ${money(u.cap)}`;
   const who = person(p, u.personId)?.name ?? u.personId;
   if (u.kind === 'travel') {
     const prev = p.travel.find((t) => t.personId === u.personId);
