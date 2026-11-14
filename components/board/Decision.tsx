@@ -61,9 +61,34 @@ export function Decision({
           )}
           {state === 'empty' && (
             <motion.div key="empty" className="relative h-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <div className="pointer-events-none relative max-w-[260px] pt-1">
-                <div className="font-serif text-[30px] leading-8 tracking-[-0.03em]">All clear.</div>
-                <p className="mt-1 text-[13px] leading-5 text-grey-1">No conflicts. Drop a flight change, screenshot or email into the inbox.</p>
+              <div className="relative flex h-full gap-6 pt-1">
+                <div className="w-[220px] shrink-0">
+                  <div className="text-[28px] font-light leading-8 tracking-[-0.03em]">All clear.</div>
+                  <p className="mt-1 text-[13px] leading-5 text-grey-1">No conflicts. Drop a flight change, screenshot or email into the inbox and the plan updates.</p>
+                  <div className="mt-4 text-[13px]">
+                    <span className="text-emerald-700">{p.people.filter((x) => x.role !== 'producer' && !x.id.startsWith('open-')).length} confirmed</span>
+                    {p.people.some((x) => x.id.startsWith('open-')) && <span className="text-grey-1"> · {p.people.filter((x) => x.id.startsWith('open-')).length} to book</span>}
+                  </div>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[13px] font-medium">Travel today</div>
+                  {p.travel.length === 0 && <p className="mt-2 text-[13px] text-grey-1">Nobody flies in. Everyone is local.</p>}
+                  <div className="mt-2 grid gap-2 md:grid-cols-2">
+                    {p.travel.map((t) => {
+                      const who = p.people.find((x) => x.id === t.personId);
+                      return (
+                        <div key={t.personId} className="rounded-2xl bg-neutral-50 p-4 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">
+                          <div className="flex items-center justify-between text-[12px] text-grey-1"><span>{t.number}</span><span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">On time</span></div>
+                          <div className="mt-2 flex items-center justify-between text-[22px] font-light tabular-nums">
+                            <span>{t.from}</span><span className="mx-2 h-px flex-1 bg-neutral-300" /><span className="text-[14px]">✈</span><span className="mx-2 h-px flex-1 bg-neutral-300" /><span>{t.to}</span>
+                          </div>
+                          <div className="mt-1 flex justify-between text-[12px] text-grey-1"><span>Departs {fmt(t.departMin)}</span><span>Lands {fmt(t.arriveMin)}</span></div>
+                          <div className="mt-2 text-[13px]">{who?.name ?? t.personId} · then {t.transferMin} min to set</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}

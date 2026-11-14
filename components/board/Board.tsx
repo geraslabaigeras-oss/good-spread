@@ -3,7 +3,7 @@
 import useSWR from 'swr';
 import { motion } from 'motion/react';
 import { useCallback, useRef, useState } from 'react';
-import { ArrowUpRight, QrCode, RotateCcw } from 'lucide-react';
+import { ArrowUpRight, RotateCcw } from 'lucide-react';
 import type { BoardState, PublicPending } from '@/lib/server/views';
 import type { Change, Receipt } from '@/lib/types';
 import { fmtDate, fmtEur } from '@/lib/format';
@@ -16,7 +16,6 @@ import { Decision } from './Decision';
 import { Inbox } from './Inbox';
 import { BudgetPanel } from './BudgetPanel';
 import { Activity } from './Activity';
-import { JoinQR } from './JoinQR';
 
 const fetcher = async (url: string) => {
   const r = await fetch(url, { cache: 'no-store' });
@@ -41,7 +40,6 @@ function BoardInner({ slug }: { slug: string }) {
   const { data, error, mutate } = useSWR<BoardState>(`/api/state/${slug}`, fetcher, { refreshInterval: 2000 });
   const toast = useToast();
   const { parent, item } = useReveal();
-  const [qr, setQr] = useState(false);
   const [approving, setApproving] = useState<Approving | null>(null);
   const [justApproved, setJustApproved] = useState<Applied | null>(null);
   const busy = useRef(false);
@@ -147,10 +145,6 @@ function BoardInner({ slug }: { slug: string }) {
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <span className="mr-2 font-mono text-[12px] text-grey-1 num">{data.viewerCount} joined</span>
-          <Button variant="secondary" onClick={() => setQr(true)}>
-            <QrCode strokeWidth={1.5} /> Show join QR
-          </Button>
           <Button variant="ghost" onClick={() => window.open(`/wrap/${slug}`, '_blank')}>
             Wrap <ArrowUpRight strokeWidth={1.5} />
           </Button>
@@ -197,7 +191,6 @@ function BoardInner({ slug }: { slug: string }) {
         </motion.div>
       </div>
 
-      <JoinQR open={qr} onOpenChange={setQr} slug={slug} />
     </motion.div>
   );
 }

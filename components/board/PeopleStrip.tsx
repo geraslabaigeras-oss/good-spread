@@ -3,7 +3,6 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import type { BoardState } from '@/lib/server/views';
-import { StatusChip } from '@/components/kit';
 import { APPROVE, chipFade, chipFlip } from '@/lib/motion';
 import { catalogPerson } from '@/data/catalog';
 
@@ -67,15 +66,17 @@ export function PeopleStrip({ people, version, changedIds }: { people: P[]; vers
               </span>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="label truncate">{ROLE[x.role] ?? x.role}</span>
-              <span className="relative inline-flex" style={{ transformStyle: 'preserve-3d' }}>
+              <span className="truncate text-[12px] text-grey-1">{ROLE[x.role] ?? x.role}</span>
+              <span className="relative inline-flex">
                 <AnimatePresence mode="wait" initial={false}>
-                  <motion.span key={x.status} variants={reduce ? chipFade : chipFlip} initial="initial" animate="animate" exit="exit" className="inline-flex">
-                    <StatusChip status={x.status} />
+                  <motion.span key={x.booking} variants={reduce ? chipFade : chipFlip} initial="initial" animate="animate" exit="exit"
+                    className={`inline-flex h-6 items-center rounded-full px-2.5 text-[11px] font-medium ${x.booking === 'confirmed' ? 'bg-emerald-50 text-emerald-700' : x.booking === 'delayed' ? 'bg-red-50 text-red-700' : 'bg-neutral-100 text-neutral-500'}`}>
+                    {x.booking === 'confirmed' ? 'Confirmed' : x.booking === 'delayed' ? 'Delayed' : 'To book'}
                   </motion.span>
                 </AnimatePresence>
               </span>
             </div>
+            {x.flight && <div className="truncate text-[11px] text-grey-1">✈ {x.flight.number} · {x.flight.from}→{x.flight.to} · lands {x.flight.lands}</div>}
             </div>
           </div>
         );

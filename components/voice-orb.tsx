@@ -65,7 +65,7 @@ export function VoiceOrb() {
       <AnimatePresence>
         {(turn || err) && (
           <motion.div initial={{ opacity: 0, y: 10, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10 }}
-            className="relative w-[340px] rounded-[22px] bg-white p-4 shadow-[0_20px_50px_rgba(20,40,90,.18),inset_0_0_0_1px_rgba(0,0,0,.05)]">
+            className="relative w-[340px] rounded-[24px] bg-white/95 p-4 shadow-[0_24px_60px_rgba(0,0,0,.14),inset_0_0_0_1px_rgba(0,0,0,.05)] backdrop-blur">
             <button onClick={() => { setTurn(null); setErr(null); }} aria-label="Close" className="absolute right-3 top-3 text-neutral-400 hover:text-neutral-900"><X className="size-4" /></button>
             {err && <p className="text-[14px] text-red-600">{err}</p>}
             {turn && (
@@ -79,12 +79,15 @@ export function VoiceOrb() {
         )}
       </AnimatePresence>
       <button onClick={() => (state === 'rec' ? rec.current?.stop() : state === 'idle' && start())} disabled={busy}
-        className="inline-flex items-center gap-3 rounded-full bg-white py-2 pl-2 pr-5 text-[15px] shadow-[0_10px_30px_rgba(20,40,90,.16),inset_0_0_0_1px_rgba(0,0,0,.05)]">
-        <motion.span animate={state === 'rec' || state === 'speak' ? { scale: [1, 1.12, 1] } : { scale: 1 }} transition={{ duration: 1, repeat: Infinity }}
-          className="flex size-9 items-center justify-center rounded-full bg-[radial-gradient(circle_at_30%_30%,#cfe9ff,#3c8dde_45%,#2c5f8a_80%)] text-white">
-          {state === 'rec' ? <Square className="size-3.5" /> : busy ? <Loader2 className="size-4 animate-spin" /> : <Mic className="size-4" />}
-        </motion.span>
-        {state === 'rec' ? 'Listening… tap to stop' : state === 'think' ? 'Thinking…' : state === 'speak' ? 'Speaking…' : 'Ask good spread'}
+        className="inline-flex h-12 items-center gap-3 rounded-full bg-neutral-950 pl-4 pr-5 text-[14px] text-white shadow-[0_14px_34px_rgba(0,0,0,.22)]">
+        <span className="flex h-4 items-end gap-[3px]" aria-hidden>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <motion.span key={i} className="w-[3px] rounded-full bg-white"
+              animate={{ height: state === 'idle' ? [4, 8, 4] : [4, 16, 6, 14, 4] }}
+              transition={{ duration: state === 'idle' ? 1.6 : 0.7, repeat: Infinity, delay: i * 0.12, ease: 'easeInOut' }} />
+          ))}
+        </span>
+        {state === 'rec' ? <span className="inline-flex items-center gap-2">Listening <Square className="size-3" /></span> : state === 'think' ? <span className="inline-flex items-center gap-2">Thinking <Loader2 className="size-3.5 animate-spin" /></span> : state === 'speak' ? 'Speaking' : <span className="inline-flex items-center gap-2"><Mic className="size-3.5" /> Ask good spread</span>}
       </button>
     </div>
   );

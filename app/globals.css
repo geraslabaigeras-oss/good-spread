@@ -372,7 +372,7 @@
 .board-dark * { border-color: var(--hairline); }
 
 /* ===================== Board as cards (Linear / Attio / Cosmos card) ===================== */
-.board-dark.board-root { row-gap: 14px; column-gap: 14px; grid-template-rows: 56px 84px minmax(0, 1fr); }
+.board-dark.board-root { row-gap: 14px; column-gap: 14px; grid-template-rows: 56px 96px minmax(0, 1fr); }
 .board-dark .board-main { grid-template-rows: 330px 14px minmax(0, 1fr); }
 .board-dark .board-side { grid-template-rows: 248px 14px 262px 14px minmax(0, 1fr); }
 .board-dark .section {

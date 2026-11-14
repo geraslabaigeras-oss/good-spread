@@ -22,12 +22,17 @@ export async function boardState(slug: string) {
   const [viewers, events, revs] = await Promise.all([viewersFor(row.id), recentEvents(row.id, 20), revisions(row.id, 1)]);
   const acked = await ackedViewerIds(viewers.map((v) => v.id), p.version);
 
+  const conflicts = detectConflicts(p);
   const people = p.people.map((x) => {
     const vs = viewers.filter((v) => v.person_id === x.id);
     const seenBy = vs.filter((v) => acked.has(v.id)).length;
     const status: PersonStatus = x.role === 'producer' ? 'seen' : !vs.length ? 'no_device' : seenBy ? 'seen' : 'not_seen';
     const call = callTime(p, x.id);
-    return { id: x.id, name: x.name, role: x.role, photo: x.photo, call: call != null ? fmt(call) : null, devices: vs.length, seenBy, status };
+    const t = p.travel.find((y) => y.personId === x.id);
+    const late = conflicts.some((c) => c.personId === x.id && (c.code === 'ARRIVAL' || c.code === 'LATE'));
+    const flight = t ? { number: t.number, from: t.from, to: t.to, lands: fmt(t.arriveMin) } : null;
+    const booking = x.id.startsWith('open-') ? 'to_book' : late ? 'delayed' : 'confirmed';
+    return { id: x.id, name: x.name, role: x.role, photo: x.photo, flight, booking, call: call != null ? fmt(call) : null, devices: vs.length, seenBy, status };
   });
 
   return {
