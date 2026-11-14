@@ -42,6 +42,7 @@ export default function NewBrief() {
   const [err, setErr] = useState<string | null>(null);
   const [drag, setDrag] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [more, setMore] = useState(false);
   const [stage, setStage] = useState<{ image: string; brief: CreativeBrief | null } | null>(null);
   const input = useRef<HTMLInputElement>(null);
 
@@ -205,50 +206,49 @@ export default function NewBrief() {
             ) : (
               <motion.div key="brief" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.7, ease }} className="glass p-8">
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-3"><span className="flex -space-x-3">{d.refImages.slice(0, 6).map((src, i) => <img key={i} src={src} alt="Reference" className="h-14 w-11 rounded-lg object-cover ring-2 ring-white" />)}</span><span className="text-[13px] text-grey-1">{d.briefVia === 'ai' || d.briefVia === 'cache' ? 'Read from your reference' : 'Example brief'}</span></span>
-                  <button onClick={() => setEditing(true)} className="text-[12px] text-grey-1 underline underline-offset-4 hover:text-ink">Change reference</button>
+                  <span className="text-[13px] text-neutral-500">{d.briefVia === 'ai' || d.briefVia === 'cache' ? `Read from ${d.refImages.length} reference${d.refImages.length > 1 ? 's' : ''}` : 'Example brief'}</span>
+                  <button onClick={() => setEditing(true)} className="text-[13px] text-neutral-500 underline underline-offset-4 hover:text-neutral-950">Change references</button>
                 </div>
-                {b.references && b.references.length > 1 && (
-                  <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {b.references.map((r) => d.refImages[r.index - 1] && (
-                      <div key={r.index} className="flex items-center gap-3 rounded-2xl bg-white/70 p-2 pr-3">
-                        <img src={d.refImages[r.index - 1]} alt={`Reference ${r.index}`} className="h-14 w-11 shrink-0 rounded-lg object-cover" />
-                        <span className="min-w-0"><span className="block text-[13px] font-medium capitalize text-neutral-900">{r.usedFor}</span><span className="block text-[12px] leading-4 text-neutral-500">{r.note}</span></span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <motion.p initial={{ opacity: 0, filter: 'blur(8px)' }} animate={{ opacity: 1, filter: 'blur(0px)' }} transition={{ duration: 0.9, delay: 0.15 }} className="mt-4 font-serif text-[30px] leading-[1.15] tracking-[-0.01em]">
-                  {b.summary}
+                {/* the references, each tagged with what it was read for */}
+                <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
+                  {d.refImages.slice(0, 6).map((src, i) => {
+                    const r = b.references?.find((x) => x.index === i + 1);
+                    return (
+                      <motion.div key={i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06, duration: 0.5, ease }} className="relative h-44 w-[132px] shrink-0 overflow-hidden rounded-2xl" title={r?.note}>
+                        <img src={src} alt={`Reference ${i + 1}`} className="size-full object-cover" />
+                        {r && <span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2.5 py-0.5 text-[12px] capitalize text-neutral-900">{r.usedFor}</span>}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+                <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.15 }} className="mt-6 text-[32px] font-light leading-[1.15] tracking-[-0.02em]">
+                  {b.summary.split(/(?<=\.)\s/)[0]}
                 </motion.p>
-                <div className="mt-5 flex flex-wrap gap-x-3 gap-y-1 font-serif text-[22px] text-grey-1">
-                  {b.aesthetic.map((a, i) => (
-                    <motion.span key={a} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.08 }}>
-                      {a}{i < b.aesthetic.length - 1 && <span className="ml-3 text-ink/20">/</span>}
-                    </motion.span>
-                  ))}
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {b.aesthetic.map((a) => <span key={a} className="rounded-full bg-white px-3 py-1 text-[13px] shadow-[inset_0_0_0_1px_rgba(0,0,0,.08)]">{a}</span>)}
                 </div>
-                <div className="mt-6 flex h-16 overflow-hidden rounded-2xl">
+                <div className="mt-6 flex h-14 overflow-hidden rounded-2xl">
                   {b.palette.map((c, i) => (
-                    <motion.div key={c} initial={{ flexGrow: 0 }} animate={{ flexGrow: 1 }} transition={{ duration: 0.8, delay: 0.4 + i * 0.07, ease }} title={c} className="relative" style={{ background: b.paletteHex?.[i] ?? '#444', flexBasis: 0 }}>
-                    </motion.div>
+                    <motion.div key={c} initial={{ flexGrow: 0 }} animate={{ flexGrow: 1 }} transition={{ duration: 0.8, delay: 0.3 + i * 0.07, ease }} title={c} style={{ background: b.paletteHex?.[i] ?? '#444', flexBasis: 0 }} />
                   ))}
                 </div>
                 <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
                   {b.palette.map((c, i) => (
-                    <span key={c} className="inline-flex items-center gap-1.5 text-[13px] text-neutral-700"><span className="size-2.5 rounded-full ring-1 ring-black/10" style={{ background: b.paletteHex?.[i] ?? '#444' }} />{c.charAt(0).toUpperCase() + c.slice(1).toLowerCase()}</span>
+                    <span key={c} className="inline-flex items-center gap-1.5 text-[13px] text-neutral-600"><span className="size-2.5 rounded-full ring-1 ring-black/10" style={{ background: b.paletteHex?.[i] ?? '#444' }} />{c.charAt(0).toUpperCase() + c.slice(1).toLowerCase()}</span>
                   ))}
                 </div>
                 {b.needs && (
-                  <div className="mt-6 grid gap-2 sm:grid-cols-3">
+                  <div className="mt-7 space-y-3">
                     {([['Model', b.needs.model], ['Photographer', b.needs.photographer], ['Location', b.needs.location]] as const).map(([k, v]) => (
-                      <div key={k} className="rounded-2xl bg-white/80 p-3 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">
-                        <div className="text-[12px] text-neutral-500">{k} we&rsquo;ll look for</div>
-                        <div className="mt-1 text-[14px] leading-5 text-neutral-900">{v}</div>
+                      <div key={k} className="flex items-start gap-4">
+                        <span className="w-[104px] shrink-0 pt-1 text-[13px] text-neutral-500">{k}</span>
+                        <span className="flex flex-wrap gap-1.5">{v.split(/,\s*/).filter(Boolean).slice(0, 5).map((w) => <span key={w} className="rounded-full bg-neutral-950/[0.05] px-3 py-1 text-[13px] text-neutral-900">{w}</span>)}</span>
                       </div>
                     ))}
                   </div>
                 )}
+                <button onClick={() => setMore((x) => !x)} className="mt-7 text-[13px] text-neutral-500 underline underline-offset-4 hover:text-neutral-950">{more ? 'Fewer details' : 'More details: shots, light, styling'}</button>
+                {more && <>
                 <Tabs defaultValue="shots" className="mt-7">
                   <TabsList className="w-full">
                     <TabsTrigger value="shots">Shots</TabsTrigger>
@@ -300,6 +300,7 @@ export default function NewBrief() {
                 </div>
                   </TabsContent>
                 </Tabs>
+                </>}
               </motion.div>
             )}
           </AnimatePresence>

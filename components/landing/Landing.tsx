@@ -12,10 +12,6 @@ import { DevicePhone } from '@/components/device-phone';
 import { MessagesScreen } from '@/components/messages-screen';
 import { BrandLogo } from '@/components/brand-logo';
 import { HeroDrop } from '@/components/hero-drop';
-import { startDemo } from '@/components/demo-guide';
-import { HeroMoment } from './HeroMoment';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import { PlansChange } from './PlansChange';
 import { flagUrl } from '@/lib/agencies';
 import { AnimatedList } from '@/components/ui/animated-list';
@@ -35,6 +31,8 @@ type Props = {
 
 // Free Unsplash-licensed photography (unsplash.com/license). Credits in the footer.
 const u = (id: string, w = 1400) => `https://images.unsplash.com/${id}?fm=jpg&q=60&w=${w}&auto=format&fit=crop`;
+import LOC_ALL from '@/data/europe/locations.json';
+const LOC_SHOWCASE = (LOC_ALL as { name: string; city: string; country: string; image_url: string }[]).filter((l) => ['Cabo da Roca', 'Étretat cliffs', 'Reynisfjara black-sand beach'].includes(l.name));
 const PHOTOS = [
   { id: 'photo-1613915617430-8ab0fd7c6baf', by: 'Chyntia Juls' },
   { id: 'photo-1692180142575-c31fcd106b5b', by: 'Tamara Harhai' },
@@ -123,9 +121,6 @@ function Bubble({ children, tone }: { children: React.ReactNode; tone: 'alert' |
 }
 
 export function Landing({ cap, stills, routes, best, people, moment }: Props) {
-  const router = useRouter();
-  // a direct link that starts the guided demo: /?demo=start
-  useEffect(() => { if (typeof window !== 'undefined' && window.location.search.includes('demo=start')) startDemo(router.push); }, [router]);
   const steps = [
     { k: 'Brief', t: 'Drop a reference. You get the look, palette, light and shot list.' },
     { k: 'Plans', t: `${routes.length} ways to make it, each costed against the €${cap.toLocaleString('en-US')} cap.` },
@@ -136,7 +131,7 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
   return (
     <div className="relative bg-[#f4f7fb] font-sans text-neutral-900">
       {/* one slow blue liquid behind the whole page, grain on top */}
-      <div className="pointer-events-none fixed inset-0 z-0 opacity-80"><Grainient colors={['#f6f9fc', '#dbe6f3', '#b7cbe3', '#eef3f9']} lightMode grainAnimated={false} grainAmount={0.08} speed={0.14} flow={1.25} softness={0.95} dpr={0.75} /></div>
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-80"><Grainient colors={['#f6f9fc', '#dbe6f3', '#b7cbe3', '#eef3f9']} lightMode grainAnimated={false} grainAmount={0.08} speed={0.4} flow={1.4} softness={0.92} dpr={0.75} /></div>
       <div className="pointer-events-none fixed inset-0 z-0"><div className="gs-grain" /></div>
       {/* Hero: headline, then one living stage (Grainient, our fog palette) with the product's moments floating out in 3D */}
       <section className="relative z-[1] overflow-hidden pb-24">
@@ -157,22 +152,14 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
             <p className="mt-6 max-w-md text-[17px] leading-7 text-neutral-600">
               For producers of fashion shoots. Drop your references: we find the models, crew and places, call their agents, plan the day and the budget, and keep everyone updated when something changes.
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3 text-[15px]">
-              <button onClick={() => startDemo(router.push)} className="rounded-full bg-neutral-950 px-7 py-3.5 font-medium text-white">Try the demo</button>
-              <a href="#start" className="rounded-full bg-white px-7 py-3.5 text-neutral-900 shadow-[inset_0_0_0_1px_rgba(0,0,0,.1)]">Use your own references</a>
-            </div>
-            <p className="mt-4 text-[13px] text-neutral-500">Two minutes, guided. Nothing to type.</p>
+            <p className="mt-6 text-[14px] text-neutral-500">Drop a few references on the right, or pick from the examples. The reading starts when you press Read.</p>
           </div>
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15, ease: [0.2, 0.7, 0.2, 1] }} className="relative">
-            <HeroMoment />
+            <HeroDrop />
           </motion.div>
         </div>
 
         {/* the stage is the reference drop: drop or pick, and the analysis starts */}
-        <div id="start" className="relative mx-auto mt-20 max-w-5xl scroll-mt-10 px-6">
-          <p className="mb-4 text-center text-[15px] text-neutral-600">Or start with your own references</p>
-          <HeroDrop />
-        </div>
       </section>
 
       {/* ElevenLabs-style: framed column, grainy gradient cards, the agency call as bubbles */}
@@ -185,74 +172,64 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
 
           <div className="mt-12 grid gap-4 md:grid-cols-2">
             <Feature title="Scouts real places for the look" tag="Location scout" date="Brief">
-              <div className="relative h-full bg-[radial-gradient(120%_90%_at_10%_10%,#ffffff_0%,#e3ebf5_40%,#b9cbe0_75%,#8ea8c6_100%)]">
-                <Grain />
-                <div className="absolute left-6 top-6 text-[34px] leading-none tracking-[-0.03em] text-neutral-900">Locations</div>
-                <div className="absolute bottom-6 right-6 text-[34px] leading-none tracking-[-0.03em] text-neutral-800">Vilnius · Riga</div>
+              <div className="grid h-full grid-cols-2 grid-rows-2 gap-2 bg-white p-2">
+                {LOC_SHOWCASE.map((l, i) => (
+                  <div key={l.name} className={`relative overflow-hidden rounded-[16px] ${i === 0 ? 'row-span-2' : ''}`}>
+                    <img src={l.image_url} alt={l.name} className="size-full object-cover" />
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent p-3 text-white">
+                      <div className="text-[14px] font-medium">{l.name}</div>
+                      <div className="text-[12px] text-white/80">{l.city}, {l.country}</div>
+                    </div>
+                    {i === 0 && <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-0.5 text-[12px] text-neutral-900">Best match · 4 of 5</span>}
+                  </div>
+                ))}
               </div>
             </Feature>
             <Feature title="Calls agencies in their language" tag="Voice" date="Team">
-              <div className="relative flex h-full items-center justify-center bg-[radial-gradient(90%_70%_at_75%_15%,#ffffff_0%,transparent_60%),radial-gradient(80%_80%_at_20%_85%,#9fb8d8_0%,transparent_65%),linear-gradient(135deg,#dfe8f4,#a9bfdb)]">
-                <Grain />
-                <div className="relative flex items-center gap-3 text-[40px] tracking-[-0.03em] text-neutral-900">Calls <span className="rounded-full border-2 border-neutral-900 px-3 py-0.5 text-[24px]">FR · IT · SE</span></div>
+              <div className="flex h-full flex-col justify-center gap-3 bg-white p-7">
+                <div className="flex items-center gap-3 text-[13px] text-neutral-500"><span className="relative flex size-2"><span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" /><span className="relative inline-flex size-2 rounded-full bg-emerald-500" /></span> On the call · Elite Paris · French</div>
+                <div className="flex h-10 items-center justify-between rounded-2xl bg-gradient-to-r from-[#eef3f9] via-[#dde8f5] to-[#eef3f9] px-3">
+                  {Array.from({ length: 36 }).map((_, i) => <motion.span key={i} className="w-[3px] rounded-full bg-gradient-to-t from-[#6f93c7] to-[#c9daf0]" animate={{ height: [4, 8 + ((i * 37) % 18), 5, 12 + ((i * 13) % 12), 4] }} transition={{ duration: 1.1 + (i % 5) * 0.12, repeat: Infinity, ease: 'easeInOut' }} />)}
+                </div>
+                <div className="ml-auto max-w-[88%] rounded-2xl rounded-br-md bg-neutral-950 px-4 py-2.5 text-white">
+                  <p className="text-[14px] leading-5">Bonjour, je suis l&rsquo;assistant de la production. Est-elle disponible le 21 ?</p>
+                  <p className="mt-1 text-[12px] text-white/60">Hello, I&rsquo;m the production&rsquo;s assistant. Is she free on the 21st?</p>
+                </div>
+                <div className="max-w-[88%] rounded-2xl rounded-bl-md bg-[#eef2f7] px-4 py-2.5">
+                  <p className="text-[14px] leading-5">Oui, elle est disponible. 1 500 € la journée.</p>
+                  <p className="mt-1 text-[12px] text-neutral-500">Yes, she is free. €1,500 a day.</p>
+                </div>
+                <span className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-600 px-3 py-1 text-[13px] text-white"><span className="size-1.5 rounded-full bg-white" /> Available · €1,500/day · saved on her card</span>
               </div>
             </Feature>
           </div>
 
-          <div className="mt-4 grid gap-4 md:grid-cols-[1.4fr_1fr]">
-            <div className="relative min-h-[460px] rounded-[28px] p-8">
-              <div className="absolute inset-0 overflow-hidden rounded-[28px] bg-[radial-gradient(120%_100%_at_20%_0%,#ffffff_0%,#e6eef8_35%,#c4d4e8_70%,#9db5d3_100%)]"><Grain /></div>
-              <div className="relative mx-auto flex max-w-[420px] flex-col gap-3 pt-6 [perspective:900px]">
-                <motion.span animate={{ y: [0, -6, 0] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} style={{ rotateY: -12, rotateX: 6 }} className="-mr-6 self-end rounded-full border border-neutral-900/15 bg-white/70 px-4 py-2 text-[14px] text-neutral-900 shadow-[0_20px_40px_rgba(0,0,0,.25)] backdrop-blur md:-mr-24">Bonjour, je suis l&rsquo;assistant de la production. Votre mannequin est-elle disponible le 21 ?</motion.span>
-                <motion.span animate={{ y: [0, 6, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }} style={{ rotateY: 10, rotateX: 4 }} className="-ml-4 self-start rounded-2xl bg-white px-4 py-2.5 text-[14px] text-neutral-900 shadow-[0_30px_60px_rgba(0,0,0,.35)] md:-ml-20">Oui, elle est disponible. Tarif journalier 600 €, usage web 12 mois.</motion.span>
-                <span className="self-end rounded-full border border-neutral-900/15 px-4 py-2 text-[14px] text-neutral-900">Parfait, je vous envoie le brief.</span>
-                <motion.span animate={{ y: [0, -5, 0] }} transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }} style={{ rotateY: 14, rotateZ: -2 }} className="-ml-2 inline-flex items-center gap-2 self-start rounded-full bg-white px-4 py-2 text-[14px] text-neutral-900 shadow-[0_24px_50px_rgba(0,0,0,.35)] md:-ml-28"><span className="size-2 rounded-full bg-emerald-500" /> Available · €600 · added to the plan</motion.span>
-              </div>
-              <div className="absolute bottom-7 left-8 right-8 text-neutral-900">
-                <div className="text-[15px] text-neutral-500">Agency calls</div>
-                <p className="mt-1 text-[17px] leading-6">The agent asks for availability, rate and usage in the agency&rsquo;s language. You read along in English and log the answer.</p>
-              </div>
-            </div>
-            <div className="flex flex-col justify-between rounded-[28px] bg-[#f3f3f2] p-6">
-              <div className="rounded-2xl bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,.05)]">
-                <div className="text-[14px] font-medium">Your team</div>
-                {[['Model', 'Available', 'bg-emerald-500'], ['Second model', 'On hold', 'bg-amber-500'], ['Photographer', 'Available', 'bg-emerald-500'], ['Stylist', 'Calling…', 'bg-sky-500']].map(([r, st, c]) => (
-                  <div key={r} className="mt-3 flex items-center justify-between border-t border-neutral-100 pt-3 text-[14px]">
-                    <span>{r}</span><span className="inline-flex items-center gap-2 text-neutral-600"><span className={`size-2 rounded-full ${c}`} />{st}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-6">
-                <div className="text-[15px] text-neutral-500">Availability</div>
-                <p className="mt-1 text-[17px] leading-6 text-neutral-900">Every answer lands on the person and in the plan, so the budget and call sheet stay true.</p>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
 
       <PlansChange />
 
-      {/* Close: light, the drop is the call to action */}
-      <section className="relative z-[1] px-6 py-28">
+      {/* Footer: blue liquid band, the line, links, the wordmark big */}
+      <footer className="relative z-[1] mt-10 overflow-hidden text-white">
+        <div className="absolute inset-0"><Grainient colors={['#9fb8d8', '#6f8fbd', '#3f5f8f', '#b9cbe0']} grainAnimated={false} grainAmount={0.1} speed={0.35} flow={1.4} softness={0.9} dpr={0.75} /></div>
         <div className="gs-grain" />
-        <div className="gs-paper relative mx-auto grid max-w-[1280px] grid-cols-1 items-center gap-10 rounded-[16px] bg-white p-10 shadow-[0_0_0_0.5px_rgba(0,0,0,.08),0_14px_40px_rgba(0,0,0,.05)] md:grid-cols-2">
-          <div>
-            <h2 className="text-[48px] font-normal leading-[1.05] tracking-[-0.035em]">Drop in your references. <span className="text-neutral-400">Stay creative.</span></h2>
-            <p className="mt-4 max-w-md text-[16px] leading-7 text-neutral-600">A few images are enough. You get the team, the places, the flights, call times and the budget, kept current.</p>
-            <Link href="/new" className="mt-8 inline-flex h-12 items-center rounded-full bg-neutral-950 px-6 text-[15px] font-medium text-white">Start a shoot</Link>
+        <div className="relative mx-auto max-w-[1320px] px-6 pt-24">
+          <div className="flex flex-wrap items-end justify-between gap-8">
+            <h2 className="text-[56px] font-normal leading-[1.02] tracking-[-0.04em] md:text-[72px]">Stay creative.<br /><span className="text-white/60">Production&rsquo;s handled.</span></h2>
+            <Link href="/new" className="inline-flex h-14 items-center rounded-full bg-white px-8 text-[16px] font-medium text-neutral-950">Start a shoot</Link>
           </div>
-          <Link href="/new" className="flex h-[280px] flex-col items-center justify-center gap-2 rounded-[16px] border border-dashed border-neutral-300 bg-[#f7f7f7] text-center transition-colors hover:border-neutral-500">
-            <span className="text-[17px]">Drop references here</span>
-            <span className="text-[13px] text-neutral-500">Photos, a moodboard, a campaign you like</span>
-          </Link>
+          <div className="mt-16 grid grid-cols-2 gap-8 border-t border-white/20 pt-8 text-[14px] md:grid-cols-4">
+            <div><div className="text-white/50">Product</div><div className="mt-3 flex flex-col gap-2"><Link href="/new" className="hover:underline">Start a shoot</Link><Link href="/people" className="hover:underline">People</Link><Link href="/board/jacket-campaign" className="hover:underline">Shoot day board</Link></div></div>
+            <div><div className="text-white/50">How it works</div><div className="mt-3 flex flex-col gap-2"><a href="#agent" className="hover:underline">Before the shoot</a><a href="#changes" className="hover:underline">When things change</a></div></div>
+            <div><div className="text-white/50">Built at</div><div className="mt-3">Unfair Weekend<br />Vilnius, November 2026</div></div>
+            <div><div className="text-white/50">Code</div><div className="mt-3"><a href="https://github.com/geraslabaigeras-oss/good-spread" target="_blank" rel="noreferrer" className="hover:underline">GitHub ↗</a></div></div>
+          </div>
         </div>
-      </section>
-
-      <footer className="relative z-[1] mx-auto max-w-7xl px-6 pb-12 pt-4 text-[12.5px] text-neutral-500 md:px-10">
-        <p><span className="text-neutral-900">good spread®</span> · Built at Unfair Weekend Vilnius, 2026</p>
-        <p className="mt-1.5">Photography from Unsplash by {PHOTOS.map((p) => p.by).join(', ')}.</p>
+        <div className="relative mt-16 px-4">
+          <Wordmark className="h-auto w-full max-w-none !bg-white" />
+        </div>
+        <p className="relative mx-auto max-w-[1320px] px-6 pb-8 pt-6 text-[12px] text-white/60">Photography from Unsplash by {PHOTOS.map((p) => p.by).join(', ')}. Location photos from Wikimedia Commons, credited on each card.</p>
       </footer>
     </div>
   );
