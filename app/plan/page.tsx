@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { StrategyId } from '@/lib/types';
 import { dnaViolations, evaluateDna, summarize, type StrategySummary } from '@/lib/engine';
-import { rosterGaps, STRATEGIES } from '@/data/catalog';
+import { rosterGaps, stillToBook, STRATEGIES } from '@/data/catalog';
 import { useRoster } from '@/lib/use-roster';
 import Link from 'next/link';
 import { fmtDate, fmtEur } from '@/lib/format';
@@ -94,6 +94,7 @@ export default function Strategies() {
                 <DayStrip sum={sum} deadline={draft.deliverables.deadlineISO} start={draft.startISO} />
 
                 <div className="mt-4 flex flex-wrap gap-1.5 text-[11px]">
+                  {stillToBook(s.id).length > 0 && <Chip>To book: {stillToBook(s.id).join(', ')} (estimated)</Chip>}
                   <Chip>{sum.physical === 'full' ? 'Full shoot' : 'Partial · composited'}</Chip>
                   <Chip>{sum.travel ? `${sum.travellers} flies in` : 'No flights'}</Chip>
                   <Chip tone={sum.overCap ? 'bad' : 'good'}>{sum.overCap ? `${fmtEur(sum.total - sum.cap)} over cap` : `${fmtEur(sum.cap - sum.total)} under cap`}</Chip>

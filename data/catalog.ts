@@ -135,8 +135,28 @@ export function setRoster(list: CatalogPerson[]) {
 }
 export const isRosterActive = () => rosterActive;
 
-export const catalogPerson = (id: string) => ALL_PEOPLE.find((x) => x.id === id) ?? SAMPLE_ALL.find((x) => x.id === id);
-export const catalogLocation = (id: string) => LOCATIONS.find((x) => x.id === id);
+/** Open slots: a role nobody is booked for yet, priced at a typical day rate (estimate). Not a person. */
+const OPEN_RATE: Record<string, number> = { model: 450, photographer: 700, mua: 350, stylist: 380 };
+const OPEN_LABEL: Record<string, string> = { model: 'Model', photographer: 'Photographer', mua: 'Hair & makeup', stylist: 'Stylist' };
+export const isOpenSlot = (id: string) => id.startsWith('open-');
+export function openSlot(role: Role, city: City, n = 1): CatalogPerson {
+  return {
+    id: `open-${role}${n > 1 ? `-${n}` : ''}`, name: `${OPEN_LABEL[role]}${n > 1 ? ` ${n}` : ''} (to book)`, role, city,
+    dayRate: OPEN_RATE[role] ?? 400, otRatePerHour: Math.round(((OPEN_RATE[role] ?? 400) / 8) * 1.25), local: true,
+    bio: 'Open slot, typical rate (estimate)', tags: ['open'],
+  };
+}
+const openFromId = (id: string): CatalogPerson | undefined => {
+  const m = id.match(/^open-(model|photographer|mua|stylist)(?:-(\d))?$/);
+  return m ? openSlot(m[1] as Role, 'Vilnius', m[2] ? Number(m[2]) : 1) : undefined;
+};
+
+export const catalogPerson = (id: string) => ALL_PEOPLE.find((x) => x.id === id) ?? SAMPLE_ALL.find((x) => x.id === id) ?? openFromId(id);
+const OPEN_LOCATIONS: CatalogLocation[] = [
+  { id: 'open-location', name: 'Location (to scout)', city: 'Vilnius', kind: 'location', address: 'To scout', mapsUrl: 'https://maps.google.com', hourlyRate: 60, permit: 500, opensMin: 420, closesMin: 1140, natural: true, note: 'Typical location fee (estimate).', tags: ['open'] },
+  { id: 'open-studio', name: 'Studio (to book)', city: 'Vilnius', kind: 'studio', address: 'To book', mapsUrl: 'https://maps.google.com', hourlyRate: 55, opensMin: 420, closesMin: 1080, natural: false, note: 'Typical studio rate (estimate).', tags: ['open'] },
+];
+export const catalogLocation = (id: string) => LOCATIONS.find((x) => x.id === id) ?? OPEN_LOCATIONS.find((x) => x.id === id);
 
 export type StrategyDef = {
   id: StrategyId; name: string; city: City; tagline: string;
@@ -180,38 +200,42 @@ export const strategyDef = (id: StrategyId): StrategyDef => {
   return {
     ...base,
     defaultPicks: {
-      models: pickFrom(MODELS, base.city, base.modelSlots),
-      photographer: pickFrom(PHOTOGRAPHERS, base.city, 1)[0] ?? '',
-      location: LOCATIONS.find((l) => l.city === base.city && base.locationKinds.includes(l.kind) && !!l.photo)?.id ?? '',
+      models: (() => { const m = pickFrom(MODELS, base.city, base.modelSlots); while (m.length < base.modelSlots) m.push(`open-model${m.length ? `-${m.length + 1}` : ''}`); return m; })(),
+      photographer: pickFrom(PHOTOGRAPHERS, base.city, 1)[0] ?? 'open-photographer',
+      location: LOCATIONS.find((l) => l.city === base.city && base.locationKinds.includes(l.kind) && !!l.photo)?.id ?? (base.locationKinds.includes('location') ? 'open-location' : 'open-studio'),
     },
     crew: {
-      mua: pickFrom(CREW.filter((c) => c.role === 'mua'), base.city, 1)[0] ?? '',
-      stylist: pickFrom(CREW.filter((c) => c.role === 'stylist'), base.city, 1)[0] ?? '',
+      mua: pickFrom(CREW.filter((c) => c.role === 'mua'), base.city, 1)[0] ?? 'open-mua',
+      stylist: pickFrom(CREW.filter((c) => c.role === 'stylist'), base.city, 1)[0] ?? 'open-stylist',
     },
   };
 };
 
-/** What's missing from the roster before this strategy can be planned. */
-export function rosterGaps(id: StrategyId): string[] {
+/** Roles and places still to book in this strategy's default plan (informational; plans always build). */
+export function rosterGaps(_id: StrategyId): string[] {
+  return [];
+}
+export function stillToBook(id: StrategyId): string[] {
   const s = strategyDef(id);
-  const gaps: string[] = [];
-  if (s.defaultPicks.models.length < s.modelSlots) gaps.push(s.modelSlots === 1 ? 'a model' : `${s.modelSlots - s.defaultPicks.models.length} more model${s.modelSlots - s.defaultPicks.models.length > 1 ? 's' : ''}`);
-  if (!s.defaultPicks.photographer) gaps.push('a photographer');
-  if (!s.crew.mua) gaps.push('a hair and makeup artist');
-  if (!s.crew.stylist) gaps.push('a stylist');
-  if (!s.defaultPicks.location) gaps.push(`a scouted location in ${s.city}`);
-  return gaps;
+  const ids = [...s.defaultPicks.models, s.defaultPicks.photographer, s.crew.mua, s.crew.stylist];
+  const out = ids.filter(isOpenSlot).map((x) => catalogPerson(x)!.name.replace(' (to book)', ''));
+  if (s.defaultPicks.location.startsWith('open-')) out.push(s.defaultPicks.location === 'open-studio' ? 'Studio' : 'Location');
+  return out;
 }
 
 /** People a strategy can pick from (assemble screen). Travelling talent is allowed and costed. */
 export function candidates(id: StrategyId, role: Role): CatalogPerson[] {
   const s = strategyDef(id);
   const pool = role === 'model' ? MODELS : role === 'photographer' ? PHOTOGRAPHERS : CREW.filter((c) => c.role === role);
-  return pool.filter((p) => p.city === s.city || !!p.travelTo?.[s.city]);
+  const real = pool.filter((p) => p.city === s.city || !!p.travelTo?.[s.city]);
+  if (!rosterActive) return real;
+  const opens = role === 'model' ? Array.from({ length: s.modelSlots }, (_, i) => openSlot('model', s.city, i + 1)) : [openSlot(role, s.city)];
+  return [...real, ...opens];
 }
 
 export function locationCandidates(id: StrategyId): CatalogLocation[] {
   const s = strategyDef(id);
   // With a real roster, only show real places (scouted, with photos); invented sample spots stay for the tests.
-  return LOCATIONS.filter((l) => l.city === s.city && s.locationKinds.includes(l.kind) && (!rosterActive || !!l.photo));
+  const real = LOCATIONS.filter((l) => l.city === s.city && s.locationKinds.includes(l.kind) && (!rosterActive || !!l.photo));
+  return rosterActive ? [...real, ...OPEN_LOCATIONS.filter((l) => s.locationKinds.includes(l.kind)).map((l) => ({ ...l, city: s.city }))] : real;
 }
