@@ -10,7 +10,7 @@ export function draftProduction(d: PlanDraft, strategy: StrategyId, picks?: Plan
   setBriefPrefs({ city: d.scoutCity, shortlist: d.shortlist });
   const p = buildProduction({
     slug: 'draft', title: d.title, brand: d.brand, strategy, picks,
-    brief: d.brief ?? { ...DEMO_BRIEF, title: d.title, brand: d.brand }, deliverables: d.deliverables, cap: d.cap, startISO: d.startISO, shootISO: d.shootISO,
+    brief: d.brief ?? { ...DEMO_BRIEF, title: d.title, brand: d.brand }, deliverables: d.deliverables, cap: d.cap, startISO: d.startISO, shootISO: d.shootISO, shootDays: d.shootDays,
   });
   if (p.dna) p.dna = p.dna.map((x) => (x.id in d.dnaPreserve ? { ...x, preserve: d.dnaPreserve[x.id] } : x));
   if (d.place && (!d.place.city || d.place.city === p.city)) p.studio = { ...p.studio, name: d.place.name, address: d.place.description ?? d.place.name, mapsUrl: d.place.mapsUrl };

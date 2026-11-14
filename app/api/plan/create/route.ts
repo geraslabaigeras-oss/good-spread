@@ -33,6 +33,7 @@ const Body = z.object({
   cap: z.number().int().min(500).max(1000000),
   startISO: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   shootISO: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+  shootDays: z.number().int().min(1).max(7).optional().nullable(),
   dnaPreserve: z.record(z.string(), z.boolean()).optional(),
   place: z.object({ name: z.string().max(120), lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180), description: z.string().max(200).nullable().optional() }).nullable().optional(),
 });
@@ -54,7 +55,7 @@ export async function POST(req: Request) {
     const slug = await newSlug(b.brief.title);
     const p = buildProduction({
       slug, title: b.brief.title, brand: b.brief.brand, strategy: b.strategy, picks: b.picks,
-      brief: b.brief, deliverables: b.deliverables, cap: b.cap, startISO: b.startISO, shootISO: b.shootISO ?? undefined,
+      brief: b.brief, deliverables: b.deliverables, cap: b.cap, startISO: b.startISO, shootISO: b.shootISO ?? undefined, shootDays: b.shootDays ?? undefined,
     });
     // AI-scouted real location chosen on the Brief page
     if (b.place) p.studio = { ...p.studio, name: b.place.name, address: b.place.description ?? b.place.name, mapsUrl: `https://maps.google.com/?q=${b.place.lat},${b.place.lng}` };

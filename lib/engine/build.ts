@@ -14,6 +14,7 @@ export type BuildInput = {
   cap: number;
   startISO: string; // planning starts (today); shoot date = start + prepDays
   shootISO?: string; // picked by the producer; overrides start + prepDays
+  shootDays?: number; // consecutive shoot days (1 by default)
   looks?: Look[];
 };
 
@@ -86,23 +87,24 @@ export function buildProduction(i: BuildInput): Production {
 
   const travel: Travel[] = [];
   const items: LineItem[] = [];
+  const days = Math.max(1, Math.min(7, Math.round(i.shootDays ?? 1)));
 
   // Talent and crew (rate card)
   for (const c of picked) {
     const p = people.find((x) => x.id === c.id)!;
     items.push({
       id: `i-${c.id}`, category: c.role === 'model' ? 'talent' : 'crew',
-      label: `${c.name}, ${c.role === 'mua' ? 'hair and makeup' : c.role}`, qty: 1, unit: 'day', rate: p.dayRate, personId: c.id, source: 'rate_card',
+      label: `${c.name}, ${c.role === 'mua' ? 'hair and makeup' : c.role}`, qty: days, unit: 'day', rate: p.dayRate, personId: c.id, source: 'rate_card',
     });
   }
 
   // Studio or location
   if (loc.kind === 'location') {
-    items.push({ id: 'i-permit', category: 'studio', label: `Location permit, ${loc.name.split(',')[0]}`, qty: 1, unit: 'flat', rate: loc.permit ?? 0, source: 'quote', tag: 'location' });
+    items.push({ id: 'i-permit', category: 'studio', label: `Location permit, ${loc.name.split(',')[0]}${days > 1 ? `, ${days} days` : ''}`, qty: days, unit: 'flat', rate: loc.permit ?? 0, source: 'quote', tag: 'location' });
     if (loc.fixer) items.push({ id: 'i-fixer', category: 'studio', label: 'Local fixer and van', qty: 1, unit: 'flat', rate: loc.fixer, source: 'estimate', tag: 'fixer' });
   } else {
     const hours = (last - first) / 60;
-    items.push({ id: 'i-studio', category: 'studio', label: `Studio ${fmtHM(first)}–${fmtHM(last)}`, qty: hours, unit: 'hour', rate: loc.hourlyRate, source: 'quote', tag: 'studio' });
+    items.push({ id: 'i-studio', category: 'studio', label: `Studio ${fmtHM(first)}–${fmtHM(last)}${days > 1 ? ` × ${days} days` : ''}`, qty: hours * days, unit: 'hour', rate: loc.hourlyRate, source: 'quote', tag: 'studio' });
   }
 
   // Travel: same-day flights become Travel records (the engine checks them); day-before adds a hotel night.
@@ -115,6 +117,7 @@ export function buildProduction(i: BuildInput): Production {
     if (t.dayBefore) {
       items.push({ id: `i-hotel-${c.id}`, category: 'travel', label: `Hotel, 1 night, ${c.name}`, qty: 1, unit: 'flat', rate: t.hotel ?? 0, personId: c.id, source: 'estimate', tag: 'hotel' });
     } else {
+      if (days > 1) items.push({ id: `i-hotel-${c.id}`, category: 'travel', label: `Hotel, ${days - 1} night${days > 2 ? 's' : ''}, ${c.name}`, qty: days - 1, unit: 'flat', rate: t.hotel ?? 120, personId: c.id, source: 'estimate', tag: 'hotel' });
       travel.push({ personId: c.id, mode: 'flight', number: t.number, from: t.from, to: t.to, departMin: t.departMin, arriveMin: t.arriveMin, transferMin: t.transferMin, source: 'catalog' });
     }
   }
@@ -136,7 +139,7 @@ export function buildProduction(i: BuildInput): Production {
 
   const p: Production = {
     id: i.slug, slug: i.slug, title: i.title, brand: i.brand,
-    dateISO: i.shootISO ?? addDays(i.startISO, s.prepDays), version: 1,
+    dateISO: i.shootISO ?? addDays(i.startISO, s.prepDays), version: 1, shootDays: days,
     studio: { name: loc.name, address: loc.address, mapsUrl: loc.mapsUrl, opensMin: loc.opensMin, closesMin: loc.closesMin, bookedUntilMin: last, hourlyRate: loc.hourlyRate },
     people, shortlist, travel, late: [], blocks, looks,
     budget: { cap: i.cap, contingencyPct: 10, items },
@@ -166,13 +169,14 @@ export type StrategySummary = {
 export function summarize(p: Production): StrategySummary {
   const s = strategyDef(p.strategy ?? 'local');
   const b = computeBudget(p);
-  const deliveryISO = addDays(p.dateISO, s.postDays);
+  const sd = p.shootDays ?? 1;
+  const deliveryISO = addDays(p.dateISO, sd - 1 + s.postDays);
   const deadline = p.deliverables?.deadlineISO;
   const travellers = new Set(p.budget.items.filter((i) => i.category === 'travel' && i.personId).map((i) => i.personId)).size;
   return {
     id: s.id, name: s.name, city: s.city, tagline: s.tagline,
     total: b.total, cap: b.cap, overCap: b.total > b.cap,
-    prepDays: s.prepDays, shootDays: 1, postDays: s.postDays, totalDays: s.prepDays + 1 + s.postDays,
+    prepDays: s.prepDays, shootDays: sd, postDays: s.postDays, totalDays: s.prepDays + sd + s.postDays,
     shootISO: p.dateISO, deliveryISO, fitsDeadline: !deadline || deliveryISO <= deadline,
     travel: travellers > 0, travellers, physical: s.physical,
     byCategory: b.byCategory, lines: b.lines,

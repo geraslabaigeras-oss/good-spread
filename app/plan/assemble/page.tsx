@@ -15,6 +15,7 @@ import { draftProduction } from '@/lib/plan-draft';
 import { BudgetLine, CAT_COLOR, Stage, Tilt, TopBar } from '@/components/glass/Stage';
 import { TeamSlots } from '@/components/team-slots';
 import { QuickAdd } from '@/components/quick-add';
+import { StepLoader } from '@/components/step-loader';
 import { Scout } from '@/components/scout';
 import { AgencyCall } from '@/components/agency-call';
 import { modelsComSearch } from '@/lib/roster';
@@ -88,7 +89,7 @@ export default function Assemble() {
       const r = await fetch('/api/plan/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ strategy, picks, brief: p.brief, deliverables: draft!.deliverables, cap: draft!.cap, startISO: draft!.startISO, shootISO: draft!.shootISO ?? null, scoutCity: draft!.scoutCity ?? null, shortlist: draft!.shortlist ?? null, dnaPreserve: draft!.dnaPreserve, place: draft!.place ?? null }),
+        body: JSON.stringify({ strategy, picks, brief: p.brief, deliverables: draft!.deliverables, cap: draft!.cap, startISO: draft!.startISO, shootISO: draft!.shootISO ?? null, shootDays: draft!.shootDays ?? null, scoutCity: draft!.scoutCity ?? null, shortlist: draft!.shortlist ?? null, dnaPreserve: draft!.dnaPreserve, place: draft!.place ?? null }),
       });
       const j = await r.json();
       if (!r.ok || j.error) throw new Error(j.error ?? `HTTP ${r.status}`);
@@ -189,6 +190,7 @@ export default function Assemble() {
           }}
         />
       )}
+      <StepLoader open={busy} title="Making your production." steps={['Locking the team and the place', 'Building call times and the day', 'Pricing travel, stay and overtime', 'Writing everyone\'s call sheet', 'Opening the board']} />
       {adding && (
         <QuickAdd
           key={adding}

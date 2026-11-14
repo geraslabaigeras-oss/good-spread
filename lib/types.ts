@@ -91,6 +91,7 @@ export type Production = {
   city?: string;
   strategy?: StrategyId;
   picks?: Picks;
+  shootDays?: number;
   deliverables?: Deliverables;
   brief?: CreativeBrief | null;
   dna?: DnaItem[];

@@ -23,6 +23,7 @@ export type PlanDraft = {
   shortlist?: string[]; // models picked on the Brief page
   scoutCity?: string; // base city the scout chose for this brief
   shootISO?: string; // shoot date the producer picked
+  shootDays?: number; // consecutive shoot days
 };
 
 const KEY = 'gs-plan-draft';

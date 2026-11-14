@@ -26,6 +26,7 @@ export function Stage({ children, backdrop, voice = false, still = false }: { ch
 }
 
 const STEPS = [
+  { n: 0, label: 'People', href: '/people' },
   { n: 1, label: 'Brief', href: '/new' },
   { n: 3, label: 'Team', href: '/plan/assemble' },
   { n: 4, label: 'Production', href: '/board/jacket-campaign' },

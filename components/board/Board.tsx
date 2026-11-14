@@ -128,7 +128,14 @@ function BoardInner({ slug }: { slug: string }) {
     }
     return (
       <div className="flex h-dvh items-center justify-center text-grey-1">
-        {error ? `Could not load the board: ${String(error.message)}` : 'Loading production…'}
+        {error ? `Could not load the board. Check the connection and refresh.` : (
+          <div className="w-[min(1100px,calc(100vw-64px))] space-y-5">
+            <div className="h-12 w-2/3 animate-pulse rounded-2xl bg-white/70" />
+            <div className="grid grid-cols-3 gap-5">{[0, 1, 2].map((i) => <div key={i} className="h-56 animate-pulse rounded-[28px] bg-white/70" />)}</div>
+            <div className="h-72 animate-pulse rounded-[28px] bg-white/70" />
+            <p className="text-center text-[14px] text-neutral-500">Opening the production…</p>
+          </div>
+        )}
       </div>
     );
   }
@@ -159,6 +166,8 @@ function BoardInner({ slug }: { slug: string }) {
   const nameOf = (id: string) => p.people.find((x) => x.id === id)?.name ?? id;
   const roleOf = (id: string) => ROLE_NAME[p.people.find((x) => x.id === id)?.role ?? ''] ?? '';
   const dateLabel = new Date(`${p.dateISO}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+  const days = p.shootDays ?? 1;
+  const endLabel = days > 1 ? new Date(new Date(`${p.dateISO}T12:00:00Z`).getTime() + (days - 1) * 86400000).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }) : null;
   const conflict = data.pending?.conflicts[0];
   const headline = data.pending && conflict ? `${conflict.message}. Pick a fix below.`
     : applied ? `Plan adapted: ${applied.label.charAt(0).toLowerCase()}${applied.label.slice(1)}.`
@@ -236,7 +245,7 @@ function BoardInner({ slug }: { slug: string }) {
 
         {/* Headline */}
         <motion.div id="plan" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="mt-12">
-          <h1 className="text-[52px] font-normal leading-[1.1] tracking-[-0.03em]">{dateLabel}</h1>
+          <h1 className="text-[52px] font-normal leading-[1.1] tracking-[-0.03em]">{endLabel ? <>{dateLabel.split(' ').slice(0, 2).join(' ')} – {endLabel} <span className="text-neutral-400">· {days} days</span></> : dateLabel}</h1>
           <p className="mt-2 text-[40px] font-light leading-[1.15] tracking-[-0.03em] text-neutral-500">{headline}</p>
         </motion.div>
 

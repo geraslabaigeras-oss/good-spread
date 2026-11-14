@@ -127,6 +127,7 @@ export function RouteGlobe({ legs, height = 460 }: { legs: Leg[]; height?: numbe
         </div>
         <div className="mt-0.5 text-[13px] text-neutral-600">{anyLive ? 'Live position from the plane itself' : 'Planned route. The plane goes live when it takes off.'}{live.length ? ` · ${live.filter((p) => !p.onGround).length} planes near ${dest} now` : ''}</div>
       </div>
+      {!ready && <div className="absolute inset-0 z-[5] flex items-center justify-center"><div className="flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-[13px] text-neutral-600"><span className="size-1.5 animate-pulse rounded-full bg-neutral-500" /> Loading the route</div></div>}
       <ReactGlobe
         ref={ref}
         width={w}

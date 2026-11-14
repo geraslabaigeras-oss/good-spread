@@ -48,7 +48,7 @@ export function agencyFeeLines(p: Production): BudgetLine[] {
       id: `fee-${person.id}`,
       category: 'talent',
       label: `Agency fee ${person.commissionPct}% (estimate), ${person.name}`,
-      amount: round2((person.dayRate * person.commissionPct) / 100),
+      amount: round2((person.dayRate * (p.shootDays ?? 1) * person.commissionPct) / 100),
       source: 'estimate',
       personId: person.id,
     });
