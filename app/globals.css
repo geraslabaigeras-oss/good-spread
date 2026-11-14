@@ -2,12 +2,7 @@
 @import "tw-animate-css"; /* keep only if shadcn installed it */
 
 /* 1. Delete Tailwind's default palette and shadows so slop can't compile. */
-@theme {
-  --color-*: initial;
-  --shadow-*: initial;
-  --inset-shadow-*: initial;
-  --drop-shadow-*: initial;
-}
+/* Tailwind's default palette stays available so shadcn / Magic UI components render as designed. */
 
 :root {
   --paper: #f7f5f3;
@@ -38,7 +33,7 @@
   --card-foreground: var(--ink);
   --popover: var(--surface);
   --popover-foreground: var(--ink);
-  --primary: var(--action);
+  --primary: var(--ink);
   --primary-foreground: #ffffff;
   --secondary: transparent;
   --secondary-foreground: var(--ink);
@@ -55,8 +50,6 @@
 
 /* 2. Utilities: bg-paper, text-ink, border-hairline, bg-action, text-conflict, font-serif ... */
 @theme inline {
-  --color-white: #ffffff;
-  --color-black: #0d0d0d;
   --color-paper: var(--paper);
   --color-surface: var(--surface);
   --color-ink: var(--ink);

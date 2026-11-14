@@ -1,10 +1,15 @@
 'use client';
 
-/* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
+import { forwardRef, useRef } from 'react';
 import { motion } from 'motion/react';
-import { Stage } from '@/components/glass/Stage';
-import { fmtEur } from '@/lib/format';
+import { CalendarClock, FileText, Mail, MessageCircle, Smartphone, Sparkles, Users } from 'lucide-react';
+import { AnimatedBeam } from '@/components/ui/animated-beam';
+import { BentoCard, BentoGrid } from '@/components/ui/bento-grid';
+import { NumberTicker } from '@/components/ui/number-ticker';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 type Props = {
   cap: number;
@@ -16,168 +21,228 @@ type Props = {
 };
 
 const ease = [0.16, 1, 0.3, 1] as const;
-const up = (d = 0) => ({ initial: { opacity: 0, y: 28 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, amount: 0.2 }, transition: { duration: 0.9, ease, delay: d } });
+const eur = (n: number) => (n === 0 ? '€0' : n > 0 ? `+€${Math.round(n)}` : `−€${Math.round(-n)}`);
 
-export function Landing({ cap, stills, routes, best, people, moment }: Props) {
-
-  const steps = [
-    { k: 'Brief', t: 'Upload a reference image. You get the look, palette, lighting and shot list as a brief you can edit.', big: `${stills} stills`, href: '/new' },
-    { k: 'Strategies', t: `${routes.map((r) => r.name).join(', ')}. Each is costed line by line against your cap.`, big: fmtEur(best.total), href: '/plan' },
-    { k: 'Team', t: 'Choose models, a photographer and a studio. Cost and call times update as you pick.', big: `${people} people`, href: '/plan/assemble' },
-    { k: 'Production', t: 'A flight changes. You see three fixes with their cost. Approve one and each person gets their new call time.', big: '0 messages', href: '/plan/assemble' },
-  ];
-
+export function Landing({ cap, routes, best, people, moment }: Props) {
   return (
-    <Stage>
-      {/* nav: floating glass pill */}
-      <header className="glass sticky top-[18px] z-30 mx-auto mt-[18px] flex h-14 w-[calc(100%-32px)] max-w-[1360px] items-center justify-between rounded-[20px] pl-[22px] pr-2.5 md:w-[calc(100%-80px)]">
-        <span className="text-[15px] font-medium tracking-[-0.15px]">good spread</span>
-        <nav className="hidden gap-[30px] text-[15px] font-medium tracking-[-0.28px] text-grey-1 md:flex">
-          <a href="#how" className="hover:text-ink">How it works</a>
-          <Link href="/people" className="hover:text-ink">Your people</Link>
-        </nav>
-        <Link href="/new" className="g-btn !h-10 !px-[18px] !text-[14px]">Start a shoot</Link>
+    <div className="min-h-dvh bg-[#fafaf9] text-neutral-950">
+      <header className="sticky top-0 z-30 border-b border-neutral-200/70 bg-[#fafaf9]/80 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+          <span className="text-[15px] font-medium tracking-[-0.15px]">good spread</span>
+          <nav className="hidden items-center gap-8 text-sm text-neutral-500 md:flex">
+            <a href="#how" className="hover:text-neutral-950">How it works</a>
+            <a href="#features" className="hover:text-neutral-950">Features</a>
+            <Link href="/people" className="hover:text-neutral-950">Your people</Link>
+          </nav>
+          <Button size="lg" className="rounded-full px-5" render={<Link href="/new" />} nativeButton={false}>Start a shoot</Button>
+        </div>
       </header>
 
       {/* hero */}
-      <section className="relative overflow-hidden pb-24 pt-16 md:pt-[120px]">
-        <div aria-hidden className="g-ghost left-[-2%] top-[40px]">good spread</div>
-        <div className="relative mx-auto w-[calc(100%-36px)] max-w-[1328px] md:w-[calc(100%-112px)]">
-          <motion.div initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease }} className="max-w-[900px]">
-            <span className="g-pill mb-[26px]">Production planning for fashion shoots</span>
-            <h1 className="font-serif text-[clamp(48px,6.4vw,96px)] leading-[0.98] tracking-[-0.045em]">Producers plan it.<br />Talent lives it.</h1>
-            <p className="mt-8 max-w-[30em] font-serif text-[clamp(18px,1.6vw,22px)] leading-[1.35] tracking-[-0.02em] text-grey-1">
-              One plan for the whole shoot. When something changes, you approve a fix and everyone on set gets their new times.
-            </p>
-            <div className="mt-[30px] flex items-center gap-[22px]">
-              <Link href="/new" className="g-btn">Start a shoot</Link>
-              <Link href="/people" className="text-[13px] text-grey-1 transition-colors hover:text-ink">or add your people first →</Link>
-            </div>
-          </motion.div>
-          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.1, ease, delay: 0.25 }} className="mt-16">
-            <Moment m={moment} />
-          </motion.div>
-        </div>
-      </section>
-
-      {/* how it works: fog band with hairline timeline (BYSN roadmap) */}
-      <section id="how" className="relative py-10">
-        <div className="fog-light relative isolate mx-auto w-[calc(100%-36px)] max-w-[1328px] overflow-hidden rounded-[36px] px-6 pb-28 pt-12 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.6)] md:w-[calc(100%-112px)] md:px-16 md:pt-[72px]">
-          <div className="grain-layer" />
-          <motion.div {...up()} className="relative">
-            <span className="g-pill mb-[26px]">How it works</span>
-            <h2 className="font-serif text-[clamp(36px,4.4vw,64px)] leading-none tracking-[-0.04em]">From a reference<br />to a call sheet.</h2>
-          </motion.div>
-          <div className="relative z-[1] mt-14 grid grid-cols-2 gap-8 md:grid-cols-4">
-            <div aria-hidden className="absolute left-1.5 right-0 top-[50px] hidden h-px bg-ink/20 md:block" />
-            {steps.map((s, i) => (
-              <motion.div key={s.k} {...up(i * 0.09)}>
-                <Link href={s.href} className="group block">
-                  <span className="relative z-[1] mb-[22px] mt-[46px] ml-0.5 block size-[9px] rounded-full bg-white shadow-[0_0_0_1px_rgb(28_28_28/0.35),0_0_0_4px_rgb(28_28_28/0.06)] transition-transform group-hover:scale-125" />
-                  <h3 className="mb-2 text-[13px] font-medium uppercase tracking-[0.06em]">{s.k}</h3>
-                  <p className="max-w-[22em] text-[13.5px] leading-[1.45] text-grey-1">{s.t}</p>
-                  <div className="mt-[18px] font-serif text-[40px] leading-none tracking-[-0.04em] num">{s.big}</div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* three plans: BYSN dark fog band */}
-      <section className="relative py-10">
-        <div className="fog-dark relative isolate mx-auto w-[calc(100%-36px)] max-w-[1328px] overflow-hidden rounded-[36px] px-6 pb-16 pt-12 md:w-[calc(100%-112px)] md:px-16 md:pt-[72px]">
-          <div className="grain-layer" />
-          <motion.div {...up()} className="relative">
-            <span className="g-pill mb-[26px]">Three plans · one brief</span>
-            <h2 className="max-w-[14em] font-serif text-[clamp(36px,4.4vw,64px)] leading-none tracking-[-0.04em] text-white">Same reference.<br />Same {fmtEur(cap)} cap.</h2>
-          </motion.div>
-          <div className="relative mt-16 grid gap-10 md:grid-cols-3">
-            {routes.map((r, i) => (
-              <motion.div key={r.name} {...up(0.1 + i * 0.12)} className="relative pl-6" style={{ marginTop: `${(2 - i) * 28}px` }}>
-                <span aria-hidden className="absolute bottom-0 left-0 top-1 w-px bg-white/30" />
-                <span aria-hidden className="absolute left-[-3px] top-0 size-[7px] rounded-full bg-white/80" />
-                <span className="g-pill">{r.name}</span>
-                <div className={`mt-5 font-serif text-[clamp(44px,4.6vw,68px)] leading-none tracking-[-0.045em] num ${r.overCap ? 'text-white/45' : 'text-white'}`}>{fmtEur(r.total)}</div>
-                <div className="mt-2 text-[14px] text-white/60">{r.overCap ? `${fmtEur(r.total - cap)} over the cap` : `${fmtEur(cap - r.total)} under the cap`}{r.name === best.name ? ' · recommended' : ''}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA: dark fog with ghost wordmark (Trelli) */}
-      <section className="relative pb-20">
-        <motion.div {...up()} className="fog-dark relative isolate mx-auto w-[calc(100%-36px)] max-w-[1328px] overflow-hidden rounded-[36px] px-10 pb-24 pt-[150px] text-center md:w-[calc(100%-112px)]">
-          <div className="grain-layer" />
-          <div aria-hidden className="g-ghost left-1/2 top-[30px] -translate-x-1/2 !text-white/55">good spread</div>
-          <div className="relative">
-            <h2 className="font-serif text-[clamp(40px,5vw,72px)] leading-none tracking-[-0.04em] text-white">Plan your next shoot.</h2>
-            <p className="mx-auto mb-[34px] mt-[22px] max-w-[22em] font-serif text-[20px] leading-[1.35] text-white/70">Start with one reference image. No account needed.</p>
-            <div className="flex items-center justify-center gap-[22px]">
-              <Link href="/new" className="g-btn !bg-white !text-ink">Start with a reference</Link>
-              <Link href="/people" className="text-[13px] text-white/70 hover:text-white">or add your people →</Link>
-            </div>
+      <section className="mx-auto max-w-6xl px-6 pb-16 pt-20 md:pt-28">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }} className="mx-auto max-w-3xl text-center">
+          <Badge variant="outline" className="rounded-full bg-white px-3 py-1 text-xs font-normal text-neutral-600">Production planning for fashion shoots</Badge>
+          <h1 className="mt-6 text-balance font-serif text-5xl leading-[1.02] tracking-[-0.045em] md:text-7xl">Producers plan it.<br />Talent lives it.</h1>
+          <p className="mx-auto mt-6 max-w-xl text-balance text-lg leading-7 text-neutral-500">
+            Drop in the flight change, the screenshot, the agency email. good spread finds what breaks, prices three fixes, and updates everyone&rsquo;s day when you approve one.
+          </p>
+          <div className="mt-8 flex items-center justify-center gap-3">
+            <Button size="lg" className="h-11 rounded-full px-6" render={<Link href="/new" />} nativeButton={false}>Start a shoot</Button>
+            <Button size="lg" variant="outline" className="h-11 rounded-full bg-white px-6" render={<Link href="/people" />} nativeButton={false}>Add your people</Button>
           </div>
         </motion.div>
+
+        <div id="how" className="mt-16 scroll-mt-24">
+          <Flow />
+        </div>
       </section>
 
-      <footer className="mx-auto grid w-[calc(100%-36px)] max-w-[1328px] gap-10 pb-14 pt-4 text-[12.5px] text-grey-1 md:w-[calc(100%-112px)] md:grid-cols-[1fr_2fr]">
-        <div><span className="text-[15px] font-medium text-ink">good spread</span><p className="mt-2.5">Built at Unfair Weekend Vilnius, 2026.</p></div>
-        <div>
-          <p>Plans use only the people you add. Prices are your rates; flights and hotels are estimates until booked.</p>
-          <p className="mt-1.5">AI reads documents and images. Costs, schedules and fixes are calculated by code.</p>
+      {/* numbers */}
+      <section className="mx-auto max-w-6xl px-6">
+        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-200 md:grid-cols-4">
+          {[
+            { v: routes.length, pre: '', l: 'costed plans per brief' },
+            { v: best.total, pre: '€', l: `cheapest plan under the €${cap.toLocaleString('en-US')} cap` },
+            { v: moment.fixes.length, pre: '', l: 'priced fixes per change' },
+            { v: people, pre: '', l: 'phones updated in one approve' },
+          ].map((x) => (
+            <div key={x.l} className="bg-white px-6 py-8">
+              <div className="font-serif text-4xl tracking-[-0.04em] tabular-nums md:text-5xl">{x.pre}<NumberTicker value={x.v} className="tracking-[-0.04em] text-neutral-950" /></div>
+              <div className="mt-2 text-sm text-neutral-500">{x.l}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* features */}
+      <section id="features" className="mx-auto max-w-6xl scroll-mt-16 px-6 py-24">
+        <div className="max-w-2xl">
+          <h2 className="font-serif text-4xl tracking-[-0.04em] md:text-5xl">One plan for the whole shoot.</h2>
+          <p className="mt-4 text-lg text-neutral-500">AI only reads the messy input. Every cost, call time and fix is calculated by code, so the numbers hold up.</p>
+        </div>
+        <BentoGrid className="mt-12 auto-rows-[20rem] lg:grid-cols-3">
+          <BentoCard
+            name="Reads the inbox" Icon={FileText} href="/new" cta="Start a shoot" className="lg:col-span-1"
+            description="Flight PDFs, WhatsApp screenshots and agency emails become structured updates."
+            background={<InboxVisual />}
+          />
+          <BentoCard
+            name="Three fixes, priced" Icon={Sparkles} href="/new" cta="Start a shoot" className="lg:col-span-2"
+            description={`${moment.who} now lands ${moment.lands} and misses ${moment.call} hair and makeup. Pick a fix; the cost is exact.`}
+            background={<FixesVisual fixes={moment.fixes} />}
+          />
+          <BentoCard
+            name="Your people" Icon={Users} href="/people" cta="Add your people" className="lg:col-span-2"
+            description="The models and crew you actually book. Find models on models.com, message them on WhatsApp or iMessage."
+            background={<PeopleVisual />}
+          />
+          <BentoCard
+            name="Everyone's day, live" Icon={Smartphone} href="/people" cta="Add your people" className="lg:col-span-1"
+            description="Each person gets their own page and a text. They tap Got it; you see who has seen it."
+            background={<PhoneVisual m={moment} />}
+          />
+        </BentoGrid>
+      </section>
+
+      {/* closing */}
+      <section className="mx-auto max-w-6xl px-6 pb-24">
+        <div className="flex flex-col items-start justify-between gap-8 rounded-3xl bg-neutral-950 px-8 py-14 text-white md:flex-row md:items-center md:px-14">
+          <div>
+            <h2 className="font-serif text-4xl tracking-[-0.04em] md:text-5xl">Plan your next shoot.</h2>
+            <p className="mt-3 text-neutral-400">Start with one reference image. No account needed.</p>
+          </div>
+          <Button size="lg" variant="secondary" className="h-11 rounded-full px-6" render={<Link href="/new" />} nativeButton={false}>Start a shoot</Button>
+        </div>
+      </section>
+
+      <footer className="border-t border-neutral-200">
+        <div className="mx-auto flex max-w-6xl flex-col justify-between gap-4 px-6 py-10 text-sm text-neutral-500 md:flex-row">
+          <span><span className="font-medium text-neutral-950">good spread</span> · Built at Unfair Weekend Vilnius, 2026</span>
+          <span>Plans use only the people you add. Flights and hotels are estimates until booked.</span>
         </div>
       </footer>
-    </Stage>
+    </div>
   );
 }
 
-/** The product's core moment, as a framed preview. Figures come from the engine (see app/page.tsx). */
-function Moment({ m }: { m: Props['moment'] }) {
-  const step = (d: number) => ({ initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.7, ease, delay: d } });
+/* ---------- inputs → good spread → people (Magic UI Animated Beam) ---------- */
+
+const Node = forwardRef<HTMLDivElement, { className?: string; children: React.ReactNode; label: string }>(({ className, children, label }, ref) => (
+  <div className="flex flex-col items-center gap-2">
+    <div ref={ref} className={cn('z-10 flex size-14 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-700 shadow-[0_0_20px_-12px_rgba(0,0,0,0.8)]', className)}>
+      {children}
+    </div>
+    <span className="whitespace-nowrap text-xs text-neutral-500">{label}</span>
+  </div>
+));
+Node.displayName = 'Node';
+
+function Flow() {
+  const box = useRef<HTMLDivElement>(null);
+  const i1 = useRef<HTMLDivElement>(null);
+  const i2 = useRef<HTMLDivElement>(null);
+  const i3 = useRef<HTMLDivElement>(null);
+  const hub = useRef<HTMLDivElement>(null);
+  const o1 = useRef<HTMLDivElement>(null);
+  const o2 = useRef<HTMLDivElement>(null);
+  const o3 = useRef<HTMLDivElement>(null);
+  const o4 = useRef<HTMLDivElement>(null);
   return (
-    <div className="glass overflow-hidden !rounded-[28px]">
-      <div className="grid h-11 grid-cols-[1fr_auto_1fr] items-center border-b border-white/60 px-[18px]">
-        <div className="flex gap-[7px]">{[0, 1, 2].map((i) => <i key={i} className="block size-[11px] rounded-full bg-ink/[0.14]" />)}</div>
-        <span className="rounded-full bg-white/60 px-4 py-[5px] text-[12.5px] text-grey-1 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.7)]">good spread · production board</span>
-        <span />
+    <div ref={box} className="relative mx-auto flex h-[380px] w-full max-w-4xl items-center justify-between overflow-hidden rounded-3xl border border-neutral-200 bg-white px-8 md:px-20">
+      <div className="flex flex-col gap-9">
+        <Node ref={i1} label="Flight PDF"><FileText className="size-6" strokeWidth={1.5} /></Node>
+        <Node ref={i2} label="WhatsApp screenshot"><MessageCircle className="size-6" strokeWidth={1.5} /></Node>
+        <Node ref={i3} label="Agency email"><Mail className="size-6" strokeWidth={1.5} /></Node>
       </div>
-      <div className="grid gap-5 p-5 md:grid-cols-[1fr_1.6fr_0.9fr] md:p-7">
-        {/* 1. inbox */}
-        <motion.div {...step(0.6)} className="rounded-[20px] bg-white p-5 shadow-[0_0_0_1px_rgb(0_0_0/0.06),0_1px_2px_rgb(0_0_0/0.06)]">
-          <span className="g-pill">Inbox</span>
-          <div className="mt-4 text-[13px] text-grey-1">Read from flight_change.pdf</div>
-          <div className="mt-1 text-[17px] leading-6">{m.who}&rsquo;s flight now lands <span className="font-medium">{m.lands}</span></div>
-          <div className="mt-4 rounded-[12px] bg-conflict-tint px-3 py-2.5 text-[13px] leading-5 text-conflict">Can&rsquo;t make {m.call} hair and makeup</div>
-        </motion.div>
-        {/* 2. three fixes */}
-        <motion.div {...step(0.9)} className="rounded-[20px] bg-white p-5 shadow-[0_0_0_1px_rgb(0_0_0/0.06),0_1px_2px_rgb(0_0_0/0.06)]">
-          <span className="g-pill">Three fixes</span>
-          <div className="mt-4 grid grid-cols-3 gap-2.5">
-            {m.fixes.map((f) => (
-              <div key={f.label} className={`rounded-[14px] p-3.5 ${f.best ? 'bg-ink text-white' : 'shadow-[inset_0_0_0_1px_rgb(13_13_13/0.1)]'}`}>
-                <div className={`text-[12px] ${f.best ? 'text-white/70' : 'text-grey-1'}`}>{f.best ? 'Recommended' : f.creative ? 'Changes casting' : '\u00a0'}</div>
-                <div className="mt-1 text-[14px] font-medium leading-5">{f.label}</div>
-                <div className="mt-3 font-serif text-[30px] leading-none tracking-[-0.04em] num">{f.cost === 0 ? '€0' : f.cost > 0 ? `+€${Math.round(f.cost)}` : `−€${Math.round(-f.cost)}`}</div>
-                <div className={`mt-1 text-[12px] ${f.best ? 'text-white/70' : 'text-grey-1'}`}>{f.people} people</div>
-              </div>
-            ))}
+      <Node ref={hub} label="Finds the conflict, prices 3 fixes" className="size-24 border-neutral-950 bg-neutral-950 text-white">
+        <span className="text-center text-[13px] font-medium leading-4">good<br />spread</span>
+      </Node>
+      <div className="flex flex-col gap-4">
+        <Node ref={o1} label="Model" className="size-11"><Smartphone className="size-5" strokeWidth={1.5} /></Node>
+        <Node ref={o2} label="Photographer" className="size-11"><Smartphone className="size-5" strokeWidth={1.5} /></Node>
+        <Node ref={o3} label="Hair & makeup" className="size-11"><Smartphone className="size-5" strokeWidth={1.5} /></Node>
+        <Node ref={o4} label="Stylist" className="size-11"><Smartphone className="size-5" strokeWidth={1.5} /></Node>
+      </div>
+      {[i1, i2, i3].map((r, k) => (
+        <AnimatedBeam key={`in${k}`} containerRef={box} fromRef={r} toRef={hub} curvature={(k - 1) * -50} pathColor="#a3a3a3" gradientStartColor="#0a0a0a" gradientStopColor="#737373" duration={4} delay={k * 0.4} />
+      ))}
+      {[o1, o2, o3, o4].map((r, k) => (
+        <AnimatedBeam key={`out${k}`} containerRef={box} fromRef={hub} toRef={r} curvature={(k - 1.5) * -35} pathColor="#a3a3a3" gradientStartColor="#0a0a0a" gradientStopColor="#737373" duration={4} delay={1.6 + k * 0.2} />
+      ))}
+    </div>
+  );
+}
+
+/* ---------- bento backgrounds ---------- */
+
+function InboxVisual() {
+  const rows = [
+    { i: FileText, t: 'flight_change.pdf', s: 'lands 10:45' },
+    { i: MessageCircle, t: 'WhatsApp screenshot', s: '30 min late' },
+    { i: Mail, t: 'Agency email', s: 'rate confirmed' },
+  ];
+  return (
+    <div className="absolute inset-x-4 top-4 space-y-2 [mask-image:linear-gradient(to_bottom,#000_60%,transparent)]">
+      {rows.map((r) => (
+        <div key={r.t} className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm transition-transform duration-300 group-hover:translate-x-1">
+          <r.i className="size-4 text-neutral-500" strokeWidth={1.5} />
+          <span className="flex-1 truncate">{r.t}</span>
+          <span className="text-xs text-neutral-500">{r.s}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FixesVisual({ fixes }: { fixes: Props['moment']['fixes'] }) {
+  return (
+    <div className="absolute inset-x-4 top-4 grid grid-cols-3 gap-2 [mask-image:linear-gradient(to_bottom,#000_65%,transparent)]">
+      {fixes.map((f) => (
+        <div key={f.label} className={cn('rounded-xl border p-4 transition-transform duration-300 group-hover:-translate-y-1', f.best ? 'border-neutral-950 bg-neutral-950 text-white' : 'border-neutral-200 bg-white')}>
+          <div className={cn('text-xs', f.best ? 'text-neutral-400' : 'text-neutral-500')}>{f.best ? 'Recommended' : f.creative ? 'Changes casting' : 'Overtime'}</div>
+          <div className="mt-1 text-sm font-medium">{f.label}</div>
+          <div className="mt-4 font-serif text-3xl tracking-[-0.04em] tabular-nums">{eur(f.cost)}</div>
+          <div className={cn('mt-1 text-xs', f.best ? 'text-neutral-400' : 'text-neutral-500')}>{f.people} people</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PeopleVisual() {
+  const rows = [
+    { r: 'Model', c: 'Vilnius', d: '€400' },
+    { r: 'Model', c: 'Riga · flies in', d: '€450' },
+    { r: 'Photographer', c: 'Vilnius', d: '€600' },
+    { r: 'Hair & makeup', c: 'Vilnius', d: '€300' },
+  ];
+  return (
+    <div className="absolute inset-x-4 top-4 grid grid-cols-2 gap-2 [mask-image:linear-gradient(to_bottom,#000_60%,transparent)]">
+      {rows.map((x, k) => (
+        <div key={k} className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-3">
+          <div className="flex size-9 items-center justify-center rounded-full bg-neutral-100 text-neutral-400"><Users className="size-4" strokeWidth={1.5} /></div>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-medium">{x.r}</div>
+            <div className="truncate text-xs text-neutral-500">{x.c}</div>
           </div>
-        </motion.div>
-        {/* 3. the phone */}
-        <motion.div {...step(1.2)} className="mx-auto w-full max-w-[240px] rounded-[30px] bg-ink p-2">
-          <div className="rounded-[24px] bg-[#f6f4f0] px-4 pb-4 pt-5">
-            <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-grey-1">Your day · updated</div>
-            <div className="mt-2 text-[13px] text-grey-1">{m.who}</div>
-            <div className="mt-1 flex items-baseline gap-2">
-              <span className="text-[15px] text-grey-2 line-through">{m.call}</span>
-              <span className="font-serif text-[46px] leading-none tracking-[-0.04em] num">{m.newCall}</span>
-            </div>
-            <div className="mt-1 text-[12px] text-grey-1">Call time · lands {m.lands}</div>
-            <div className="mt-4 flex h-10 items-center justify-center rounded-full bg-ink text-[13px] font-medium text-white">Got it</div>
-          </div>
-        </motion.div>
+          <span className="text-xs tabular-nums text-neutral-500">{x.d}/day</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PhoneVisual({ m }: { m: Props['moment'] }) {
+  return (
+    <div className="absolute left-1/2 top-4 w-[200px] -translate-x-1/2 rounded-[28px] bg-neutral-950 p-1.5 transition-transform duration-300 group-hover:-translate-y-1 [mask-image:linear-gradient(to_bottom,#000_70%,transparent)]">
+      <div className="rounded-[22px] bg-white px-4 pb-5 pt-4">
+        <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-neutral-500"><CalendarClock className="size-3" /> Your day · updated</div>
+        <div className="mt-3 flex items-baseline gap-2">
+          <span className="text-sm text-neutral-400 line-through">{m.call}</span>
+          <span className="font-serif text-4xl tracking-[-0.04em] tabular-nums">{m.newCall}</span>
+        </div>
+        <div className="mt-1 text-xs text-neutral-500">Call time · lands {m.lands}</div>
+        <div className="mt-4 flex h-9 items-center justify-center rounded-full bg-neutral-950 text-xs font-medium text-white">Got it</div>
       </div>
     </div>
   );
