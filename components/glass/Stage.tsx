@@ -14,7 +14,7 @@ export function Stage({ children, backdrop, voice = false }: { children: React.R
   return (
     <div className="stage">
       {/* living background: one slow grainy colour field (React Bits Grainient), 1x pixel ratio, no blur on top */}
-      <div className="pointer-events-none fixed inset-0 z-0 opacity-90"><Grainient colors={['#f7f7f7', '#ececec', '#dde2e8', '#f4f4f4']} lightMode grainAnimated grainAmount={0.1} speed={0.18} flow={1} softness={0.95} dpr={1} /></div>
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-90"><Grainient colors={['#f4f7fb', '#d9e5f2', '#b4c9e2', '#eef3f9']} lightMode grainAnimated grainAmount={0.1} speed={0.18} flow={1} softness={0.95} dpr={1} /></div>
       {backdrop && <div className="backdrop-img" style={{ backgroundImage: `url(${backdrop})` }} />}
       <div className="grain" />
       <div className="content">{children}</div>
