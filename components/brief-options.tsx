@@ -35,7 +35,8 @@ export function BriefOptions({ brief, draft, setDraft }: { brief: CreativeBrief;
     .filter((p) => p.role === 'photographer')
     .map((p) => ({ p, m: lookMatch(brief.needs?.photographer, toCatalog(p).lookWords) }))
     .sort((a, b) => b.m.score - a.m.score), [roster.key, brief.needs?.photographer]); // eslint-disable-line react-hooks/exhaustive-deps
-  const crew = roster.people.filter((p) => p.role === 'mua' || p.role === 'stylist');
+  const home = draft.scoutCity && draft.scoutCity !== 'auto' ? draft.scoutCity : null;
+  const crew = roster.people.filter((p) => p.role === 'mua' || p.role === 'stylist').sort((a, b) => Number(b.city === home) - Number(a.city === home));
   const toggle = (id: string) => setDraft({ ...draft, shortlist: shortlist.includes(id) ? shortlist.filter((x) => x !== id) : [...shortlist, id] });
 
   const [city, setCity] = useState<string>(draft.scoutCity ?? 'auto'); // what we ask the scout for
@@ -83,13 +84,13 @@ export function BriefOptions({ brief, draft, setDraft }: { brief: CreativeBrief;
           </div>
           {shortlist.length > 0 && <span className="shrink-0 text-[14px] text-neutral-700">{shortlist.length} shortlisted</span>}
         </div>
-        <div className="-mx-2 mt-5 flex snap-x gap-4 overflow-x-auto px-2 pb-3">
+        <div className="-mx-4 mt-3 flex snap-x scroll-px-4 gap-4 overflow-x-auto px-4 pb-6 pt-3">
           {!roster.ready && Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-[340px] w-[210px] shrink-0 animate-pulse rounded-[22px] bg-neutral-200/70" />)}
           {models.map(({ p, m }, i) => {
             const on = shortlist.includes(p.id);
             return (
               <motion.button key={p.id} onClick={() => setViewing(p.id)} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: i * 0.05, ease }}
-                className={`group w-[210px] shrink-0 snap-start overflow-hidden rounded-[22px] bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,.04),0_14px_34px_rgba(0,0,0,.06)] transition-shadow ${on ? 'ring-2 ring-neutral-950' : ''}`}>
+                className={`group flex w-[210px] shrink-0 snap-start flex-col justify-start overflow-hidden rounded-[22px] bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,.04),0_14px_34px_rgba(0,0,0,.06)] transition-shadow ${on ? 'ring-2 ring-neutral-950' : ''}`}>
                 <div className="relative h-[260px] overflow-hidden bg-neutral-200">
                   {p.photo && <img src={p.photo} alt={p.name} className="size-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.04]" />}
                   {on && <span className="absolute right-3 top-3 flex size-7 items-center justify-center rounded-full bg-neutral-950 text-white"><Check className="size-4" /></span>}
@@ -110,11 +111,11 @@ export function BriefOptions({ brief, draft, setDraft }: { brief: CreativeBrief;
       <section>
         <h3 className="text-[26px] font-light tracking-[-0.02em]">Photographer</h3>
         <p className="mt-1 text-[14px] text-neutral-500">Looking for: {brief.needs?.photographer ?? brief.lighting}. Add one with a link to their portfolio and we read their style.</p>
-        <div className="-mx-2 mt-5 flex gap-4 overflow-x-auto px-2 pb-3">
+        <div className="-mx-4 mt-3 flex gap-4 overflow-x-auto px-4 pb-6 pt-3">
           {photogs.map(({ p, m }) => {
             const on = shortlist.includes(p.id);
             return (
-              <button key={p.id} onClick={() => setViewing(p.id)} className={`w-[210px] shrink-0 overflow-hidden rounded-[22px] bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,.04),0_14px_34px_rgba(0,0,0,.06)] ${on ? 'ring-2 ring-neutral-950' : ''}`}>
+              <button key={p.id} onClick={() => setViewing(p.id)} className={`flex w-[210px] shrink-0 flex-col justify-start overflow-hidden rounded-[22px] bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,.04),0_14px_34px_rgba(0,0,0,.06)] ${on ? 'ring-2 ring-neutral-950' : ''}`}>
                 <div className="relative h-[160px] bg-neutral-200">{p.photo && <img src={p.photo} alt={p.name} className="size-full object-cover" />}{on && <span className="absolute right-3 top-3 flex size-7 items-center justify-center rounded-full bg-neutral-950 text-white"><Check className="size-4" /></span>}</div>
                 <div className="p-3.5"><div className="truncate text-[15px] font-medium">{p.name}</div><div className="truncate text-[12px] text-neutral-500">{p.look?.look ?? p.city}</div>{m.hits.length > 0 && <div className="mt-2 truncate text-[12px] text-neutral-700">Fits: {m.hits.slice(0, 3).join(', ')}</div>}</div>
               </button>
@@ -126,17 +127,24 @@ export function BriefOptions({ brief, draft, setDraft }: { brief: CreativeBrief;
 
       {/* Your own crew */}
       <section>
-        <h3 className="text-[26px] font-light tracking-[-0.02em]">Your own crew</h3>
-        <p className="mt-1 text-[14px] text-neutral-500">Already have a make-up artist or stylist? Add them and they go into the plan. Otherwise we keep the slot open and price it.</p>
-        <div className="-mx-2 mt-5 flex gap-4 overflow-x-auto px-2 pb-3">
+        <h3 className="text-[26px] font-light tracking-[-0.02em]">Make-up and styling</h3>
+        <p className="mt-1 text-[14px] text-neutral-500">{home ? `People based near ${home} first. ` : ''}Tap one to see their work and call their agent, or add someone you already work with.</p>
+        <div className="-mx-4 mt-3 flex gap-4 overflow-x-auto px-4 pb-6 pt-3">
           {crew.map((p) => (
-            <div key={p.id} className="flex w-[260px] shrink-0 items-center gap-3 rounded-[22px] bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,.04),0_14px_34px_rgba(0,0,0,.06)]">
-              {p.photo ? <img src={p.photo} alt="" className="size-12 rounded-full object-cover" /> : <span className="flex size-12 items-center justify-center rounded-full bg-neutral-200">{p.name[0]}</span>}
-              <span className="min-w-0"><span className="block truncate text-[15px] font-medium">{p.name}</span><span className="text-[12px] text-neutral-500">{p.role === 'mua' ? 'Hair & make-up' : 'Stylist'}</span></span>
-            </div>
+            <button key={p.id} onClick={() => setViewing(p.id)} className={`flex w-[210px] shrink-0 flex-col justify-start overflow-hidden rounded-[22px] bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,.04),0_14px_34px_rgba(0,0,0,.06)] ${shortlist.includes(p.id) ? 'ring-2 ring-neutral-950' : ''}`}>
+              <div className="relative h-[160px] w-full shrink-0 bg-neutral-200">
+                {p.photo ? <img src={p.photo} alt={p.name} className="size-full object-cover" /> : <span className="flex size-full items-center justify-center text-[48px] font-light text-neutral-400">{p.name[0]}</span>}
+                {shortlist.includes(p.id) && <span className="absolute right-3 top-3 flex size-7 items-center justify-center rounded-full bg-neutral-950 text-white"><Check className="size-4" /></span>}
+              </div>
+              <div className="p-3.5">
+                <div className="truncate text-[15px] font-medium">{p.name}</div>
+                <div className="truncate text-[12px] text-neutral-500">{p.role === 'mua' ? 'Make-up' : 'Stylist'} · {p.agency ?? p.city}</div>
+                {p.availability && <div className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${p.availability === 'available' ? 'bg-emerald-50 text-emerald-700' : p.availability === 'hold' ? 'bg-amber-50 text-amber-700' : 'bg-neutral-100 text-neutral-500'}`}>{p.availability === 'available' ? 'Available' : p.availability === 'hold' ? 'On hold' : 'Not available'}</div>}
+              </div>
+            </button>
           ))}
-          <AddCard label="Add make-up artist" sub="link, Instagram screenshot or just a name" onClick={() => setAdding('mua')} small />
-          <AddCard label="Add stylist" sub="link, Instagram screenshot or just a name" onClick={() => setAdding('stylist')} small />
+          <AddCard label="Add make-up artist" sub="link, Instagram screenshot or just a name" onClick={() => setAdding('mua')} />
+          <AddCard label="Add stylist" sub="link, Instagram screenshot or just a name" onClick={() => setAdding('stylist')} />
         </div>
       </section>
 
@@ -155,7 +163,7 @@ export function BriefOptions({ brief, draft, setDraft }: { brief: CreativeBrief;
             const backup = backupStudios(l)[0];
             return (
               <motion.button key={l.id} onClick={() => pick(l)} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: i * 0.04, ease }}
-                className={`group flex flex-col overflow-hidden rounded-[22px] bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,.04),0_14px_34px_rgba(0,0,0,.06)] ${on ? 'ring-2 ring-neutral-950' : ''}`}>
+                className={`group flex flex-col justify-start overflow-hidden rounded-[22px] bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,.04),0_14px_34px_rgba(0,0,0,.06)] ${on ? 'ring-2 ring-neutral-950' : ''}`}>
                 <div className="relative h-[190px] overflow-hidden bg-neutral-200">
                   <img src={l.image_url} alt={l.name} className="size-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
                   <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-0.5 text-[12px] capitalize">{l.type}</span>
@@ -193,7 +201,7 @@ export function BriefOptions({ brief, draft, setDraft }: { brief: CreativeBrief;
                 const on = draft.place?.url === pl.url;
                 return (
                   <button key={pl.url} onClick={() => setDraft({ ...draft, place: on ? null : pl, scoutCity: pl.city ?? draft.scoutCity })}
-                    className={`group flex flex-col overflow-hidden rounded-[22px] bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,.04),0_14px_34px_rgba(0,0,0,.06)] ${on ? 'ring-2 ring-neutral-950' : ''}`}>
+                    className={`group flex flex-col justify-start overflow-hidden rounded-[22px] bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,.04),0_14px_34px_rgba(0,0,0,.06)] ${on ? 'ring-2 ring-neutral-950' : ''}`}>
                     <div className="relative h-[160px] overflow-hidden bg-neutral-200">{pl.image && <img src={pl.image} alt={pl.name} className="size-full object-cover" />}{on && <span className="absolute right-3 top-3 flex size-7 items-center justify-center rounded-full bg-neutral-950 text-white"><Check className="size-4" /></span>}</div>
                     <div className="p-4">
                       <div className="text-[16px] font-medium">{pl.name}</div>

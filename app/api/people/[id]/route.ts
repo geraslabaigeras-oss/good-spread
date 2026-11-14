@@ -9,7 +9,7 @@ const Id = z.string().regex(/^p-[a-z0-9]{8}$/);
 export async function PUT(req: Request, ctx: RouteContext<'/api/people/[id]'>) {
   return handle(async () => {
     const { id } = await ctx.params;
-    if (/^tb-[a-z0-9-]{3,80}$/.test(id)) {
+    if (/^(tb|eu)-[a-z0-9-]{3,80}$/.test(id)) {
       const body = await parseJson(req, RosterInput.pick({ availability: true, availabilityNote: true }));
       if ('error' in body) return body.error;
       return setTalentAvailability(id, body.data.availability ?? null, body.data.availabilityNote) ? ok({ person: { id } }) : fail(404, 'not_found');

@@ -63,3 +63,34 @@ export function talentImagePath(file: string): string | null {
   const p = path.join(DIR, 'img', file);
   return fs.existsSync(p) ? p : null;
 }
+
+/* ---------- Europe crew (private/europe): photographers, stylists, make-up artists. Local only, like the book. ---------- */
+type CrewEntry = { id: string; name: string; city: string; country: string; agency: string; credits?: string; style_keywords?: string; url: string; base_verified?: boolean };
+const EU = path.join(process.cwd(), 'private', 'europe');
+const COUNTRY_BASE: Record<string, City> = {
+  Lithuania: 'Vilnius', Latvia: 'Riga', Estonia: 'Tallinn', 'United Kingdom': 'London', Germany: 'Berlin', Portugal: 'Lisbon', France: 'Paris',
+  Italy: 'Milan', Denmark: 'Copenhagen', Sweden: 'Stockholm', Spain: 'Barcelona', Iceland: 'Reykjavik', Greece: 'Athens', Poland: 'Warsaw', Netherlands: 'Amsterdam',
+};
+const RATE: Record<string, number> = { photographer: 1200, stylist: 600, mua: 500 };
+export function europeCrew(): RosterPerson[] {
+  if (!talentBookEnabled() || !fs.existsSync(EU)) return [];
+  let imgs: Record<string, string[]> = {};
+  try { imgs = JSON.parse(fs.readFileSync(path.join(EU, 'images.json'), 'utf8')); } catch {}
+  const state = readState();
+  const load = (file: string, role: 'photographer' | 'stylist' | 'mua') => {
+    try { return (JSON.parse(fs.readFileSync(path.join(EU, `${file}.json`), 'utf8')) as CrewEntry[]).map((c) => ({ c, role })); } catch { return []; }
+  };
+  return [...load('photographers', 'photographer'), ...load('stylists', 'stylist'), ...load('mua', 'mua')].map(({ c, role }) => {
+    const city = ((CITIES as readonly string[]).find((x) => c.city.toLowerCase().startsWith(x.toLowerCase())) as City | undefined) ?? COUNTRY_BASE[c.country] ?? 'London';
+    const pics = imgs[c.id] ?? [];
+    const words = [c.style_keywords, c.credits].filter(Boolean).join(', ');
+    return {
+      id: `eu-${c.id}`, createdAt: '2026-11-14T00:00:00Z', source: 'talent-book' as const,
+      name: c.name, role, city, dayRate: RATE[role], rateIsEstimate: true,
+      agency: `${c.agency}${c.city ? ` ${c.city.split(' /')[0]}` : ''}`, commissionPct: 20, profileUrl: c.url, instagram: null,
+      photo: pics[0] ?? null, gallery: pics, notes: words || null,
+      look: words ? { look: c.style_keywords ? `Style: ${c.style_keywords}.` : `Credits: ${c.credits}.`, hair: c.credits ? `Credits: ${c.credits}` : '', features: [], vibe: (c.style_keywords ?? '').split(',').map((s) => s.trim()).filter(Boolean).slice(0, 4), bookShows: [], fitNotes: '' } : null,
+      availability: state[`eu-${c.id}`]?.availability ?? null, availabilityNote: state[`eu-${c.id}`]?.availabilityNote ?? null,
+    };
+  });
+}
