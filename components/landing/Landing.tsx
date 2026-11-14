@@ -5,6 +5,11 @@ import Link from 'next/link';
 import { motion } from 'motion/react';
 import { TextAnimate } from '@/components/ui/text-animate';
 import { Card, Carousel } from '@/components/ui/apple-cards-carousel';
+import { AnimatedList } from '@/components/ui/animated-list';
+import { NumberTicker } from '@/components/ui/number-ticker';
+import { BorderBeam } from '@/components/ui/border-beam';
+import { Change as RollChange } from '@/components/flow/ui';
+import '@/components/flow/flow-theme.css';
 
 type Props = {
   cap: number;
@@ -65,14 +70,20 @@ function Chip({ children, className }: { children: React.ReactNode; className?: 
   );
 }
 
-function Panel({ pill, title, children }: { pill: string; title: string; children: React.ReactNode }) {
+function Panel({ pill, title, children, beam }: { pill: string; title: string; children: React.ReactNode; beam?: boolean }) {
   return (
-    <div className="rounded-[28px] bg-white/45 p-7 shadow-[inset_0_0_0_1px_rgba(255,255,255,.7),0_18px_48px_rgba(80,60,40,.07)] backdrop-blur-xl">
+    <div className="relative overflow-hidden rounded-[28px] bg-white/45 p-7 shadow-[inset_0_0_0_1px_rgba(255,255,255,.7),0_18px_48px_rgba(80,60,40,.07)] backdrop-blur-xl">
       <Pill>{pill}</Pill>
       <h3 className="mb-4 mt-5 text-2xl font-light tracking-[-0.02em]">{title}</h3>
       {children}
+      {beam && <BorderBeam size={140} duration={7} colorFrom="#0a0a0a" colorTo="#9aa7b0" />}
     </div>
   );
+}
+
+function Bubble({ children, tone }: { children: React.ReactNode; tone: 'alert' | 'best' | 'plain' | 'ok' }) {
+  const c = tone === 'alert' ? 'bg-red-50 text-red-700' : tone === 'best' ? 'bg-neutral-950 text-white' : tone === 'ok' ? 'bg-emerald-50 text-emerald-800' : 'bg-white text-neutral-800';
+  return <div className={`flex w-full items-center rounded-2xl px-4 py-2.5 text-[14px] shadow-[0_4px_14px_rgba(0,0,0,.05)] ${c}`}>{children}</div>;
 }
 
 export function Landing({ cap, stills, routes, best, people, moment }: Props) {
@@ -139,30 +150,34 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
         <div className="relative z-[2] mx-auto max-w-6xl">
           <h2 className="max-w-2xl text-4xl font-light leading-[1.05] tracking-[-0.03em] md:text-6xl">From one reference to everyone&rsquo;s day.</h2>
           <div className="mt-14 grid gap-4 md:grid-cols-3">
-            <Panel pill="Plan" title={`${routes.length} plans, each costed`}>
+            <Panel pill="Plan" title={`${routes.length} plans, each costed`} beam>
               {routes.map((r) => (
                 <div key={r.name} className="flex items-baseline justify-between border-t border-neutral-900/10 py-2.5 text-[15px]">
                   <span className={r.name === best.name ? 'text-neutral-900' : 'text-neutral-500'}>{r.name}{r.name === best.name ? ' · recommended' : ''}</span>
-                  <span className={`tabular-nums ${r.overCap ? 'text-neutral-400 line-through' : ''}`}>{eur(r.total)}</span>
+                  <span className={`tabular-nums ${r.overCap ? 'text-neutral-400 line-through' : ''}`}>€<NumberTicker value={Math.round(r.total)} className="text-inherit" /></span>
                 </div>
               ))}
               <p className="mt-3 text-[13px] text-neutral-500">Against a {eur(cap)} cap. Code does the sums, not AI.</p>
             </Panel>
             <Panel pill="Change" title={`${moment.who} lands ${moment.lands}`}>
-              <p className="text-[13px] text-neutral-500">Misses {moment.call} hair and makeup. Three fixes:</p>
-              {moment.fixes.map((f) => (
-                <div key={f.label} className="flex items-baseline justify-between border-t border-neutral-900/10 py-2.5 text-[15px]">
-                  <span className={f.best ? 'text-neutral-900' : 'text-neutral-500'}>{f.label}</span>
-                  <span className="tabular-nums">{delta(f.cost)}</span>
-                </div>
-              ))}
+              <div className="relative h-[220px] overflow-hidden">
+                <AnimatedList delay={1400}>
+                  {[
+                    <Bubble key="c" tone="alert">Misses {moment.call} hair and makeup</Bubble>,
+                    ...moment.fixes.map((f) => <Bubble key={f.label} tone={f.best ? 'best' : 'plain'}>{f.label} <b className="ml-auto pl-3 tabular-nums">{delta(f.cost)}</b></Bubble>),
+                  ]}
+                </AnimatedList>
+              </div>
             </Panel>
             <Panel pill="Everyone" title={`${people} phones update`}>
-              <div className="flex items-baseline gap-3">
-                <span className="text-[15px] text-neutral-400 line-through">{moment.call}</span>
-                <span className="text-6xl font-light tracking-[-0.04em] tabular-nums">{moment.newCall}</span>
+              <div className="flow !bg-transparent">
+                <div className="text-6xl font-light tracking-[-0.04em]"><RollChange old={moment.call} now={moment.newCall} /></div>
               </div>
-              <p className="mt-3 text-[13px] text-neutral-500">Each person gets their new call time by text and taps Got it. You see who has seen it. Nobody types a message.</p>
+              <div className="relative mt-4 h-[150px] overflow-hidden">
+                <AnimatedList delay={1100}>
+                  {['Model', 'Photographer', 'Hair & makeup', 'Stylist', 'Model 2'].map((r) => <Bubble key={r} tone="ok">{r} tapped Got it</Bubble>)}
+                </AnimatedList>
+              </div>
             </Panel>
           </div>
         </div>
