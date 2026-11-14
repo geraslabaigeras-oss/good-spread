@@ -116,7 +116,7 @@ export default function People() {
   const shown = people.filter((p) => filter === 'all' || p.role === filter);
 
   return (
-    <div className="relative min-h-dvh bg-[linear-gradient(180deg,#f3f2ee_0%,#eceeed_50%,#d9e0e4_100%)] text-neutral-900">
+    <div className="relative min-h-dvh bg-[linear-gradient(180deg,#f6f7f8_0%,#eef1f3_50%,#dde3e8_100%)] text-neutral-900">
       <svg aria-hidden className="pointer-events-none fixed inset-0 z-0 h-full w-full opacity-[0.1] mix-blend-overlay">
         <filter id="pgrain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch" /></filter>
         <rect width="100%" height="100%" filter="url(#pgrain)" />

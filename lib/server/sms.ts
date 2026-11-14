@@ -5,10 +5,10 @@ export function appUrl(): string {
   return u.replace(/\/$/, '');
 }
 
-/** GSM-safe, ≤ 160 chars: GOOD SPREAD (demo): {name}, {change text}. Confirm: {APP_URL}/p/{token} */
+/** GSM-safe, ≤ 160 chars: good spread: {name}, {change text}. Confirm: {APP_URL}/p/{token} */
 export function smsText(name: string, change: string, token: string): string {
   const gsm = (s: string) => s.replace(/→/g, '->').replace(/[–—]/g, '-').normalize('NFD').replace(/[̀-ͯ]/g, '');
-  const head = `GOOD SPREAD (demo): ${gsm(name)}, `;
+  const head = `good spread: ${gsm(name)}, `;
   const tail = ` Confirm: ${appUrl()}/p/${token}`;
   let body = gsm(change.charAt(0).toLowerCase() + change.slice(1));
   const room = 160 - head.length - tail.length;

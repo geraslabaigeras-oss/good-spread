@@ -7,6 +7,7 @@ import { TextAnimate } from '@/components/ui/text-animate';
 import { Card, Carousel } from '@/components/ui/apple-cards-carousel';
 import { Safari } from '@/components/ui/safari';
 import { Iphone } from '@/components/ui/iphone';
+import { MessagesScreen } from '@/components/messages-screen';
 import { BrandLogo } from '@/components/brand-logo';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { NumberTicker } from '@/components/ui/number-ticker';
@@ -73,6 +74,18 @@ function Chip({ children, className }: { children: React.ReactNode; className?: 
   );
 }
 
+function Feature({ title, tag, date, light, children }: { title: string; tag: string; date: string; light?: boolean; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className={`relative aspect-square overflow-hidden rounded-[22px] ${light ? 'shadow-[inset_0_0_0_1px_rgba(0,0,0,.06)]' : ''}`}>{children}</div>
+      <div className="mt-4 px-1">
+        <p className="text-[19px] leading-6 tracking-[-0.01em] text-neutral-950">{title}</p>
+        <p className="mt-2 text-[14px]"><span className="text-neutral-900">{tag}</span> <span className="ml-2 text-neutral-400">{date}</span></p>
+      </div>
+    </div>
+  );
+}
+
 function Panel({ pill, title, children, beam }: { pill: string; title: string; children: React.ReactNode; beam?: boolean }) {
   return (
     <div className="relative overflow-hidden rounded-[28px] bg-white/45 p-7 shadow-[inset_0_0_0_1px_rgba(255,255,255,.7),0_18px_48px_rgba(80,60,40,.07)] backdrop-blur-xl">
@@ -98,9 +111,9 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
   ];
 
   return (
-    <div className="bg-[#efeee9] font-sans text-neutral-900">
+    <div className="bg-[#fafafa] font-sans text-neutral-900">
       {/* Hero: editorial serif + floating real photos in shapes with live chips (after the team's own good-spread hero) */}
-      <section className="relative h-[100svh] min-h-[720px] w-full overflow-hidden bg-[#f7f6f3]">
+      <section className="relative h-[100svh] min-h-[720px] w-full overflow-hidden bg-[#fafafa]">
         <Grain />
         <header className="absolute inset-x-0 top-0 z-30 mx-auto flex h-20 max-w-7xl items-center justify-between px-6 text-[14px] text-neutral-700">
           <span className="font-medium text-neutral-900">good spread</span>
@@ -148,7 +161,7 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
       </section>
 
       {/* How it works, shown: the real board on a laptop and the real crew page on a phone (Magic UI Safari + iPhone frames) */}
-      <section id="how" className="relative overflow-hidden bg-[linear-gradient(180deg,#f7f6f3_0%,#eceeed_55%,#d6dee3_100%)] px-4 py-24 md:px-10">
+      <section id="how" className="relative overflow-hidden bg-[linear-gradient(180deg,#f6f7f8_0%,#eef1f3_55%,#dfe5ea_100%)] px-4 py-24 md:px-10">
         <Grain />
         <div className="relative z-[2] mx-auto max-w-6xl">
           <div className="grid items-end gap-6 md:grid-cols-2">
@@ -163,17 +176,95 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
             </motion.div>
 
             <motion.div initial={{ opacity: 0, y: 60 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.9, delay: 0.25 }} className="relative mx-auto mt-10 w-[260px] md:absolute md:-bottom-10 md:right-0 md:mt-0 md:w-[300px]">
-              <Iphone src="/screens/myday.jpg" className="drop-shadow-[0_30px_60px_rgba(0,0,0,.25)]" />
+              <div className="relative">
+                <Iphone className="drop-shadow-[0_30px_60px_rgba(0,0,0,.25)]" />
+                <div className="absolute overflow-hidden" style={{ left: `${(21.25 / 433) * 100}%`, top: `${(19.25 / 882) * 100}%`, width: `${(389.5 / 433) * 100}%`, height: `${(843.5 / 882) * 100}%`, borderRadius: `${(55.75 / 389.5) * 100}% / ${(55.75 / 843.5) * 100}%` }}>
+                  <MessagesScreen name="Model" before={moment.call} after={moment.newCall} place="Pilies courtyard, Vilnius" url="good-spread.app/p/k3f9" />
+                </div>
+              </div>
               <motion.div initial={{ opacity: 0, y: -20, scale: 0.9 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 1.1, type: 'spring' }}
                 className="absolute -left-10 top-16 w-[280px] rounded-2xl bg-white/90 p-3 shadow-[0_18px_40px_rgba(0,0,0,.18)] backdrop-blur-xl md:-left-24">
                 <div className="flex items-center gap-2 text-[11px] text-neutral-500"><BrandLogo name="imessage" size={14} /> Messages · now</div>
                 <p className="mt-1 text-[13px] leading-[18px] text-neutral-900"><b>good spread:</b> Your call moved {moment.call} → {moment.newCall}. Tap to confirm.</p>
               </motion.div>
-              <p className="mt-3 text-center text-[13px] text-neutral-500">Their phone: new call time, where to be, Got it.</p>
+              <p className="mt-3 text-center text-[13px] text-neutral-500">The text each person gets, sent by Twilio. One tap opens their day.</p>
             </motion.div>
           </div>
         </div>
       </section>
+
+      {/* ElevenLabs-style: framed column, grainy gradient cards, the agency call as bubbles */}
+      <section id="agent" className="bg-[#fafafa]">
+        <div className="mx-auto max-w-6xl border-x border-neutral-200/80 px-6 py-24 md:px-10">
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <h2 className="text-4xl tracking-[-0.02em] text-neutral-950 md:text-5xl">What the agent does for you</h2>
+            <Link href="/new" className="rounded-full border border-neutral-200 bg-white px-5 py-2.5 text-[15px] shadow-[0_1px_2px_rgba(0,0,0,.04)]">Try it</Link>
+          </div>
+
+          <div className="mt-12 grid gap-4 md:grid-cols-3">
+            <Feature title="Scouts real places for the look" tag="Claude · Wikipedia" date="Brief">
+              <div className="relative h-full bg-[radial-gradient(120%_90%_at_10%_10%,#f2c48d_0%,#d98a45_40%,#9c5a2b_75%,#5b3420_100%)]">
+                <Grain />
+                <div className="absolute left-6 top-6 text-[34px] leading-none tracking-[-0.03em] text-white">Locations</div>
+                <div className="absolute bottom-6 right-6 text-[34px] leading-none tracking-[-0.03em] text-white/95">Vilnius · Riga</div>
+              </div>
+            </Feature>
+            <Feature title="Calls agencies in their language" tag="ElevenLabs" date="Team">
+              <div className="relative flex h-full items-center justify-center bg-[radial-gradient(90%_70%_at_75%_15%,#f06b4f_0%,transparent_60%),radial-gradient(80%_80%_at_20%_85%,#1f6b45_0%,transparent_65%),linear-gradient(135deg,#e7a07a,#2d5a3f)]">
+                <Grain />
+                <div className="relative flex items-center gap-3 text-[40px] tracking-[-0.03em] text-white">Calls <span className="rounded-full border-2 border-white px-3 py-0.5 text-[24px]">FR · IT · SE</span></div>
+              </div>
+            </Feature>
+            <Feature title="Re-plans the minute a flight slips" tag="Engine" date="Shoot day" light>
+              <div className="flex h-full flex-col items-center justify-center bg-white px-6 text-center">
+                <div className="text-[13px] font-semibold">good spread</div>
+                <div className="text-[28px] tracking-[-0.02em]">Three fixes, priced</div>
+                <div className="mt-4 grid w-full grid-cols-3 gap-2 rounded-2xl bg-neutral-900 p-4 text-white">
+                  {moment.fixes.map((f) => (
+                    <div key={f.label} className="text-center"><div className="text-[22px] font-light tabular-nums">{delta(f.cost)}</div><div className="mt-1 text-[10px] text-white/60">{f.label}</div></div>
+                  ))}
+                </div>
+              </div>
+            </Feature>
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-[1.4fr_1fr]">
+            <div className="relative min-h-[460px] overflow-hidden rounded-[28px] bg-[radial-gradient(120%_100%_at_20%_0%,#a9bccb_0%,#5b6f8f_35%,#232c4a_70%,#0d0f1a_100%)] p-8">
+              <Grain />
+              <div className="relative mx-auto flex max-w-[380px] flex-col gap-3 pt-6">
+                <span className="self-end rounded-full border border-white/50 px-4 py-2 text-[14px] text-white">Bonjour, je suis l&rsquo;assistant de la production. Votre mannequin est-elle disponible le 21 ?</span>
+                <span className="self-start rounded-2xl bg-white px-4 py-2.5 text-[14px] text-neutral-900">Oui, elle est disponible. Tarif journalier 600 €, usage web 12 mois.</span>
+                <span className="self-end rounded-full border border-white/50 px-4 py-2 text-[14px] text-white">Parfait, je vous envoie le brief.</span>
+                <span className="inline-flex items-center gap-2 self-start rounded-full bg-white px-4 py-2 text-[14px] text-neutral-900"><span className="size-2 rounded-full bg-emerald-500" /> Available · €600 · added to the plan</span>
+              </div>
+              <div className="absolute bottom-7 left-8 right-8 text-white">
+                <div className="text-[15px] text-white/70">Agency calls</div>
+                <p className="mt-1 text-[17px] leading-6">The agent asks for availability, rate and usage in the agency&rsquo;s language. You read along in English and log the answer.</p>
+              </div>
+            </div>
+            <div className="flex flex-col justify-between rounded-[28px] bg-[#f3f3f2] p-6">
+              <div className="rounded-2xl bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,.05)]">
+                <div className="text-[14px] font-medium">Your team</div>
+                {[['Model', 'Available', 'bg-emerald-500'], ['Second model', 'On hold', 'bg-amber-500'], ['Photographer', 'Available', 'bg-emerald-500'], ['Stylist', 'Calling…', 'bg-sky-500']].map(([r, st, c]) => (
+                  <div key={r} className="mt-3 flex items-center justify-between border-t border-neutral-100 pt-3 text-[14px]">
+                    <span>{r}</span><span className="inline-flex items-center gap-2 text-neutral-600"><span className={`size-2 rounded-full ${c}`} />{st}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-6">
+                <div className="text-[15px] text-neutral-500">Availability</div>
+                <p className="mt-1 text-[17px] leading-6 text-neutral-900">Every answer lands on the person and in the plan, so the budget and call sheet stay true.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* floating voice pill (ElevenLabs) */}
+      <Link href="/new" className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-3 rounded-full bg-white py-2 pl-2 pr-5 text-[15px] shadow-[0_10px_30px_rgba(0,0,0,.12),inset_0_0_0_1px_rgba(0,0,0,.05)]">
+        <span className="size-9 rounded-full bg-[radial-gradient(circle_at_30%_30%,#bfe3ff,#3c8dde_45%,#2f6b3a_80%)]" />
+        Voice brief
+      </Link>
 
       {/* Aceternity Apple Cards Carousel with real photography */}
       <section className="py-20">

@@ -224,7 +224,7 @@
  * Sources: good-spread flow-theme.css + DESIGN-REFS.md (BYSN fog, Trelli grain, Cosmos cards).
  */
 .stage {
-  --g-bg: #f1efe8;
+  --g-bg: #f6f7f8;
   --g-fg: #0d0d0d;
   --g-dim: #6e6a69;
   --g-faint: #9a9796;
@@ -241,7 +241,7 @@
   --g-shadow: 0 1px 2px rgb(28 26 25 / 0.04), 0 18px 48px rgb(80 60 40 / 0.08);
   --g-ease: cubic-bezier(0.16, 1, 0.3, 1);
   position: relative; min-height: 100dvh; overflow-x: hidden;
-  background: linear-gradient(180deg, #f1efe8 0%, #eeece6 40%, #e2e3e0 72%, #c9d0d3 100%) fixed;
+  background: linear-gradient(180deg, #f6f7f8 0%, #f1f3f5 40%, #e6eaed 72%, #d3dbe0 100%) fixed;
   color: var(--g-fg);
 }
 .stage .aurora { display: none; position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
