@@ -3,7 +3,7 @@
 import useSWR from 'swr';
 import { motion } from 'motion/react';
 import { useCallback, useRef, useState } from 'react';
-import { ArrowUpRight, RotateCcw } from 'lucide-react';
+import { ArrowUpRight, Plane, RotateCcw } from 'lucide-react';
 import type { BoardState, PublicPending } from '@/lib/server/views';
 import type { Change, Receipt } from '@/lib/types';
 import { fmtDate, fmtEur } from '@/lib/format';
@@ -152,7 +152,20 @@ function BoardInner({ slug }: { slug: string }) {
 
   const team = data.people.filter((x) => x.role !== 'producer');
   // Demo: the first traveller's flight now lands 10:45 (what a live flight status feed would report)
+  const [happenOpen, setHappenOpen] = useState(false);
+  const models = team.filter((x) => x.role === 'model');
+  const sendUpdate = async (body: Record<string, unknown>) => {
+    setHappenOpen(false);
+    await fetch('/api/inbox/apply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slug, inboxId: `event-${Date.now()}`, ...body }) });
+    await mutate();
+  };
+  const runningLate = (id: string, minutes: number) => {
+    const call = callTime(p, id) ?? 540;
+    return sendUpdate({ source: `${nameOf(id).split(' ')[0]} by text: running late`, update: { kind: 'late', personId: id, readyMin: call + minutes, source: 'talent' } });
+  };
+  const cantMakeIt = (id: string) => sendUpdate({ source: `${nameOf(id).split(' ')[0]}'s agent: can't make it`, update: { kind: 'late', personId: id, readyMin: 99999, source: 'agency' } });
   const simulateDelay = async () => {
+    setHappenOpen(false);
     const t = p.travel[0];
     if (!t) return;
     const late = Math.max(t.arriveMin + 90, 645);
@@ -186,14 +199,18 @@ function BoardInner({ slug }: { slug: string }) {
   });
 
   // Day schedule: each person's call, plus flight landings, in time order; "was" when the last change moved it
-  type Row = { at: number; text: string; where: string; was?: string; kind: 'call' | 'land' };
+  type Row = { at: number; personId: string; name: string; role: string; what: string; was?: string; kind: 'call' | 'land'; late?: boolean };
+  const KIND_WORD: Record<string, string> = { hmu: 'Hair & make-up', shoot: 'Shoot', setup: 'Set-up', lunch: 'Lunch', wrap: 'Wrap' };
+  const firstBlock = (id: string) => [...p.blocks].filter((bl) => bl.personIds.includes(id)).sort((a, z) => a.startMin - z.startMin)[0];
   const rows: Row[] = [
     ...team.map((x) => {
       const call = callTime(p, x.id);
       const c = changedBy.get(x.id);
-      return call == null ? null : { at: call, text: `${x.name} call · ${ROLE_NAME[x.role]?.toLowerCase() ?? x.role}`, where: p.studio.name.split(',')[0], was: c?.kind === 'call_time' ? c.before : undefined, kind: 'call' as const };
+      const fb = firstBlock(x.id);
+      const what = fb ? `${KIND_WORD[fb.kind] ?? fb.kind}${fb.kind === 'shoot' && fb.lookIds?.length ? ` · looks ${fb.lookIds.join(', ')}` : ''}` : 'On set';
+      return call == null ? null : { at: call, personId: x.id, name: x.name, role: ROLE_NAME[x.role] ?? x.role, what, was: c?.kind === 'call_time' ? c.before : undefined, kind: 'call' as const, late: x.booking === 'delayed' };
     }).filter((r): r is NonNullable<typeof r> => !!r),
-    ...p.travel.map((t) => ({ at: t.arriveMin, text: `${t.number} lands · ${nameOf(t.personId)}`, where: t.to, was: t.scheduledArriveMin != null && t.scheduledArriveMin !== t.arriveMin ? fmt(t.scheduledArriveMin) : undefined, kind: 'land' as const })),
+    ...p.travel.map((t) => ({ at: t.arriveMin, personId: t.personId, name: nameOf(t.personId), role: '', what: `Lands at ${t.to}${t.number !== 'TBC' ? ` · ${t.number}` : ''}`, was: t.scheduledArriveMin != null && t.scheduledArriveMin !== t.arriveMin ? fmt(t.scheduledArriveMin) : undefined, kind: 'land' as const })),
   ].sort((a, z) => a.at - z.at);
 
   const NAV = [
@@ -236,8 +253,18 @@ function BoardInner({ slug }: { slug: string }) {
           <div className="text-[15px] text-neutral-500">Shoots <span className="mx-1.5">/</span> {p.title.replace(' (demo)', '')} <span className="mx-1.5">/</span> <span className="text-neutral-900">Plan</span></div>
           <div className="flex items-center gap-4">
             <span className={`border-b-2 pb-0.5 text-[17px] tabular-nums ${b.remaining < 0 ? 'border-red-600 text-red-600' : 'border-neutral-950'}`}>{fmtEur(Math.round(b.total))} <span className="text-neutral-400">/ {fmtEur(b.cap)}</span></span>
-            {p.travel.length > 0 && !data.pending && (
-              <button data-demo="simulate-delay" onClick={simulateDelay} className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-4 text-[14px] shadow-[inset_0_0_0_1px_rgba(0,0,0,.1)] hover:bg-neutral-50">✈ Simulate a flight delay</button>
+            {!data.pending && (
+              <div className="relative">
+                <button data-demo="simulate-delay" onClick={() => setHappenOpen((x) => !x)} className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-4 text-[14px] shadow-[inset_0_0_0_1px_rgba(0,0,0,.1)] hover:bg-neutral-50">Something happens…</button>
+                {happenOpen && (
+                  <div className="absolute right-0 top-12 z-50 w-[300px] overflow-hidden rounded-2xl bg-white p-1.5 shadow-[0_24px_60px_rgba(0,0,0,.18),0_0_0_0.5px_rgba(0,0,0,.08)]">
+                    <div className="px-3 pb-1 pt-2 text-[12px] text-neutral-500">Simulate a real-world change</div>
+                    {p.travel[0] && <button onClick={simulateDelay} className="flex w-full flex-col rounded-xl px-3 py-2.5 text-left hover:bg-neutral-50"><span className="text-[14px]">✈ Flight lands late</span><span className="text-[12px] text-neutral-500">{nameOf(p.travel[0].personId)}&rsquo;s flight slips 2 h</span></button>}
+                    {models[0] && <button onClick={() => runningLate(models[0].id, 45)} className="flex w-full flex-col rounded-xl px-3 py-2.5 text-left hover:bg-neutral-50"><span className="text-[14px]">⏱ Someone is running late</span><span className="text-[12px] text-neutral-500">{models[0].name} texts: 45 min late</span></button>}
+                    {models[1] && <button onClick={() => cantMakeIt(models[1].id)} className="flex w-full flex-col rounded-xl px-3 py-2.5 text-left hover:bg-neutral-50"><span className="text-[14px]">✕ Someone can&rsquo;t make it</span><span className="text-[12px] text-neutral-500">{models[1].name}&rsquo;s agent cancels</span></button>}
+                  </div>
+                )}
+              </div>
             )}
             <a href="#messages" className="inline-flex h-11 items-center rounded-full bg-neutral-950 px-5 text-[15px] font-medium text-white">Call sheet</a>
           </div>
@@ -259,40 +286,51 @@ function BoardInner({ slug }: { slug: string }) {
           <div className="mt-10"><Decision production={p} pending={null} approving={null} applied={applied} countUp={!!animateVersion} onApprove={approve} /></div>
         )}
 
-        {/* Today: the schedule is the main thing; arrivals and the route sit beside it */}
+        {/* Today: schedule on the left with the weather; on the right arrivals when people fly, otherwise weather and budget */}
         <div className="mt-8 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
+          <div className="flex min-w-0 flex-col gap-5">
           <div id="schedule" className="rounded-[28px] bg-white/70 p-6 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">
-            <div className="flex justify-between border-b border-black/[0.06] pb-4"><span className="text-[17px] font-medium">Day schedule</span><span className="text-[14px] text-neutral-500">{p.studio.name.split(',')[0]}</span></div>
-            <div className="divide-y divide-black/[0.06]">
-              {rows.map((r, i) => (
-                <div key={i} className="flex items-center gap-3 py-3">
-                  <span className={`w-[64px] shrink-0 rounded-full py-0.5 text-center text-[16px] tabular-nums ${r.was ? 'bg-neutral-950 text-white' : 'text-neutral-600'}`}>{fmt(r.at)}</span>
-                  <span className="min-w-0 flex-1 truncate text-[16px]">{r.text}</span>
-                  {r.was && <span className="shrink-0 rounded-full bg-neutral-950 px-2 py-0.5 text-[12px] text-white">was {r.was}</span>}
-                  <span className="shrink-0 text-[14px] text-neutral-500">{r.where}</span>
-                </div>
-              ))}
+              <div className="flex justify-between border-b border-black/[0.06] pb-4"><span className="text-[17px] font-medium">Day schedule</span><span className="truncate pl-4 text-[14px] text-neutral-500">{p.studio.name.split(',')[0]}</span></div>
+              <div className="mt-2">
+                {rows.map((r, i) => {
+                  const person = data.people.find((x) => x.id === r.personId);
+                  return (
+                    <div key={i} className="flex items-center gap-4 rounded-2xl px-2 py-2.5 transition-colors hover:bg-white">
+                      <span className={`w-[64px] shrink-0 rounded-full py-0.5 text-center text-[17px] tabular-nums ${r.was ? 'bg-neutral-950 text-white' : 'text-neutral-900'}`}>{fmt(r.at)}</span>
+                      {r.kind === 'land'
+                        ? <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#e3eaf3] text-neutral-700"><Plane className="size-4" /></span>
+                        : person?.photo ? <img src={person.photo} alt="" className="size-10 shrink-0 rounded-full object-cover object-top" /> : <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-[14px]">{r.name[0]}</span>}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[16px]">{r.kind === 'land' ? `${r.name.split(' ')[0]} lands` : r.name}{r.role && <span className="text-neutral-400"> · {r.role}</span>}</span>
+                        <span className="block truncate text-[13px] text-neutral-500">{r.what}</span>
+                      </span>
+                      {r.was && <span className="shrink-0 rounded-full bg-neutral-100 px-2.5 py-0.5 text-[12px] text-neutral-500 line-through">{r.was}</span>}
+                      {r.late && <span className="shrink-0 rounded-full bg-red-50 px-2.5 py-0.5 text-[12px] text-red-700">Late</span>}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
+            {p.travel.length > 0 && <div className="-mt-5">{(() => { const c = CITY[p.city ?? 'Vilnius'] ?? CITY.Vilnius; const ext = p.blocks.find((b) => b.kind === 'shoot'); return <WeatherCard lat={c.lat} lng={c.lng} dateISO={p.dateISO} place={p.studio.name.split(',')[0]} exteriorAt={ext ? `the exterior look at ${fmt(ext.startMin)}` : undefined} />; })()}</div>}
           </div>
-          <div className="flex flex-col gap-5">
-            {p.travel.length > 0 ? <Arrivals p={p} /> : <div className="rounded-[24px] bg-white/80 p-5 text-[15px] text-neutral-500 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">Nobody flies in. Everyone is based in {p.city ?? 'Vilnius'}.</div>}
-            {p.travel.length > 0 && <RouteGlobe legs={p.travel.map((t) => ({ id: t.personId, from: t.from, to: t.to, label: nameOf(t.personId), callsign: callsignFor(t.number), departMin: t.departMin, arriveMin: t.arriveMin, dateISO: p.dateISO }))} height={340} />}
-          </div>
-        </div>
-
-        {/* Weather and money */}
-        <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
-          <div className="-mt-5">{(() => { const c = CITY[p.city ?? 'Vilnius'] ?? CITY.Vilnius; const ext = p.blocks.find((b) => b.kind === 'shoot'); return <WeatherCard lat={c.lat} lng={c.lng} dateISO={p.dateISO} place={p.studio.name.split(',')[0]} exteriorAt={ext ? `the exterior look at ${fmt(ext.startMin)}` : undefined} />; })()}</div>
-          <div id="budget" className="rounded-[28px] bg-white/70 p-6 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">
-            <div className="flex justify-between"><span className="text-[17px] font-medium">Budget</span><span className="text-[14px] text-neutral-500">{fmtDate(p.dateISO).slice(4, 10)}</span></div>
-            <div className="mt-6 flex items-baseline gap-3"><span className="text-[34px] font-light tabular-nums">{fmtEur(Math.round(b.total))}</span><span className="text-[20px] font-light text-neutral-500">of {fmtEur(b.cap)}</span></div>
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-neutral-200"><motion.div className={`h-full rounded-full ${b.remaining < 0 ? 'bg-red-600' : 'bg-neutral-950'}`} initial={{ width: 0 }} animate={{ width: `${Math.min(100, (b.total / b.cap) * 100)}%` }} transition={{ duration: 1 }} /></div>
-            <div className="mt-4 divide-y divide-black/[0.06]">
-              {(['talent', 'crew', 'studio', 'travel', 'post', 'usage'] as const).filter((c) => b.byCategory[c] > 0).map((c) => (
-                <div key={c} className="flex justify-between py-2 text-[15px]"><span>{CAT_NAME[c]}</span><span className="tabular-nums">{fmtEur(Math.round(b.byCategory[c]))}</span></div>
-              ))}
+          <div className="flex min-w-0 flex-col gap-5">
+            {p.travel.length > 0 ? (
+              <>
+                <Arrivals p={p} />
+                <RouteGlobe legs={p.travel.map((t) => ({ id: t.personId, from: t.from, to: t.to, label: nameOf(t.personId), callsign: callsignFor(t.number), departMin: t.departMin, arriveMin: t.arriveMin, dateISO: p.dateISO }))} height={320} />
+              </>
+            ) : (() => { const c = CITY[p.city ?? 'Vilnius'] ?? CITY.Vilnius; const ext = p.blocks.find((b) => b.kind === 'shoot'); return <WeatherCard compact lat={c.lat} lng={c.lng} dateISO={p.dateISO} place={p.studio.name.split(',')[0]} exteriorAt={ext ? `the exterior look at ${fmt(ext.startMin)}` : undefined} />; })()}
+            <div id="budget" className="rounded-[28px] bg-white/70 p-6 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">
+              <div className="flex justify-between"><span className="text-[17px] font-medium">Budget</span><span className="text-[14px] text-neutral-500">{fmtDate(p.dateISO).slice(4, 10)}</span></div>
+              <div className="mt-6 flex items-baseline gap-3"><span className="text-[34px] font-light tabular-nums">{fmtEur(Math.round(b.total))}</span><span className="text-[20px] font-light text-neutral-500">of {fmtEur(b.cap)}</span></div>
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-neutral-200"><motion.div className={`h-full rounded-full ${b.remaining < 0 ? 'bg-red-600' : 'bg-neutral-950'}`} initial={{ width: 0 }} animate={{ width: `${Math.min(100, (b.total / b.cap) * 100)}%` }} transition={{ duration: 1 }} /></div>
+              <div className="mt-4 divide-y divide-black/[0.06]">
+                {(['talent', 'crew', 'studio', 'travel', 'post', 'usage'] as const).filter((c) => b.byCategory[c] > 0).map((c) => (
+                  <div key={c} className="flex justify-between py-2 text-[15px]"><span>{CAT_NAME[c]}</span><span className="tabular-nums">{fmtEur(Math.round(b.byCategory[c]))}</span></div>
+                ))}
+              </div>
+              <p className="mt-3 text-[14px] text-neutral-500">{b.remaining >= 0 ? `${fmtEur(Math.round(b.remaining))} under the cap, ${fmtEur(Math.round(b.contingency))} kept for surprises.` : `${fmtEur(Math.round(-b.remaining))} over the cap.`}{b.overtime > 0 ? ` Includes ${fmtEur(Math.round(b.overtime))} overtime.` : ''}</p>
             </div>
-            <p className="mt-3 text-[14px] text-neutral-500">{b.remaining >= 0 ? `${fmtEur(Math.round(b.remaining))} under the cap, ${fmtEur(Math.round(b.contingency))} kept for surprises.` : `${fmtEur(Math.round(-b.remaining))} over the cap.`}{b.overtime > 0 ? ` Includes ${fmtEur(Math.round(b.overtime))} overtime.` : ''}</p>
           </div>
         </div>
 

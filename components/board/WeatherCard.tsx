@@ -91,7 +91,7 @@ const icon = (code: number) => (code >= 95 ? CloudLightning : code >= 71 && code
 const fetcher = (u: string) => fetch(u).then((r) => (r.ok ? r.json() : null));
 
 /** Real forecast for the shoot day and place (Open-Meteo). When rain hits shoot hours, the sky turns to storm. */
-export function WeatherCard({ lat, lng, dateISO, place, exteriorAt }: { lat: number; lng: number; dateISO: string; place: string; exteriorAt?: string }) {
+export function WeatherCard({ lat, lng, dateISO, place, exteriorAt, compact }: { lat: number; lng: number; dateISO: string; place: string; exteriorAt?: string; compact?: boolean }) {
   const { data } = useSWR<Forecast | null>(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,precipitation_probability,weathercode&start_date=${dateISO}&end_date=${dateISO}&timezone=auto`, fetcher);
   const [demoRain, setDemoRain] = useState(false);
   const hours = [9, 10, 11, 12, 13, 14, 15, 16].map((h) => {
@@ -103,19 +103,19 @@ export function WeatherCard({ lat, lng, dateISO, place, exteriorAt }: { lat: num
   const wet = hours.find((x) => (x.rainP ?? 0) >= 60 || (x.code ?? 0) >= 61);
   const storm = !!wet;
   return (
-    <div className="relative mt-5 overflow-hidden rounded-[28px] shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]" style={{ minHeight: 300 }}>
+    <div className={`relative overflow-hidden rounded-[28px] shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)] ${compact ? '' : 'mt-5'}`} style={{ minHeight: compact ? 260 : 300 }}>
       <StormSky storm={storm} />
-      <div className="relative flex h-full min-h-[300px] flex-col justify-between gap-6 p-6 md:flex-row md:items-end">
+      <div className={`relative flex h-full flex-col justify-between gap-5 p-6 ${compact ? 'min-h-[260px]' : 'min-h-[300px] md:flex-row md:items-end'}`}>
         <div className="max-w-[460px]">
           <div className={`text-[13px] ${storm ? 'text-white/80' : 'text-neutral-500'}`}>Weather · {place} · {new Date(`${dateISO}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })}</div>
-          <div className={`mt-1 text-[26px] leading-8 ${storm ? 'text-white' : 'text-neutral-950'}`}>
+          <div className={`mt-1 ${compact ? 'text-[19px] leading-6' : 'text-[26px] leading-8'} ${storm ? 'text-white' : 'text-neutral-950'}`}>
             {!data ? 'Reading the forecast…' : storm ? <>Rain from {String(wet!.h).padStart(2, '0')}:00. <span className={storm ? 'text-white/70' : 'text-neutral-400'}>Shoot {exteriorAt ?? 'the exterior look'} before it, or move it to the studio backup.</span></> : <>Dry all day. <span className="text-neutral-400">Good light for the exterior looks.</span></>}
           </div>
           <button onClick={() => setDemoRain((x) => !x)} className={`mt-4 inline-flex h-9 items-center rounded-full px-4 text-[13px] ${storm ? 'bg-white text-neutral-950' : 'bg-neutral-950 text-white'}`}>{demoRain ? 'Back to the real forecast' : 'Simulate rain at 14:00'}</button>
         </div>
         <div className="flex gap-1 rounded-2xl bg-white/85 p-3">
           {hours.map((x) => { const I = x.code != null ? icon(x.code) : Cloud; return (
-            <div key={x.h} className="flex w-11 flex-col items-center gap-1 text-[12px]">
+            <div key={x.h} className={`flex ${compact ? 'w-8' : 'w-11'} flex-col items-center gap-1 text-[12px]`}>
               <span className="text-neutral-500">{x.h}</span>
               <I className={`size-4 ${x.code != null && x.code >= 51 ? 'text-[#4f78b3]' : 'text-neutral-700'}`} />
               <span className="tabular-nums">{x.temp != null ? `${x.temp}°` : '–'}</span>

@@ -41,8 +41,8 @@ function Chapter({ n, title, sub, children, cref, onReplay }: { n: string; title
     <div ref={cref} className="grid min-h-[560px] grid-cols-1 items-center gap-10 py-14 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)]">
       <div>
         <div className="text-[14px] text-neutral-500">{n}</div>
-        <h3 className="mt-2 text-[44px] font-normal leading-[1.05] tracking-[-0.035em]">{title}</h3>
-        <p className="mt-4 max-w-sm text-[16px] leading-7 text-neutral-600">{sub}</p>
+        <h3 className="mt-2 text-[52px] font-medium leading-[1.02] tracking-[-0.04em]">{title}</h3>
+        <p className="mt-3 text-[18px] text-neutral-500">{sub}</p>
         <button onClick={onReplay} className="mt-6 inline-flex items-center gap-1.5 text-[13px] text-neutral-500 hover:text-neutral-950"><RotateCcw className="size-3.5" /> Replay</button>
       </div>
       <div>{children}</div>
@@ -74,12 +74,19 @@ export function PlansChange() {
     <section id="changes" className="relative z-[1] px-6 pt-24">
       <div className="relative mx-auto max-w-[1280px]">
         <h2 className="max-w-[820px] text-[56px] font-normal leading-[1.03] tracking-[-0.04em]">Something always breaks. <span className="text-neutral-400">The plan fixes itself.</span></h2>
-        <p className="mt-4 text-[13px] text-neutral-400">Mockup data. Scroll to watch one shoot day go wrong and get fixed.</p>
+        <p className="mt-4 text-[13px] text-neutral-400">Mockup data</p>
 
         {/* 1. Storm */}
-        <Chapter n="09:12 · Weather" cref={storm.ref} onReplay={storm.replay} title={<>A storm rolls in. <span className="text-neutral-400">The exterior moves first.</span></>} sub="The forecast turns to rain at 14:00. The outdoor look swaps to 11:00, before the storm, and the studio look moves after lunch.">
+        <Chapter n="09:12 · Weather" cref={storm.ref} onReplay={storm.replay} title={<>Rain at 14:00.</>} sub="Exterior shot first. Before the storm.">
           <div className="relative overflow-hidden rounded-[20px] shadow-[0_0_0_0.5px_rgba(0,0,0,.08),0_30px_70px_rgba(20,40,90,.12)]" style={{ minHeight: 420 }}>
             <StormSky storm={storm.on} />
+            <AnimatePresence>{storm.on && (
+              <motion.div initial={{ y: -20, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ type: 'spring', stiffness: 240, damping: 20, delay: 0.9 }}
+                className="absolute left-1/2 top-[44%] z-20 w-[min(420px,86%)] -translate-x-1/2 rounded-[20px] bg-neutral-950/90 px-5 py-4 text-white shadow-[0_0_0_1px_rgba(255,255,255,.15),0_0_40px_rgba(140,180,240,.45),0_24px_60px_rgba(0,0,0,.35)]">
+                <div className="text-[20px] font-medium">Look 02 moved to 11:00</div>
+                <div className="text-[14px] text-white/70">Thunderstorm from 14:00 · crew told</div>
+              </motion.div>
+            )}</AnimatePresence>
             <div className="relative grid h-full grid-cols-1 gap-4 p-6 md:grid-cols-2">
               <div className="flex flex-col justify-between">
                 <div className={`text-[22px] leading-8 transition-colors duration-700 ${storm.on ? 'text-white' : 'text-neutral-950'}`}>{storm.on ? <>Rain at 14:00. <span className="text-white/70">Exterior to 11:00.</span></> : <>Dry until evening. <span className="text-neutral-400">Exterior at 14:00.</span></>}</div>
@@ -106,8 +113,15 @@ export function PlansChange() {
         </Chapter>
 
         {/* 2. Flight */}
-        <Chapter n="09:40 · Flight status" cref={flight.ref} onReplay={flight.replay} title={<>A flight lands late. <span className="text-neutral-400">The driver and the call follow.</span></>} sub="Talent 01's flight slips 25 minutes. The pickup and her call time move with it. Nobody else's day changes.">
+        <Chapter n="09:40 · Flight status" cref={flight.ref} onReplay={flight.replay} title={<>Flight late.</>} sub="Driver and call move. Nobody else does.">
           <div className="gs-paper relative overflow-hidden rounded-[20px] bg-white p-7 shadow-[0_0_0_0.5px_rgba(0,0,0,.08),0_30px_70px_rgba(20,40,90,.12)]">
+            <AnimatePresence>{flight.on && (
+              <motion.div initial={{ y: -16, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ type: 'spring', stiffness: 240, damping: 20, delay: 1.3 }}
+                className="absolute left-1/2 top-[38%] z-20 w-[min(400px,86%)] -translate-x-1/2 rounded-[20px] bg-neutral-950/90 px-5 py-4 text-white shadow-[0_0_40px_rgba(140,180,240,.45),0_24px_60px_rgba(0,0,0,.3)]">
+                <div className="text-[20px] font-medium text-[#ffb4a8]">Delayed 25m</div>
+                <div className="text-[14px] text-white/70">Late inbound aircraft · call now 13:15</div>
+              </motion.div>
+            )}</AnimatePresence>
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
                 <img src={img(CAST[0])} alt="" className="size-11 rounded-full object-cover object-top" />
@@ -135,7 +149,7 @@ export function PlansChange() {
         </Chapter>
 
         {/* 3. Everyone told */}
-        <Chapter n="09:41 · Messages" cref={told.ref} onReplay={told.replay} title={<>Everyone gets told. <span className="text-neutral-400">One message each, about their own day.</span></>} sub="You approve once. Each person gets their new time on the app they use, and you watch them see it.">
+        <Chapter n="09:41 · Messages" cref={told.ref} onReplay={told.replay} title={<>Everyone knows.</>} sub="One tap. One message each.">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
             <div className="relative h-[360px]">
               {msgs.map((m, i) => (

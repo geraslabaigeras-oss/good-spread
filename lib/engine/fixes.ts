@@ -55,7 +55,13 @@ export function swapTalent(p: Production, outId: string, incoming: Person): Prod
   plan.people = plan.people.filter((x) => x.id !== outId).concat(clone(incoming));
   plan.shortlist = plan.shortlist.filter((x) => x.id !== incoming.id);
   plan.blocks.forEach((b) => (b.personIds = b.personIds.map((x) => (x === outId ? incoming.id : x))));
+  const outTravel = plan.travel.find((t) => t.personId === outId);
   plan.travel = plan.travel.filter((t) => t.personId !== outId);
+  if (!incoming.local) {
+    // flies in on the morning like the person they replace (estimate until booked)
+    const arrive = outTravel?.arriveMin ?? 430;
+    plan.travel.push({ personId: incoming.id, mode: 'flight', number: 'TBC', from: '', to: outTravel?.to ?? '', departMin: Math.max(0, arrive - 150), arriveMin: arrive, transferMin: outTravel?.transferMin ?? 30, source: 'replacement' });
+  }
   plan.late = plan.late.filter((l) => l.personId !== outId);
   const outFirst = firstName(out.name);
   const inFirst = firstName(incoming.name);
@@ -68,6 +74,10 @@ export function swapTalent(p: Production, outId: string, incoming: Person): Prod
       }
       return { ...i, personId: incoming.id, label: i.label.replace(outFirst, inFirst) };
     });
+  if (!incoming.local) {
+    plan.budget.items.push({ id: `i-flight-${incoming.id}`, category: 'travel', label: `Flight, ${incoming.name}`, qty: 1, unit: 'flat', rate: 220, personId: incoming.id, source: 'estimate' });
+    plan.budget.items.push({ id: `i-taxi-${incoming.id}`, category: 'travel', label: `Taxi airport → set, ${incoming.name}`, qty: 1, unit: 'flat', rate: 30, personId: incoming.id, source: 'estimate' });
+  }
   return plan;
 }
 
@@ -125,10 +135,10 @@ export function proposeFixes(p: Production, conflict: Conflict): Fix[] {
   }
 
   // 3. SWAP_TALENT
-  const sub = p.shortlist.find((s) => s.role === late.role && s.local);
+  const sub = p.shortlist.find((s) => s.role === late.role && s.local) ?? p.shortlist.find((s) => s.role === late.role);
   if (sub) {
     fixes.push(finish(p, 'SWAP_TALENT', `Swap to ${firstName(sub.name)}`,
-      `${firstName(sub.name)} (shortlist, local) replaces ${firstName(late.name)}`, swapTalent(p, lateId, sub), true));
+      `${firstName(sub.name)} (shortlist, ${sub.local ? 'local' : 'flies in'}) replaces ${firstName(late.name)}`, swapTalent(p, lateId, sub), true));
   }
 
   return fixes.filter((f): f is Fix => !!f).slice(0, 3);

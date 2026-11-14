@@ -79,7 +79,8 @@ export function buildProduction(i: BuildInput): Production {
   const people: Person[] = [{ id: 'producer', name: 'Producer (you)', role: 'producer', dayRate: 0, otRatePerHour: 0, local: true }, ...picked.map((c) => toPerson(c, city))];
 
   const takenIds = new Set(picked.map((c) => c.id));
-  const shortlist = [...MODELS, ...PHOTOGRAPHERS].filter((c) => c.city === city && !takenIds.has(c.id)).map((c) => toPerson(c, city));
+  // locals first; others can fly in as a last resort
+  const shortlist = [...MODELS, ...PHOTOGRAPHERS].filter((c) => !takenIds.has(c.id)).sort((a, b) => Number(b.city === city) - Number(a.city === city)).slice(0, 12).map((c) => toPerson(c, city));
 
   const blocks = schedule(picks.models, picks.photographer, s.crew.mua, s.crew.stylist, looks);
   const first = Math.min(...blocks.map((b) => b.startMin));

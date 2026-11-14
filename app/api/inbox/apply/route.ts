@@ -7,8 +7,8 @@ import { manualUpdate, parseHHMM, type Update } from '@/lib/engine';
 
 const min = z.number().int().min(0).max(99999);
 const UpdateSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('travel'), personId: z.string().max(40), arriveMin: min, departMin: min.optional(), number: z.string().max(20).optional(), from: z.string().max(10).optional(), to: z.string().max(10).optional(), source: z.string().max(200) }),
-  z.object({ kind: z.literal('late'), personId: z.string().max(40), readyMin: min, source: z.string().max(200) }),
+  z.object({ kind: z.literal('travel'), personId: z.string().max(90), arriveMin: min, departMin: min.optional(), number: z.string().max(20).optional(), from: z.string().max(10).optional(), to: z.string().max(10).optional(), source: z.string().max(200) }),
+  z.object({ kind: z.literal('late'), personId: z.string().max(90), readyMin: min, source: z.string().max(200) }),
   z.object({ kind: z.literal('log'), source: z.string().max(200), text: z.string().max(500) }),
   z.object({ kind: z.literal('cap'), cap: z.number().int().min(500).max(1000000), source: z.string().max(200) }),
 ]);
