@@ -10,6 +10,7 @@ import {
   badgePop, CALL_CHANGE, highlight, highlightReduced, oldTimeSmall, scrim, sheet, strikeLine, timeIn, timeOut, tPress, useReveal,
 } from '@/lib/motion';
 import { Button, ToastProvider, useToast, Wordmark } from '@/components/kit';
+import { Stage } from '@/components/glass/Stage';
 import { cn } from '@/lib/utils';
 
 const fetcher = async (url: string) => {
@@ -21,9 +22,13 @@ const fetcher = async (url: string) => {
 
 export function MyDay({ token }: { token: string }) {
   return (
-    <ToastProvider position="bottom-center">
-      <MyDayInner token={token} />
-    </ToastProvider>
+    <Stage>
+      <div className="board-dark">
+        <ToastProvider position="bottom-center">
+          <MyDayInner token={token} />
+        </ToastProvider>
+      </div>
+    </Stage>
   );
 }
 
@@ -223,7 +228,7 @@ function MyDayInner({ token }: { token: string }) {
 
       {/* Fixed action bar (§3.3) */}
       {!data.released || !data.acked ? (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-paper px-5 pt-3" style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}>
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-black/40 px-5 pt-3 backdrop-blur-xl" style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}>
           <div className="mx-auto max-w-[420px]">
             <GotIt acked={data.acked} seenAt={seenAt} busy={busy} onClick={gotIt} />
             {!data.released && (
@@ -247,7 +252,7 @@ function MyDayInner({ token }: { token: string }) {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="fixed inset-x-0 bottom-0 z-50 rounded-t-[20px] bg-surface px-5 pt-5"
+              className="fixed inset-x-0 bottom-0 z-50 rounded-t-[20px] border-t border-white/15 bg-[#11131c]/90 px-5 pt-5 backdrop-blur-2xl"
               style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}
             >
               <div className="absolute left-[calc(50%-18px)] top-2 h-1 w-9 rounded-[2px] bg-grey-3" />

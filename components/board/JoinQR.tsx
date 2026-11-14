@@ -31,7 +31,7 @@ export function JoinQR({ open, onOpenChange, slug }: { open: boolean; onOpenChan
   return (
     <AnimatePresence>
       {open && (
-        <motion.div key="qr" variants={qrPanel} initial="initial" animate="animate" exit="exit" className="fixed inset-0 z-50 flex items-center justify-center bg-paper">
+        <motion.div key="qr" variants={qrPanel} initial="initial" animate="animate" exit="exit" className="fixed inset-0 z-50 flex items-center justify-center bg-[#06070b]/85 backdrop-blur-2xl">
           <Button variant="ghost" className="absolute right-6 top-6" onClick={() => onOpenChange(false)}>
             <X strokeWidth={1.5} /> Close
           </Button>

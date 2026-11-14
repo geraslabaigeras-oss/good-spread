@@ -15,6 +15,8 @@ export type TravelTemplate = {
 export type CatalogPerson = Person & {
   city: City;
   bio: string;
+  stats?: { height: number; bust: number; waist: number; hips: number; shoe: number; hair: string; eyes: string };
+  known?: string; // photographers: what they're known for
   tags: string[];
   photo?: string;
   motion?: boolean; // photographers: can also shoot the motion deliverables
@@ -39,36 +41,36 @@ const VNO_TO_LIS: TravelTemplate = { number: 'DA 210', from: 'VNO', to: 'LIS', d
 
 export const MODELS: CatalogPerson[] = [
   {
-    id: 'ieva', name: 'Ieva', role: 'model', agency: 'Milan agency (demo)', commissionPct: 20, dayRate: 600, otRatePerHour: 75, local: false,
+    id: 'ieva', name: 'Ieva', stats: { height: 178, bust: 81, waist: 60, hips: 88, shoe: 39, hair: 'Dark blonde', eyes: 'Grey' }, role: 'model', agency: 'Milan agency (demo)', commissionPct: 20, dayRate: 600, otRatePerHour: 75, local: false,
     city: 'Milan', bio: 'Editorial and outerwear. Strong in movement.', tags: ['editorial', 'outerwear', 'motion'], travelTo: IEVA_TRAVEL,
   },
   {
-    id: 'marta', name: 'Marta', role: 'model', dayRate: 450, otRatePerHour: 55, local: true,
+    id: 'marta', name: 'Marta', stats: { height: 176, bust: 83, waist: 62, hips: 90, shoe: 40, hair: 'Brown', eyes: 'Green' }, role: 'model', dayRate: 450, otRatePerHour: 55, local: true,
     city: 'Vilnius', bio: 'Freelance. Commercial and editorial.', tags: ['commercial', 'editorial'], travelTo: { Lisbon: VNO_TO_LIS },
   },
   {
-    id: 'austeja', name: 'Austėja', role: 'model', dayRate: 500, otRatePerHour: 60, local: true,
+    id: 'austeja', name: 'Austėja', stats: { height: 179, bust: 80, waist: 59, hips: 87, shoe: 40, hair: 'Black, short', eyes: 'Brown' }, role: 'model', dayRate: 500, otRatePerHour: 60, local: true,
     city: 'Vilnius', bio: 'Editorial. Short dark hair.', tags: ['editorial'], travelTo: { Lisbon: VNO_TO_LIS },
   },
   {
-    id: 'lina', name: 'Lina', role: 'model', agency: 'Vilnius models (demo)', commissionPct: 15, dayRate: 380, otRatePerHour: 45, local: true,
+    id: 'lina', name: 'Lina', stats: { height: 175, bust: 82, waist: 61, hips: 89, shoe: 39, hair: 'Light brown', eyes: 'Blue' }, role: 'model', agency: 'Vilnius models (demo)', commissionPct: 15, dayRate: 380, otRatePerHour: 45, local: true,
     city: 'Vilnius', bio: 'New face. Clean, natural look.', tags: ['new face', 'commercial'], travelTo: { Lisbon: VNO_TO_LIS },
   },
   {
-    id: 'ines', name: 'Inês', role: 'model', agency: 'Lisbon agency (demo)', commissionPct: 20, dayRate: 550, otRatePerHour: 65, local: true,
+    id: 'ines', name: 'Inês', stats: { height: 177, bust: 82, waist: 60, hips: 88, shoe: 39, hair: 'Dark brown', eyes: 'Brown' }, role: 'model', agency: 'Lisbon agency (demo)', commissionPct: 20, dayRate: 550, otRatePerHour: 65, local: true,
     city: 'Lisbon', bio: 'Editorial. Outdoor light, movement.', tags: ['editorial', 'outdoor'],
   },
   {
-    id: 'sofia', name: 'Sofia', role: 'model', dayRate: 480, otRatePerHour: 55, local: true,
+    id: 'sofia', name: 'Sofia', stats: { height: 174, bust: 84, waist: 63, hips: 91, shoe: 38, hair: 'Black', eyes: 'Hazel' }, role: 'model', dayRate: 480, otRatePerHour: 55, local: true,
     city: 'Lisbon', bio: 'Freelance. Commercial and sport.', tags: ['commercial', 'sport'],
   },
 ];
 
 export const PHOTOGRAPHERS: CatalogPerson[] = [
-  { id: 'tomas', name: 'Tomas', role: 'photographer', dayRate: 900, otRatePerHour: 90, local: true, city: 'Vilnius', motion: true, bio: 'Stills and motion. Outerwear campaigns.', tags: ['stills', 'motion'], travelTo: { Lisbon: VNO_TO_LIS } },
-  { id: 'ruta', name: 'Rūta', role: 'photographer', dayRate: 700, otRatePerHour: 70, local: true, city: 'Vilnius', motion: true, bio: 'Stills and motion. Natural light.', tags: ['stills', 'motion', 'natural light'], travelTo: { Lisbon: VNO_TO_LIS } },
-  { id: 'paulius', name: 'Paulius', role: 'photographer', dayRate: 550, otRatePerHour: 55, local: true, city: 'Vilnius', motion: false, bio: 'Stills only. E-commerce and lookbook.', tags: ['stills'] },
-  { id: 'joao', name: 'João', role: 'photographer', dayRate: 950, otRatePerHour: 95, local: true, city: 'Lisbon', motion: true, bio: 'Stills and motion. Outdoor editorial.', tags: ['stills', 'motion', 'outdoor'] },
+  { id: 'tomas', name: 'Tomas', known: 'Outerwear, cold light, long lenses', role: 'photographer', dayRate: 900, otRatePerHour: 90, local: true, city: 'Vilnius', motion: true, bio: 'Stills and motion. Outerwear campaigns.', tags: ['stills', 'motion'], travelTo: { Lisbon: VNO_TO_LIS } },
+  { id: 'ruta', name: 'Rūta', known: 'Daylight portraits, quiet colour', role: 'photographer', dayRate: 700, otRatePerHour: 70, local: true, city: 'Vilnius', motion: true, bio: 'Stills and motion. Natural light.', tags: ['stills', 'motion', 'natural light'], travelTo: { Lisbon: VNO_TO_LIS } },
+  { id: 'paulius', name: 'Paulius', known: 'Clean e-commerce, flat light', role: 'photographer', dayRate: 550, otRatePerHour: 55, local: true, city: 'Vilnius', motion: false, bio: 'Stills only. E-commerce and lookbook.', tags: ['stills'] },
+  { id: 'joao', name: 'João', known: 'Street light, movement, film grain', role: 'photographer', dayRate: 950, otRatePerHour: 95, local: true, city: 'Lisbon', motion: true, bio: 'Stills and motion. Outdoor editorial.', tags: ['stills', 'motion', 'outdoor'] },
 ];
 
 export const CREW: CatalogPerson[] = [

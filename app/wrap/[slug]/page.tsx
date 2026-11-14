@@ -3,6 +3,7 @@ import { getOrSeed } from '@/lib/server/db';
 import { agencyFeeLines, blocksFor, computeOvertime, fmt, lastEnd } from '@/lib/engine';
 import { fmtDate, fmtEur } from '@/lib/format';
 import { Wordmark } from '@/components/kit';
+import { Stage } from '@/components/glass/Stage';
 
 const ROLE: Record<string, string> = { model: 'Model', photographer: 'Photographer', mua: 'Hair & makeup', stylist: 'Stylist' };
 const COLS = 'grid grid-cols-[1.4fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-4';
@@ -33,7 +34,7 @@ export default async function WrapPage({ params }: PageProps<'/wrap/[slug]'>) {
   const total = rows.reduce((s, r) => s + r.total, 0);
 
   return (
-    <div className="min-h-dvh bg-paper">
+    <Stage><div className="board-dark min-h-dvh">
       <div className="mx-auto max-w-[1120px] px-6 py-10">
         <div className="flex h-10 items-center justify-between">
           <Wordmark demo />
@@ -71,6 +72,6 @@ export default async function WrapPage({ params }: PageProps<'/wrap/[slug]'>) {
           Pay crew in 48 h — coming soon
         </div>
       </div>
-    </div>
+    </div></Stage>
   );
 }

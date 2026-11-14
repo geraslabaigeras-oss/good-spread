@@ -1,11 +1,14 @@
 'use client';
 
+import { AnimatePresence, LayoutGroup, motion } from 'motion/react';
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { CreativeBrief } from '@/lib/types';
 import { defaultDna, defaultLooks } from '@/lib/engine';
 import { useDraft, thumb } from '@/lib/plan-store';
-import { Steps } from '@/components/plan/Steps';
+import { Stage, TopBar } from '@/components/glass/Stage';
+
+const ease = [0.2, 0.8, 0.2, 1] as const;
 
 export default function NewBrief() {
   const router = useRouter();
@@ -15,17 +18,19 @@ export default function NewBrief() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [drag, setDrag] = useState(false);
+  const [editing, setEditing] = useState(false);
   const input = useRef<HTMLInputElement>(null);
 
-  if (!draft) return null;
+  if (!draft) return <Stage><div /></Stage>;
   const d = draft;
 
   async function addFiles(list: FileList | File[]) {
     const imgs = Array.from(list).filter((f) => f.type.startsWith('image/')).slice(0, 3);
     if (!imgs.length) return;
     setFiles(imgs);
-    const thumbs = await Promise.all(imgs.map((f) => thumb(f)));
+    const thumbs = await Promise.all(imgs.map((f) => thumb(f, 900)));
     setDraft({ ...d, refImages: thumbs, brief: null });
+    setEditing(false);
   }
 
   async function read() {
@@ -37,10 +42,11 @@ export default function NewBrief() {
       fd.set('brand', d.brand);
       fd.set('notes', notes);
       files.forEach((f) => fd.append('image', f));
-      const r = await fetch('/api/brief', { method: 'POST', body: fd });
+      const [r] = await Promise.all([fetch('/api/brief', { method: 'POST', body: fd }), new Promise((res) => setTimeout(res, 900))]);
       const j = await r.json();
       if (!r.ok) throw new Error(j.error ?? `HTTP ${r.status}`);
       setDraft({ ...d, brief: j.brief as CreativeBrief, briefVia: j.via, dnaPreserve: {} });
+      setEditing(false);
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'failed');
     } finally {
@@ -48,121 +54,168 @@ export default function NewBrief() {
     }
   }
 
-  const b = d.brief;
-  const dna = b ? defaultDna(d.deliverables, b, defaultLooks(b.garment), []) : [];
-  const preserve = (id: string, def: boolean) => d.dnaPreserve[id] ?? def;
+  const b = editing ? null : d.brief;
+  const dna = d.brief ? defaultDna(d.deliverables, d.brief, defaultLooks(d.brief.garment), []) : [];
+  const keep = (id: string, def: boolean) => d.dnaPreserve[id] ?? def;
+  const setDel = (k: keyof typeof d.deliverables, v: string | number) => setDraft({ ...d, deliverables: { ...d.deliverables, [k]: v } });
 
   return (
-    <div className="mx-auto min-h-dvh max-w-[1200px] px-6 py-6">
-      <Steps step={1} />
-      <h1 className="mt-6 font-serif text-[40px] leading-[44px]">One reference. Three ways to produce it.</h1>
-
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1.2fr_1fr]">
-        {/* Reference drop */}
-        <div
-          onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
-          onDragLeave={() => setDrag(false)}
-          onDrop={(e) => { e.preventDefault(); setDrag(false); addFiles(e.dataTransfer.files); }}
-          onClick={() => input.current?.click()}
-          className={`flex min-h-[420px] cursor-pointer items-center justify-center rounded-[20px] border ${drag ? 'border-action bg-action-tint' : 'border-dashed border-hairline-strong'} p-3`}
-        >
-          {d.refImages.length ? (
-            <div className={`grid h-full w-full gap-2 ${d.refImages.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-              {d.refImages.map((src, i) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img key={i} src={src} alt={`Reference ${i + 1}`} className="h-full max-h-[560px] w-full rounded-[10px] object-cover" />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center">
-              <div className="text-[16px]">Drop a campaign reference</div>
-              <div className="mt-1 text-[13px] text-grey-1">Moodboard, tear sheet or previous campaign · up to 3 images</div>
-            </div>
-          )}
-          <input ref={input} type="file" accept="image/*" multiple className="hidden" onChange={(e) => e.target.files && addFiles(e.target.files)} />
-        </div>
-
-        {/* Brief inputs */}
-        <div className="flex flex-col gap-3">
-          <Field label="Campaign"><input value={d.title} onChange={(e) => setDraft({ ...d, title: e.target.value })} className={inp} /></Field>
-          <Field label="Brand"><input value={d.brand} onChange={(e) => setDraft({ ...d, brand: e.target.value })} className={inp} /></Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Budget cap (€)"><input type="number" value={d.cap} onChange={(e) => setDraft({ ...d, cap: Number(e.target.value) || 0 })} className={inp} /></Field>
-            <Field label="Deadline"><input type="date" value={d.deliverables.deadlineISO} onChange={(e) => setDraft({ ...d, deliverables: { ...d.deliverables, deadlineISO: e.target.value } })} className={inp} /></Field>
-            <Field label="Retouched stills"><input type="number" value={d.deliverables.stills} onChange={(e) => setDraft({ ...d, deliverables: { ...d.deliverables, stills: Number(e.target.value) || 0 } })} className={inp} /></Field>
-            <Field label="Motion assets"><input type="number" value={d.deliverables.motion} onChange={(e) => setDraft({ ...d, deliverables: { ...d.deliverables, motion: Number(e.target.value) || 0 } })} className={inp} /></Field>
-            <Field label="Usage (months)"><input type="number" value={d.deliverables.usageMonths} onChange={(e) => setDraft({ ...d, deliverables: { ...d.deliverables, usageMonths: Number(e.target.value) || 0 } })} className={inp} /></Field>
-            <Field label="Usage"><input value={d.deliverables.usage} onChange={(e) => setDraft({ ...d, deliverables: { ...d.deliverables, usage: e.target.value } })} className={inp} /></Field>
+    <Stage backdrop={d.refImages[0]}>
+      <TopBar step={1} />
+      <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-8 px-8 pb-16 pt-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+        {/* Reference */}
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }}>
+          <h1 className="font-serif text-[64px] leading-[0.95] tracking-[-0.03em]">
+            One reference.
+            <br />
+            <span className="text-white/45">Three ways to make it real.</span>
+          </h1>
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+            onDragLeave={() => setDrag(false)}
+            onDrop={(e) => { e.preventDefault(); setDrag(false); addFiles(e.dataTransfer.files); }}
+            onClick={() => input.current?.click()}
+            className={`glass relative mt-8 aspect-[4/5] max-h-[68vh] cursor-pointer overflow-hidden transition-all duration-300 ${drag ? 'scale-[1.01] ring-2 ring-[var(--g-accent)]' : ''}`}
+          >
+            <AnimatePresence mode="popLayout">
+              {d.refImages.length ? (
+                <motion.div key={d.refImages[0].slice(-40)} initial={{ opacity: 0, scale: 1.06 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, ease }} className={`grid h-full w-full gap-1 ${d.refImages.length > 1 ? 'grid-cols-2' : ''}`}>
+                  {d.refImages.map((src, i) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={i} src={src} alt={`Reference ${i + 1}`} className={`h-full w-full object-cover ${d.refImages.length === 3 && i === 0 ? 'row-span-2' : ''}`} />
+                  ))}
+                </motion.div>
+              ) : (
+                <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex h-full flex-col items-center justify-center p-10 text-center">
+                  <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} className="mb-6 flex size-20 items-center justify-center rounded-full border border-white/20 bg-white/5 text-3xl font-light">+</motion.div>
+                  <div className="font-serif text-[30px] leading-8">Drop a campaign reference</div>
+                  <div className="mt-2 text-[14px] text-white/50">Moodboard, tear sheet, a past campaign. Up to three images.</div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            {busy && (
+              <div className="pointer-events-none absolute inset-0 bg-black/20">
+                <div className="scanline" />
+                <div className="absolute bottom-5 left-5 rounded-full bg-black/50 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] backdrop-blur">Reading light, palette, styling…</div>
+              </div>
+            )}
+            <input ref={input} type="file" accept="image/*" multiple className="hidden" onChange={(e) => e.target.files && addFiles(e.target.files)} />
           </div>
-          <Field label="Notes (optional)"><textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className={`${inp} h-auto py-2`} placeholder="e.g. must feel like Baltic autumn" /></Field>
-          <button onClick={read} disabled={busy} className="h-12 rounded-full bg-action text-[15px] font-medium text-white disabled:opacity-50">
-            {busy ? 'Reading the reference…' : files.length ? 'Read the reference' : 'Use the demo brief'}
-          </button>
-          {err && <p className="text-[13px] text-conflict">{err}</p>}
-        </div>
-      </div>
+        </motion.div>
 
-      {b && (
-        <div className="mt-8 grid grid-cols-1 gap-6 border-t border-hairline pt-6 lg:grid-cols-[1.2fr_1fr]">
-          <div>
-            <div className="label">Creative brief · {d.briefVia === 'ai' ? 'read by AI' : d.briefVia === 'cache' ? 'read by AI (cached)' : 'demo brief'}</div>
-            <p className="mt-2 font-serif text-[24px] leading-8">{b.summary}</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {b.aesthetic.map((a) => <span key={a} className="rounded-full border border-hairline-strong px-3 py-1 text-[13px]">{a}</span>)}
-            </div>
-            <div className="mt-4 flex gap-2">
-              {b.palette.map((c, i) => (
-                <div key={c} className="text-center">
-                  <div className="h-10 w-14 rounded-[4px] border border-hairline" style={{ background: b.paletteHex?.[i] ?? '#ddd' }} />
-                  <div className="mt-1 text-[11px] text-grey-1">{c}</div>
+        {/* Inputs → Brief */}
+        <div className="lg:pt-[150px]">
+          <AnimatePresence mode="wait">
+            {!b ? (
+              <motion.div key="form" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.6, ease }} className="glass p-8">
+                <div className="g-label">The job</div>
+                <div className="mt-4 grid grid-cols-2 gap-4">
+                  <F label="Campaign" span><input className="glass-input" value={d.title} onChange={(e) => setDraft({ ...d, title: e.target.value })} /></F>
+                  <F label="Brand" span><input className="glass-input" value={d.brand} onChange={(e) => setDraft({ ...d, brand: e.target.value })} /></F>
+                  <F label="Budget cap €"><input className="glass-input font-mono" type="number" value={d.cap} onChange={(e) => setDraft({ ...d, cap: Number(e.target.value) || 0 })} /></F>
+                  <F label="Delivery deadline"><input className="glass-input font-mono" type="date" value={d.deliverables.deadlineISO} onChange={(e) => setDel('deadlineISO', e.target.value)} /></F>
+                  <F label="Retouched stills"><input className="glass-input font-mono" type="number" value={d.deliverables.stills} onChange={(e) => setDel('stills', Number(e.target.value) || 0)} /></F>
+                  <F label="Motion assets"><input className="glass-input font-mono" type="number" value={d.deliverables.motion} onChange={(e) => setDel('motion', Number(e.target.value) || 0)} /></F>
+                  <F label="Usage"><input className="glass-input" value={d.deliverables.usage} onChange={(e) => setDel('usage', e.target.value)} /></F>
+                  <F label="Usage months"><input className="glass-input font-mono" type="number" value={d.deliverables.usageMonths} onChange={(e) => setDel('usageMonths', Number(e.target.value) || 0)} /></F>
+                  <F label="Notes for the AI" span><input className="glass-input" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="must feel like a Baltic autumn" /></F>
                 </div>
-              ))}
-            </div>
-            <dl className="mt-4 grid grid-cols-[110px_1fr] gap-y-1 text-[14px]">
-              <dt className="text-grey-1">Garment</dt><dd>{b.garment}</dd>
-              <dt className="text-grey-1">Light</dt><dd>{b.lighting}</dd>
-              <dt className="text-grey-1">Setting</dt><dd>{b.setting} · {b.settingNote}</dd>
-              <dt className="text-grey-1">Styling</dt><dd>{b.styling}</dd>
-              <dt className="text-grey-1">Casting</dt><dd>{b.casting}</dd>
-              <dt className="text-grey-1">Shots</dt><dd>{b.shotList.join(' · ')}</dd>
-            </dl>
-          </div>
-          <div>
-            <div className="label">Production DNA · click to move</div>
-            <p className="mt-1 text-[13px] text-grey-1">What must survive any change, and what the engine may move to hit budget or time.</p>
-            <div className="mt-3 grid grid-cols-2 gap-4">
-              {[true, false].map((col) => (
-                <div key={String(col)}>
-                  <div className="mb-2 text-[13px] font-medium">{col ? 'Must keep' : 'Can change'}</div>
-                  {dna.filter((x) => preserve(x.id, x.preserve) === col).map((x) => (
-                    <button
-                      key={x.id}
-                      onClick={() => setDraft({ ...d, dnaPreserve: { ...d.dnaPreserve, [x.id]: !col } })}
-                      className="mb-1.5 block w-full rounded-[10px] border border-hairline px-3 py-2 text-left text-[13px] hover:border-ink"
-                    >
-                      {x.label}
-                    </button>
+                <button onClick={read} disabled={busy} className="g-btn mt-7 w-full">
+                  {busy ? 'Reading the reference…' : files.length ? 'Read the reference' : 'Use the demo reference'}
+                </button>
+                {err && <p className="mt-3 text-[13px] text-[var(--g-bad)]">{err}</p>}
+              </motion.div>
+            ) : (
+              <motion.div key="brief" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.7, ease }} className="glass p-8">
+                <div className="flex items-center justify-between">
+                  <span className="g-label">Creative brief · {d.briefVia === 'ai' ? 'read by AI' : d.briefVia === 'cache' ? 'read by AI · cached' : 'demo'}</span>
+                  <button onClick={() => setEditing(true)} className="text-[12px] text-white/50 underline underline-offset-4 hover:text-white">Edit the job</button>
+                </div>
+                <motion.p initial={{ opacity: 0, filter: 'blur(8px)' }} animate={{ opacity: 1, filter: 'blur(0px)' }} transition={{ duration: 0.9, delay: 0.15 }} className="mt-4 font-serif text-[30px] leading-[1.15] tracking-[-0.01em]">
+                  {b.summary}
+                </motion.p>
+                <div className="mt-5 flex flex-wrap gap-x-3 gap-y-1 font-serif text-[22px] text-white/70">
+                  {b.aesthetic.map((a, i) => (
+                    <motion.span key={a} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.08 }}>
+                      {a}{i < b.aesthetic.length - 1 && <span className="ml-3 text-white/25">/</span>}
+                    </motion.span>
                   ))}
                 </div>
-              ))}
-            </div>
-            <button onClick={() => router.push('/plan')} className="mt-6 h-12 w-full rounded-full bg-ink text-[15px] font-medium text-paper">
-              See three ways to produce it →
-            </button>
-          </div>
+                <div className="mt-6 flex h-16 overflow-hidden rounded-2xl">
+                  {b.palette.map((c, i) => (
+                    <motion.div key={c} initial={{ flexGrow: 0 }} animate={{ flexGrow: 1 }} transition={{ duration: 0.8, delay: 0.4 + i * 0.07, ease }} className="relative flex items-end p-2" style={{ background: b.paletteHex?.[i] ?? '#444', flexBasis: 0 }}>
+                      <span className="font-mono text-[10px] uppercase tracking-wider mix-blend-difference">{c}</span>
+                    </motion.div>
+                  ))}
+                </div>
+                <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 text-[14px]">
+                  <Info k="Garment" v={b.garment} />
+                  <Info k="Light" v={b.lighting} />
+                  <Info k="Setting" v={`${b.setting} · ${b.settingNote}`} />
+                  <Info k="Casting" v={b.casting} />
+                  <Info k="Styling" v={b.styling} span />
+                </div>
+                <div className="mt-6">
+                  <div className="g-label">Shot list</div>
+                  <ol className="mt-2 grid grid-cols-1 gap-1 md:grid-cols-2">
+                    {b.shotList.map((s, i) => (
+                      <motion.li key={s} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 + i * 0.06 }} className="flex gap-3 text-[14px]">
+                        <span className="font-mono text-white/35">{String(i + 1).padStart(2, '0')}</span>{s}
+                      </motion.li>
+                    ))}
+                  </ol>
+                </div>
+
+                <div className="mt-7 border-t border-white/10 pt-6">
+                  <div className="g-label">Production DNA · tap to move</div>
+                  <LayoutGroup>
+                    <div className="mt-3 grid grid-cols-2 gap-4">
+                      {[true, false].map((col) => (
+                        <div key={String(col)} className={`rounded-2xl p-3 ${col ? 'bg-white/[0.06]' : 'border border-dashed border-white/15'}`}>
+                          <div className="mb-2 text-[12px] font-medium text-white/60">{col ? 'Must keep' : 'Can change'}</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {dna.filter((x) => keep(x.id, x.preserve) === col).map((x) => (
+                              <motion.button
+                                layout
+                                layoutId={`dna-${x.id}`}
+                                key={x.id}
+                                transition={{ type: 'spring', stiffness: 500, damping: 36 }}
+                                onClick={() => setDraft({ ...d, dnaPreserve: { ...d.dnaPreserve, [x.id]: !col } })}
+                                className={`rounded-full px-3 py-1.5 text-[12px] ${col ? 'bg-white text-[#06070b]' : 'border border-white/20 text-white/80 hover:bg-white/10'}`}
+                              >
+                                {x.label}
+                              </motion.button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </LayoutGroup>
+                </div>
+                <button onClick={() => router.push('/plan')} className="g-btn mt-7 w-full">See three ways to produce it →</button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      )}
-    </div>
+      </div>
+    </Stage>
   );
 }
 
-const inp = 'h-10 w-full rounded-[10px] border border-hairline-strong bg-surface px-3 text-[14px]';
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function F({ label, children, span }: { label: string; children: React.ReactNode; span?: boolean }) {
   return (
-    <label className="block">
-      <span className="mb-1 block text-[12px] text-grey-1">{label}</span>
+    <label className={`block ${span ? 'col-span-2' : ''}`}>
+      <span className="g-label mb-1.5 block">{label}</span>
       {children}
     </label>
+  );
+}
+
+function Info({ k, v, span }: { k: string; v: string; span?: boolean }) {
+  return (
+    <div className={span ? 'col-span-2' : ''}>
+      <div className="g-label">{k}</div>
+      <div className="mt-0.5 text-white/85">{v}</div>
+    </div>
   );
 }

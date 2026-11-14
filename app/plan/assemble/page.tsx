@@ -1,5 +1,6 @@
 'use client';
 
+import { AnimatePresence, motion } from 'motion/react';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Picks } from '@/lib/types';
@@ -7,13 +8,18 @@ import { computeBudget, detectConflicts, dnaViolations, evaluateDna, fmt, summar
 import { candidates, locationCandidates, strategyDef, type CatalogPerson } from '@/data/catalog';
 import { fmtDate, fmtEur } from '@/lib/format';
 import { useDraft } from '@/lib/plan-store';
-import { draftProduction } from '@/lib/plan-draft';
-import { Steps } from '@/components/plan/Steps';
-import { Timeline } from '@/components/board/Timeline';
+import { draftProduction, pinsFor } from '@/lib/plan-draft';
+import { AnimatedNumber, BudgetRing, CAT_COLOR, Stage, Tilt, TopBar } from '@/components/glass/Stage';
+import { Globe, type GlobePin } from '@/components/glass/Globe';
+
+const ease = [0.2, 0.8, 0.2, 1] as const;
+const CATS = ['talent', 'crew', 'studio', 'travel', 'post', 'usage'] as const;
+type Tab = 'models' | 'photographer' | 'location';
 
 export default function Assemble() {
   const router = useRouter();
   const [draft, setDraft] = useDraft();
+  const [tab, setTab] = useState<Tab>('models');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -28,18 +34,34 @@ export default function Assemble() {
     return { p, sum: summarize(p), budget: computeBudget(p), conflicts: detectConflicts(p).filter((c) => c.code !== 'BUDGET'), dna: evaluateDna(base, p) };
   }, [draft, strategy, picks]);
 
-  if (!draft || !view) return null;
+  if (!draft || !view) return <Stage><div /></Stage>;
   const { p, sum, budget, conflicts, dna } = view;
   const broken = dnaViolations(dna);
+  const models = candidates(strategy, 'model');
+  const photos = candidates(strategy, 'photographer');
+  const locs = locationCandidates(strategy);
 
   const setPicks = (next: Picks) => setDraft({ ...draft, picks: next });
   const toggleModel = (id: string) => {
     const has = picks.models.includes(id);
-    let models = has ? picks.models.filter((m) => m !== id) : [...picks.models, id];
-    if (models.length > def.modelSlots) models = models.slice(models.length - def.modelSlots);
-    if (!models.length) return;
-    setPicks({ ...picks, models });
+    let m = has ? picks.models.filter((x) => x !== id) : [...picks.models, id];
+    if (m.length > def.modelSlots) m = m.slice(m.length - def.modelSlots);
+    if (m.length) setPicks({ ...picks, models: m });
   };
+  const onPin = (id: string) => {
+    if (models.some((m) => m.id === id)) { toggleModel(id); setTab('models'); }
+    else if (photos.some((x) => x.id === id)) { setPicks({ ...picks, photographer: id }); setTab('photographer'); }
+    else if (locs.some((l) => l.id === id)) { setPicks({ ...picks, location: id }); setTab('location'); }
+  };
+
+  // Globe: every candidate, chosen ones lit; flights for chosen travellers
+  const chosen = pinsFor(p);
+  const pins: GlobePin[] = [
+    ...models.map((c) => ({ id: c.id, city: c.city, label: c.name, sub: 'model', kind: 'model' as const, selected: picks.models.includes(c.id), dim: !picks.models.includes(c.id) })),
+    ...photos.map((c) => ({ id: c.id, city: c.city, label: c.name, sub: 'photographer', kind: 'photographer' as const, selected: picks.photographer === c.id, dim: picks.photographer !== c.id })),
+    ...chosen.pins.filter((x) => x.kind === 'crew'),
+    ...locs.map((l) => ({ id: l.id, city: l.city, label: l.name.split(',')[0].replace(' (demo)', ''), sub: 'location', kind: 'location' as const, selected: picks.location === l.id, dim: picks.location !== l.id })),
+  ];
 
   async function create() {
     setBusy(true);
@@ -48,9 +70,7 @@ export default function Assemble() {
       const r = await fetch('/api/plan/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          strategy, picks, brief: p.brief, deliverables: draft!.deliverables, cap: draft!.cap, startISO: draft!.startISO, dnaPreserve: draft!.dnaPreserve,
-        }),
+        body: JSON.stringify({ strategy, picks, brief: p.brief, deliverables: draft!.deliverables, cap: draft!.cap, startISO: draft!.startISO, dnaPreserve: draft!.dnaPreserve }),
       });
       const j = await r.json();
       if (!r.ok || j.error) throw new Error(j.error ?? `HTTP ${r.status}`);
@@ -61,109 +81,117 @@ export default function Assemble() {
     }
   }
 
-  const travelNote = (c: CatalogPerson) => {
-    if (c.city === def.city) return `${c.city}, local`;
+  const travel = (c: CatalogPerson) => {
+    if (c.city === def.city) return `Based in ${c.city}`;
     const t = c.travelTo?.[def.city];
     if (!t) return c.city;
-    return t.dayBefore ? `Flies ${t.from}→${t.to} day before · +${fmtEur(t.flight + t.taxi + (t.hotel ?? 0))}` : `Flies ${t.number} ${t.from}→${t.to}, lands ${fmt(t.arriveMin)} · +${fmtEur(t.flight + t.taxi)}`;
+    return t.dayBefore ? `${t.from} → ${t.to} the day before · +${fmtEur(t.flight + t.taxi + (t.hotel ?? 0))}` : `${t.number} ${t.from} → ${t.to}, lands ${fmt(t.arriveMin)} · +${fmtEur(t.flight + t.taxi)}`;
   };
+  const ok = conflicts.length === 0 && !sum.overCap && broken.length === 0;
 
   return (
-    <div className="mx-auto min-h-dvh max-w-[1320px] px-6 py-6">
-      <Steps step={3} />
-      <div className="mt-6 flex items-end justify-between">
-        <div>
-          <h1 className="font-serif text-[40px] leading-[44px]">Assemble the {def.name.toLowerCase()} production</h1>
-          <p className="mt-1 text-[14px] text-grey-1">{def.tagline} Pick {def.modelSlots === 1 ? 'a model' : `${def.modelSlots} models`}, a photographer and a {def.locationKinds.includes('location') ? 'location' : 'studio'}. Every pick re-costs and re-checks the plan.</p>
-        </div>
-        <button onClick={() => router.push('/plan')} className="text-[13px] text-grey-1 underline">Change strategy</button>
-      </div>
+    <Stage backdrop={draft.refImages[0]}>
+      <TopBar step={3} right={<button onClick={() => router.push('/plan')} className="text-[12px] text-white/50 underline underline-offset-4 hover:text-white">Change strategy</button>} />
+      <div className="mx-auto grid max-w-[1480px] grid-cols-1 gap-6 px-8 pb-10 pt-4 xl:grid-cols-[minmax(0,1fr)_560px]">
+        {/* Globe + live plan */}
+        <div className="relative">
+          <div className="pointer-events-none absolute left-0 top-2 z-10">
+            <div className="g-label">{def.name} · shoot in {def.city}</div>
+            <h1 className="mt-1 font-serif text-[52px] leading-[0.95] tracking-[-0.03em]">Build the team</h1>
+            <p className="mt-2 max-w-[380px] text-[14px] text-white/55">Tap anyone on the globe or in the list. Every pick re-costs the shoot and re-checks the day.</p>
+          </div>
+          <Globe pins={pins} arcs={chosen.arcs} focus={def.city} hub={def.city} onPin={onPin} height="64vh" altitude={0.62} />
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
-        <div className="flex flex-col gap-6">
-          <Group title={`Models · ${picks.models.length}/${def.modelSlots}`}>
-            {candidates(strategy, 'model').map((c) => (
-              <Card key={c.id} c={c} selected={picks.models.includes(c.id)} onClick={() => toggleModel(c.id)} note={travelNote(c)} />
-            ))}
-          </Group>
-          <Group title="Photographer">
-            {candidates(strategy, 'photographer').map((c) => (
-              <Card key={c.id} c={c} selected={picks.photographer === c.id} onClick={() => setPicks({ ...picks, photographer: c.id })} note={`${travelNote(c)}${c.motion === false ? ' · stills only' : ' · stills + motion'}`} />
-            ))}
-          </Group>
-          <Group title={def.locationKinds.includes('location') ? 'Location' : 'Studio'}>
-            {locationCandidates(strategy).map((l) => (
-              <button key={l.id} onClick={() => setPicks({ ...picks, location: l.id })} className={`rounded-[20px] border p-4 text-left ${picks.location === l.id ? 'border-ink' : 'border-hairline hover:border-hairline-strong'}`}>
-                {l.photo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={l.photo} alt="" className="mb-3 aspect-[4/3] w-full rounded-[10px] object-cover" />
-                ) : (
-                  <div className="mb-3 flex h-20 items-end rounded-[10px] bg-grey-3 p-3 text-[12px] text-ink">{l.tags.join(' · ')}</div>
-                )}
-                <div className="font-serif text-[20px] leading-6">{l.name.split(',')[0]}</div>
-                <div className="mt-1 text-[13px] text-grey-1">{l.note}</div>
-                <div className="mt-1 font-mono text-[13px] num">{l.kind === 'location' ? `Permit ${fmtEur(l.permit ?? 0)} + fixer ${fmtEur(l.fixer ?? 0)}` : `${fmtEur(l.hourlyRate)}/h`}</div>
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }} className="glass -mt-16 grid grid-cols-1 items-center gap-6 p-6 md:grid-cols-[auto_1fr_auto]">
+            <BudgetRing cap={budget.cap} size={150} stroke={12} segments={CATS.map((c) => ({ value: budget.byCategory[c], color: CAT_COLOR[c] }))}>
+              <AnimatedNumber value={budget.total} format={(n) => fmtEur(Math.round(n))} className={`font-serif text-[28px] leading-none num ${sum.overCap ? 'text-[var(--g-bad)]' : ''}`} />
+              <span className="mt-1 font-mono text-[10px] text-white/45">{sum.overCap ? `${fmtEur(budget.total - budget.cap)} over` : `${fmtEur(budget.remaining)} left`}</span>
+            </BudgetRing>
+            <div>
+              <div className="g-label">Call times · {fmtDate(sum.shootISO)} · {p.studio.name.split(',')[0]}</div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <AnimatePresence mode="popLayout">
+                  {sum.callTimes.map((x) => (
+                    <motion.span layout key={x.name} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[12px]">
+                      {x.name} <span className="font-mono text-white/60">{x.call != null ? fmt(x.call) : '—'}</span>
+                    </motion.span>
+                  ))}
+                </AnimatePresence>
+              </div>
+              <div className="mt-3 text-[13px]">
+                {ok && <span className="text-[var(--g-good)]">No conflicts · brief kept · within budget · delivered {fmtDate(sum.deliveryISO)}</span>}
+                {sum.overCap && <div className="text-[var(--g-bad)]">Over the {fmtEur(budget.cap)} cap</div>}
+                {conflicts.map((c, i) => <div key={i} className="text-[var(--g-bad)]">{c.message}</div>)}
+                {broken.map((x) => <div key={x.id} className="text-[var(--g-bad)]">Breaks must-keep: {x.label}{x.note ? ` (${x.note})` : ''}</div>)}
+              </div>
+            </div>
+            <div className="flex flex-col items-stretch gap-2">
+              <button onClick={create} disabled={busy || conflicts.length > 0} className="g-btn">{busy ? 'Creating…' : 'Create production →'}</button>
+              {err && <p className="text-[12px] text-[var(--g-bad)]">{err}</p>}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Talent / photographer / location */}
+        <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, ease }} className="glass flex max-h-[calc(100dvh-110px)] flex-col p-4">
+          <div className="relative flex gap-1 rounded-full bg-white/5 p-1">
+            {([['models', `Models ${picks.models.length}/${def.modelSlots}`], ['photographer', 'Photographer'], ['location', def.locationKinds.includes('location') ? 'Location' : 'Studio']] as [Tab, string][]).map(([k, label]) => (
+              <button key={k} onClick={() => setTab(k)} className="relative flex-1 rounded-full py-2 text-[13px]">
+                {tab === k && <motion.span layoutId="tab-pill" className="absolute inset-0 rounded-full bg-white" transition={{ type: 'spring', stiffness: 400, damping: 34 }} />}
+                <span className={`relative ${tab === k ? 'text-[#06070b]' : 'text-white/60'}`}>{label}</span>
               </button>
             ))}
-          </Group>
-        </div>
-
-        {/* Live plan */}
-        <aside className="h-fit rounded-[20px] border border-hairline p-5 lg:sticky lg:top-6">
-          <div className="label">Live plan</div>
-          <div className={`mt-2 font-serif text-[44px] leading-[48px] num ${sum.overCap ? 'text-conflict' : ''}`}>{fmtEur(budget.total)}</div>
-          <div className="text-[13px] text-grey-1 num">of {fmtEur(budget.cap)} cap · {sum.overCap ? `${fmtEur(budget.total - budget.cap)} over` : `${fmtEur(budget.remaining)} left`}</div>
-          <dl className="mt-4 grid grid-cols-[110px_1fr] gap-y-1 text-[14px]">
-            <dt className="text-grey-1">Shoot</dt><dd className="num">{fmtDate(sum.shootISO)} · {p.studio.name.split(',')[0]}</dd>
-            <dt className="text-grey-1">Delivery</dt><dd className={`num ${sum.fitsDeadline ? '' : 'text-conflict'}`}>{fmtDate(sum.deliveryISO)}</dd>
-            <dt className="text-grey-1">Calls</dt><dd className="num">{sum.callTimes.map((x) => `${x.name} ${x.call != null ? fmt(x.call) : '—'}`).join(' · ')}</dd>
-          </dl>
-          <div className="mt-4">
-            <div className="label">Checks</div>
-            {conflicts.length === 0 && !sum.overCap && broken.length === 0 && <p className="mt-1 text-[14px] text-seen">No conflicts. Brief kept. Within budget.</p>}
-            {sum.overCap && <p className="mt-1 text-[14px] text-conflict">Over the budget cap.</p>}
-            {conflicts.map((c, i) => <p key={i} className="mt-1 text-[14px] text-conflict">{c.message}</p>)}
-            {broken.map((x) => <p key={x.id} className="mt-1 text-[14px] text-conflict">Breaks must-keep: {x.label}{x.note ? ` (${x.note})` : ''}</p>)}
           </div>
-          <button onClick={create} disabled={busy || conflicts.length > 0} className="mt-5 h-12 w-full rounded-full bg-action text-[15px] font-medium text-white disabled:opacity-40">
-            {busy ? 'Creating…' : 'Create production →'}
-          </button>
-          {err && <p className="mt-2 text-[13px] text-conflict">{err}</p>}
-        </aside>
+          <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
+            <AnimatePresence mode="wait">
+              <motion.div key={tab} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.3 }} className="grid grid-cols-2 gap-3">
+                {tab === 'models' && models.map((c) => <CompCard key={c.id} c={c} selected={picks.models.includes(c.id)} onClick={() => toggleModel(c.id)} travel={travel(c)} />)}
+                {tab === 'photographer' && photos.map((c) => <CompCard key={c.id} c={c} selected={picks.photographer === c.id} onClick={() => setPicks({ ...picks, photographer: c.id })} travel={travel(c)} />)}
+                {tab === 'location' && locs.map((l) => (
+                  <Tilt key={l.id} onClick={() => setPicks({ ...picks, location: l.id })} selected={picks.location === l.id} className="glass-soft cursor-pointer overflow-hidden">
+                    <div className="relative h-32 overflow-hidden" style={{ background: l.photo ? `url(${l.photo}) center/cover` : `linear-gradient(135deg, ${l.natural ? '#c9b99a, #5b5a3c' : '#1f2a3d, #8fa8ff'})` }}>
+                      <span className="absolute bottom-2 left-3 font-mono text-[10px] uppercase tracking-wider text-white/90">{l.tags.join(' · ')}</span>
+                    </div>
+                    <div className="p-3">
+                      <div className="font-serif text-[20px] leading-6">{l.name.split(',')[0]}</div>
+                      <div className="mt-1 text-[12px] text-white/55">{l.note}</div>
+                      <div className="mt-2 font-mono text-[12px]">{l.kind === 'location' ? `Permit ${fmtEur(l.permit ?? 0)} · fixer ${fmtEur(l.fixer ?? 0)}` : `${fmtEur(l.hourlyRate)}/h`}</div>
+                    </div>
+                  </Tilt>
+                ))}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </motion.div>
       </div>
-
-      <div className="mt-8 h-[300px]" style={{ ['--row-h' as string]: '40px', ['--bar-h' as string]: '28px', ['--label-w' as string]: '120px' }}>
-        <Timeline production={p} conflicts={detectConflicts(p)} />
-      </div>
-    </div>
+    </Stage>
   );
 }
 
-function Group({ title, children }: { title: string; children: React.ReactNode }) {
+function CompCard({ c, selected, onClick, travel }: { c: CatalogPerson; selected: boolean; onClick: () => void; travel: string }) {
+  const hue = (c.name.charCodeAt(0) * 37) % 360;
   return (
-    <section>
-      <div className="label mb-2">{title}</div>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">{children}</div>
-    </section>
-  );
-}
-
-function Card({ c, selected, onClick, note }: { c: CatalogPerson; selected: boolean; onClick: () => void; note: string }) {
-  return (
-    <button onClick={onClick} className={`rounded-[20px] border p-4 text-left ${selected ? 'border-ink bg-surface' : 'border-hairline hover:border-hairline-strong'}`}>
-      {c.photo ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={c.photo} alt={c.name} className="mb-3 aspect-[3/4] w-full rounded-[10px] object-cover" />
-      ) : (
-        <div className="mb-3 flex h-20 items-center justify-center rounded-[10px] bg-grey-3 font-serif text-[36px] text-ink-24">{c.name[0]}</div>
-      )}
-      <div className="flex items-baseline justify-between">
-        <span className="font-serif text-[22px] leading-7">{c.name}</span>
-        <span className="font-mono text-[13px] num">{fmtEur(c.dayRate)}</span>
+    <Tilt onClick={onClick} selected={selected} className="glass-soft relative cursor-pointer overflow-hidden">
+      <div className="relative h-40 overflow-hidden" style={{ background: c.photo ? `url(${c.photo}) center/cover` : `radial-gradient(120% 90% at 30% 20%, hsl(${hue} 60% 62% / .55), transparent 60%), linear-gradient(160deg, #1a1d2b, #0b0d14)` }}>
+        {!c.photo && <span className="absolute bottom-0 right-3 font-serif text-[110px] leading-[0.8] text-white/15">{c.name[0]}</span>}
+        {selected && <motion.span layoutId={undefined} initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute right-2 top-2 rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-[#06070b]">Booked</motion.span>}
+        <span className="absolute left-3 top-2 font-mono text-[10px] uppercase tracking-wider text-white/70">{c.agency?.replace(' (demo)', '') ?? 'Freelance'}</span>
       </div>
-      <div className="text-[12px] text-grey-1">{c.agency ?? 'Freelance'}{c.commissionPct ? ` · ${c.commissionPct}% fee` : ''}</div>
-      <div className="mt-1 text-[13px]">{c.bio}</div>
-      <div className="mt-1 text-[12px] text-grey-1">{note}</div>
-    </button>
+      <div className="p-3">
+        <div className="flex items-baseline justify-between">
+          <span className="font-serif text-[22px] leading-7">{c.name}</span>
+          <span className="font-mono text-[12px] text-white/80">{fmtEur(c.dayRate)}</span>
+        </div>
+        {c.stats ? (
+          <div className="mt-1 font-mono text-[10px] uppercase tracking-wide text-white/55">
+            {c.stats.height} · {c.stats.bust}/{c.stats.waist}/{c.stats.hips} · shoe {c.stats.shoe}
+            <br />{c.stats.hair} · {c.stats.eyes} eyes
+          </div>
+        ) : (
+          <div className="mt-1 text-[12px] text-white/60">{c.known ?? c.bio}{c.motion === false ? ' · stills only' : c.role === 'photographer' ? ' · stills + motion' : ''}</div>
+        )}
+        <div className="mt-2 text-[11px] text-white/45">{travel}</div>
+      </div>
+    </Tilt>
   );
 }

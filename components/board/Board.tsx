@@ -9,6 +9,7 @@ import type { Receipt } from '@/lib/types';
 import { fmtDate, fmtEur } from '@/lib/format';
 import { useReveal, APPROVE } from '@/lib/motion';
 import { Button, ToastProvider, useToast, Wordmark } from '@/components/kit';
+import { Stage } from '@/components/glass/Stage';
 import { PeopleStrip } from './PeopleStrip';
 import { Timeline } from './Timeline';
 import { Decision } from './Decision';
@@ -28,9 +29,11 @@ export type Applied = { version: number; label: string; receipt: Receipt; at: st
 
 export function Board({ slug }: { slug: string }) {
   return (
-    <ToastProvider position="bottom-right">
-      <BoardInner slug={slug} />
-    </ToastProvider>
+    <Stage>
+      <ToastProvider position="bottom-right">
+        <BoardInner slug={slug} />
+      </ToastProvider>
+    </Stage>
   );
 }
 
@@ -97,7 +100,7 @@ function BoardInner({ slug }: { slug: string }) {
 
   if (!data) {
     return (
-      <div className="flex h-dvh items-center justify-center text-grey-1">
+      <div className="flex h-dvh items-center justify-center text-white/60">
         {error ? `Could not load the board: ${String(error.message)}` : 'Loading production…'}
       </div>
     );
@@ -114,7 +117,7 @@ function BoardInner({ slug }: { slug: string }) {
   const animateVersion = justApproved?.version === p.version ? p.version : null;
 
   return (
-    <motion.div className="board-root" variants={parent} initial="hidden" animate="shown">
+    <motion.div className="board-root board-dark" variants={parent} initial="hidden" animate="shown">
       {/* Header (§3.1) */}
       <motion.header variants={item} style={{ gridArea: 'header' }} className="flex min-w-0 items-center justify-between border-b border-hairline">
         <div className="flex min-w-0 items-center gap-3">

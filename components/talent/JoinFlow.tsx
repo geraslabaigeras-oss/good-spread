@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check } from 'lucide-react';
 import { Button, Wordmark } from '@/components/kit';
+import { Stage } from '@/components/glass/Stage';
 import { useReveal } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 
@@ -56,7 +57,7 @@ export function JoinFlow({ slug, people }: { slug: string; title: string; dateIS
   }
 
   return (
-    <div className="mx-auto min-h-dvh max-w-[420px] bg-paper p-5">
+    <Stage><div className="board-dark mx-auto min-h-dvh max-w-[420px] p-5">
       <motion.div variants={parent} initial="hidden" animate="shown">
         <motion.div variants={item} className="flex h-10 items-center">
           <Wordmark demo />
@@ -120,6 +121,6 @@ export function JoinFlow({ slug, people }: { slug: string; title: string; dateIS
           )}
         </AnimatePresence>
       </motion.div>
-    </div>
+    </div></Stage>
   );
 }
