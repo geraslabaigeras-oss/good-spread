@@ -1,6 +1,5 @@
-import { buildProduction, summarize } from '@/lib/engine';
-import { ALL_PEOPLE, STRATEGIES } from '@/data/catalog';
-import type { GlobePin } from '@/components/glass/Globe';
+import { applyUpdate, buildPending, buildProduction, callTime, fmt, summarize } from '@/lib/engine';
+import { STRATEGIES } from '@/data/catalog';
 import { DEMO_BRIEF, DEMO_CAP, DEMO_DELIVERABLES, DEMO_START } from '@/data/demo';
 import { makeSeed } from '@/data/seed';
 import { Landing } from '@/components/landing/Landing';
@@ -12,9 +11,19 @@ export default function Home() {
   );
   const fitting = routes.filter((r) => !r.overCap && r.fitsDeadline).sort((a, b) => a.total - b.total)[0] ?? routes[0];
   const seed = makeSeed();
-  const pins: GlobePin[] = [
-    ...ALL_PEOPLE.filter((c) => c.role === 'model' || c.role === 'photographer').map((c) => ({ id: c.id, city: c.city, label: c.name, sub: c.role, photo: c.photo, kind: (c.role === 'model' ? 'model' : c.role === 'photographer' ? 'photographer' : 'crew') as GlobePin['kind'], selected: c.role === 'model' })),
-  ];
+  // The core moment, computed: a flight change for the travelling model on the sample plan.
+  const traveller = seed.people.find((x) => !x.local)!;
+  const changed = applyUpdate(seed, { kind: 'travel', personId: traveller.id, arriveMin: 645, source: 'flight_change.pdf' }, '2026-11-14T08:00:00Z');
+  const pending = buildPending(changed, { inboxId: 'landing', source: 'flight_change.pdf', createdAt: '2026-11-14T08:00:00Z' })!;
+  const best = pending.fixes.find((f) => f.id === pending.recommendedFixId)!;
+  const roleName = (id: string) => { const x = seed.people.find((y) => y.id === id)!; return x.role === 'model' ? `Model ${seed.people.filter((y) => y.role === 'model').indexOf(x) + 1}` : x.role === 'mua' ? 'Hair & makeup' : x.role[0].toUpperCase() + x.role.slice(1); };
+  const moment = {
+    lands: fmt(645),
+    call: fmt(callTime(seed, traveller.id)!),
+    newCall: fmt(callTime(best.plan, traveller.id)!),
+    who: roleName(traveller.id),
+    fixes: pending.fixes.map((f) => ({ label: f.kind === 'SWAP_ORDER' ? 'Swap the order' : f.kind === 'SHIFT_FROM' ? 'Shift the day' : 'Replace the model', cost: f.costDelta, people: f.peopleAffected.length, creative: f.changesCreative, best: f.id === best.id })),
+  };
   return (
     <Landing
       cap={DEMO_CAP}
@@ -22,8 +31,7 @@ export default function Home() {
       routes={routes.map((r) => ({ name: r.name, total: r.total, overCap: r.overCap }))}
       best={{ name: fitting.name, total: fitting.total }}
       people={seed.people.filter((x) => x.role !== 'producer').length}
-      pins={pins}
-      total={ALL_PEOPLE.length}
+      moment={moment}
     />
   );
 }

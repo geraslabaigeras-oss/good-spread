@@ -2,10 +2,8 @@
 
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { Stage } from '@/components/glass/Stage';
-import { Globe, type GlobePin } from '@/components/glass/Globe';
 import { fmtEur } from '@/lib/format';
 
 type Props = {
@@ -14,26 +12,19 @@ type Props = {
   routes: { name: string; total: number; overCap: boolean }[];
   best: { name: string; total: number };
   people: number;
-  pins: GlobePin[];
-  total: number;
+  moment: { lands: string; call: string; newCall: string; who: string; fixes: { label: string; cost: number; people: number; creative: boolean; best: boolean }[] };
 };
 
 const ease = [0.16, 1, 0.3, 1] as const;
 const up = (d = 0) => ({ initial: { opacity: 0, y: 28 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, amount: 0.2 }, transition: { duration: 0.9, ease, delay: d } });
 
-export function Landing({ cap, stills, routes, best, people, pins }: Props) {
-  const par = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const on = () => { if (par.current) par.current.style.transform = `translate3d(0, ${Math.min(120, window.scrollY * 0.08)}px, 0)`; };
-    window.addEventListener('scroll', on, { passive: true });
-    return () => window.removeEventListener('scroll', on);
-  }, []);
+export function Landing({ cap, stills, routes, best, people, moment }: Props) {
 
   const steps = [
     { k: 'Brief', t: 'Upload a reference image. You get the look, palette, lighting and shot list as a brief you can edit.', big: `${stills} stills`, href: '/new' },
     { k: 'Strategies', t: `${routes.map((r) => r.name).join(', ')}. Each is costed line by line against your cap.`, big: fmtEur(best.total), href: '/plan' },
     { k: 'Team', t: 'Choose models, a photographer and a studio. Cost and call times update as you pick.', big: `${people} people`, href: '/plan/assemble' },
-    { k: 'Production', t: 'A flight changes. You see three fixes with their cost. Approve one and each person gets their new call time.', big: '0 messages', href: '/board/jacket-campaign' },
+    { k: 'Production', t: 'A flight changes. You see three fixes with their cost. Approve one and each person gets their new call time.', big: '0 messages', href: '/plan/assemble' },
   ];
 
   return (
@@ -43,8 +34,7 @@ export function Landing({ cap, stills, routes, best, people, pins }: Props) {
         <span className="text-[15px] font-medium tracking-[-0.15px]">good spread</span>
         <nav className="hidden gap-[30px] text-[15px] font-medium tracking-[-0.28px] text-grey-1 md:flex">
           <a href="#how" className="hover:text-ink">How it works</a>
-          <Link href="/board/jacket-campaign" className="hover:text-ink">Live board</Link>
-          <Link href="/wrap/jacket-campaign" className="hover:text-ink">Wrap</Link>
+          <Link href="/people" className="hover:text-ink">Your people</Link>
         </nav>
         <Link href="/new" className="g-btn !h-10 !px-[18px] !text-[14px]">Start a shoot</Link>
       </header>
@@ -52,29 +42,21 @@ export function Landing({ cap, stills, routes, best, people, pins }: Props) {
       {/* hero */}
       <section className="relative overflow-hidden pb-24 pt-16 md:pt-[120px]">
         <div aria-hidden className="g-ghost left-[-2%] top-[40px]">good spread</div>
-        <div className="relative mx-auto grid w-[calc(100%-36px)] max-w-[1328px] items-center gap-10 md:w-[calc(100%-112px)] md:grid-cols-[5fr_7fr]">
-          <motion.div initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease }}>
-            <span className="g-eyebrow mb-[26px]">Production planning for fashion shoots</span>
-            <h1 className="whitespace-nowrap font-serif text-[clamp(40px,4.9vw,76px)] leading-[0.98] tracking-[-0.045em]">Producers plan it.<br />Talent lives it.</h1>
-            <p className="mt-8 max-w-[22em] font-serif text-[clamp(18px,1.6vw,22px)] leading-[1.35] tracking-[-0.02em] text-grey-1">
-              Upload a reference. Get three costed plans, a team and a call sheet. When something changes, each person on set gets their new times by text.
+        <div className="relative mx-auto w-[calc(100%-36px)] max-w-[1328px] md:w-[calc(100%-112px)]">
+          <motion.div initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease }} className="max-w-[900px]">
+            <span className="g-pill mb-[26px]">Production planning for fashion shoots</span>
+            <h1 className="font-serif text-[clamp(48px,6.4vw,96px)] leading-[0.98] tracking-[-0.045em]">Producers plan it.<br />Talent lives it.</h1>
+            <p className="mt-8 max-w-[30em] font-serif text-[clamp(18px,1.6vw,22px)] leading-[1.35] tracking-[-0.02em] text-grey-1">
+              One plan for the whole shoot. When something changes, you approve a fix and everyone on set gets their new times.
             </p>
             <div className="mt-[30px] flex items-center gap-[22px]">
-              <Link href="/new" className="g-btn">Start with a reference</Link>
-              <Link href="/board/jacket-campaign" className="text-[13px] text-grey-1 transition-colors hover:text-ink">or open the live board →</Link>
+              <Link href="/new" className="g-btn">Start a shoot</Link>
+              <Link href="/people" className="text-[13px] text-grey-1 transition-colors hover:text-ink">or add your people first →</Link>
             </div>
           </motion.div>
-          <div ref={par} className="relative h-[460px] md:h-[640px] md:-mr-14">
-            <Globe pins={pins} arcs={[{ from: 'Milan', to: 'Vilnius', label: 'Ieva' }, { from: 'Vilnius', to: 'Lisbon', label: 'Lukas' }]} focus="Vilnius" hub="Vilnius" height="100%" altitude={1.05} spread={2.3} />
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease, delay: 0.8 }}
-              className="glass pointer-events-none absolute bottom-6 left-4 flex items-center gap-3 !rounded-[18px] py-2.5 pl-2.5 pr-5">
-              <img src="/catalog/ieva.jpg" alt="" className="size-10 rounded-full object-cover object-top" />
-              <div>
-                <div className="text-[13px] font-medium">Ieva · DA 641 Milan → Vilnius</div>
-                <div className="font-mono text-[11px] text-grey-1 num">lands 07:40 · call 09:00</div>
-              </div>
-            </motion.div>
-          </div>
+          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.1, ease, delay: 0.25 }} className="mt-16">
+            <Moment m={moment} />
+          </motion.div>
         </div>
       </section>
 
@@ -134,7 +116,7 @@ export function Landing({ cap, stills, routes, best, people, pins }: Props) {
             <p className="mx-auto mb-[34px] mt-[22px] max-w-[22em] font-serif text-[20px] leading-[1.35] text-white/70">Start with one reference image. No account needed.</p>
             <div className="flex items-center justify-center gap-[22px]">
               <Link href="/new" className="g-btn !bg-white !text-ink">Start with a reference</Link>
-              <Link href="/join/jacket-campaign" className="text-[13px] text-white/70 hover:text-white">or join the demo shoot as crew →</Link>
+              <Link href="/people" className="text-[13px] text-white/70 hover:text-white">or add your people →</Link>
             </div>
           </div>
         </motion.div>
@@ -143,10 +125,60 @@ export function Landing({ cap, stills, routes, best, people, pins }: Props) {
       <footer className="mx-auto grid w-[calc(100%-36px)] max-w-[1328px] gap-10 pb-14 pt-4 text-[12.5px] text-grey-1 md:w-[calc(100%-112px)] md:grid-cols-[1fr_2fr]">
         <div><span className="text-[15px] font-medium text-ink">good spread</span><p className="mt-2.5">Built at Unfair Weekend Vilnius, 2026.</p></div>
         <div>
-          <p>Demo: people, agencies, prices and flights are invented. Photos are placeholders.</p>
+          <p>Plans use only the people you add. Prices are your rates; flights and hotels are estimates until booked.</p>
           <p className="mt-1.5">AI reads documents and images. Costs, schedules and fixes are calculated by code.</p>
         </div>
       </footer>
     </Stage>
+  );
+}
+
+/** The product's core moment, as a framed preview. Figures come from the engine (see app/page.tsx). */
+function Moment({ m }: { m: Props['moment'] }) {
+  const step = (d: number) => ({ initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.7, ease, delay: d } });
+  return (
+    <div className="glass overflow-hidden !rounded-[28px]">
+      <div className="grid h-11 grid-cols-[1fr_auto_1fr] items-center border-b border-white/60 px-[18px]">
+        <div className="flex gap-[7px]">{[0, 1, 2].map((i) => <i key={i} className="block size-[11px] rounded-full bg-ink/[0.14]" />)}</div>
+        <span className="rounded-full bg-white/60 px-4 py-[5px] text-[12.5px] text-grey-1 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.7)]">good spread · production board</span>
+        <span />
+      </div>
+      <div className="grid gap-5 p-5 md:grid-cols-[1fr_1.6fr_0.9fr] md:p-7">
+        {/* 1. inbox */}
+        <motion.div {...step(0.6)} className="rounded-[20px] bg-white p-5 shadow-[0_0_0_1px_rgb(0_0_0/0.06),0_1px_2px_rgb(0_0_0/0.06)]">
+          <span className="g-pill">Inbox</span>
+          <div className="mt-4 text-[13px] text-grey-1">Read from flight_change.pdf</div>
+          <div className="mt-1 text-[17px] leading-6">{m.who}&rsquo;s flight now lands <span className="font-medium">{m.lands}</span></div>
+          <div className="mt-4 rounded-[12px] bg-conflict-tint px-3 py-2.5 text-[13px] leading-5 text-conflict">Can&rsquo;t make {m.call} hair and makeup</div>
+        </motion.div>
+        {/* 2. three fixes */}
+        <motion.div {...step(0.9)} className="rounded-[20px] bg-white p-5 shadow-[0_0_0_1px_rgb(0_0_0/0.06),0_1px_2px_rgb(0_0_0/0.06)]">
+          <span className="g-pill">Three fixes</span>
+          <div className="mt-4 grid grid-cols-3 gap-2.5">
+            {m.fixes.map((f) => (
+              <div key={f.label} className={`rounded-[14px] p-3.5 ${f.best ? 'bg-ink text-white' : 'shadow-[inset_0_0_0_1px_rgb(13_13_13/0.1)]'}`}>
+                <div className={`text-[12px] ${f.best ? 'text-white/70' : 'text-grey-1'}`}>{f.best ? 'Recommended' : f.creative ? 'Changes casting' : '\u00a0'}</div>
+                <div className="mt-1 text-[14px] font-medium leading-5">{f.label}</div>
+                <div className="mt-3 font-serif text-[30px] leading-none tracking-[-0.04em] num">{f.cost === 0 ? '€0' : f.cost > 0 ? `+€${Math.round(f.cost)}` : `−€${Math.round(-f.cost)}`}</div>
+                <div className={`mt-1 text-[12px] ${f.best ? 'text-white/70' : 'text-grey-1'}`}>{f.people} people</div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+        {/* 3. the phone */}
+        <motion.div {...step(1.2)} className="mx-auto w-full max-w-[240px] rounded-[30px] bg-ink p-2">
+          <div className="rounded-[24px] bg-[#f6f4f0] px-4 pb-4 pt-5">
+            <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-grey-1">Your day · updated</div>
+            <div className="mt-2 text-[13px] text-grey-1">{m.who}</div>
+            <div className="mt-1 flex items-baseline gap-2">
+              <span className="text-[15px] text-grey-2 line-through">{m.call}</span>
+              <span className="font-serif text-[46px] leading-none tracking-[-0.04em] num">{m.newCall}</span>
+            </div>
+            <div className="mt-1 text-[12px] text-grey-1">Call time · lands {m.lands}</div>
+            <div className="mt-4 flex h-10 items-center justify-center rounded-full bg-ink text-[13px] font-medium text-white">Got it</div>
+          </div>
+        </motion.div>
+      </div>
+    </div>
   );
 }

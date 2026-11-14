@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable @next/next/no-img-element */
 import { AnimatePresence, motion } from 'motion/react';
 import { useState } from 'react';
 import { ArrowUpRight, MessageCircle, Search, Trash2, Upload } from 'lucide-react';
