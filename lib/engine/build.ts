@@ -13,6 +13,7 @@ export type BuildInput = {
   deliverables: Deliverables;
   cap: number;
   startISO: string; // planning starts (today); shoot date = start + prepDays
+  shootISO?: string; // picked by the producer; overrides start + prepDays
   looks?: Look[];
 };
 
@@ -135,7 +136,7 @@ export function buildProduction(i: BuildInput): Production {
 
   const p: Production = {
     id: i.slug, slug: i.slug, title: i.title, brand: i.brand,
-    dateISO: addDays(i.startISO, s.prepDays), version: 1,
+    dateISO: i.shootISO ?? addDays(i.startISO, s.prepDays), version: 1,
     studio: { name: loc.name, address: loc.address, mapsUrl: loc.mapsUrl, opensMin: loc.opensMin, closesMin: loc.closesMin, bookedUntilMin: last, hourlyRate: loc.hourlyRate },
     people, shortlist, travel, late: [], blocks, looks,
     budget: { cap: i.cap, contingencyPct: 10, items },

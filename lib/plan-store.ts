@@ -22,6 +22,7 @@ export type PlanDraft = {
   place?: ScoutedPlace | null; // AI-scouted real location chosen on the Brief page
   shortlist?: string[]; // models picked on the Brief page
   scoutCity?: string; // base city the scout chose for this brief
+  shootISO?: string; // shoot date the producer picked
 };
 
 const KEY = 'gs-plan-draft';

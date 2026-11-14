@@ -27,6 +27,7 @@ function Dial({ label, value, children }: { label: string; value: string; childr
 const refUrl = (id: string, w: number) => `https://images.unsplash.com/${id}?fm=jpg&q=70&w=${w}&auto=format&fit=crop`;
 import { Scout } from '@/components/scout';
 import { BriefOptions } from '@/components/brief-options';
+import { ShootDate } from '@/components/shoot-date';
 import { Stage, TopBar } from '@/components/glass/Stage';
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
@@ -165,6 +166,7 @@ export default function NewBrief() {
               <motion.div key="form" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.6, ease }} className="glass p-8">
                 <input aria-label="Campaign name" className="w-full bg-transparent font-serif text-[34px] leading-tight tracking-[-0.01em] outline-none placeholder:text-grey-2" value={d.title} onChange={(e) => setDraft({ ...d, title: e.target.value })} placeholder="Name the campaign" />
                 <p className="mt-1 text-[13px] text-grey-1">Drop a reference or pick one. Set the size of the job here.</p>
+                <div className="mt-6"><ShootDate value={d.shootISO} fallbackISO={addDaysISO(d.startISO, 7)} onChange={(iso) => setDraft({ ...d, shootISO: iso })} /></div>
                 <div className="mt-7 space-y-6">
                   <Dial label="Budget cap" value={`€${d.cap.toLocaleString('en-US')}`}>
                     <Slider value={[d.cap]} min={1000} max={20000} step={250} onValueChange={(v) => setDraft({ ...d, cap: Array.isArray(v) ? v[0] : v })} />
@@ -290,6 +292,10 @@ export default function NewBrief() {
       </div>
       {b && (
         <div className="mx-auto max-w-[1200px] px-8 pb-24">
+          <div className="flex flex-wrap items-center gap-3">
+            <ShootDate value={d.shootISO} fallbackISO={addDaysISO(d.startISO, 7)} onChange={(iso) => setDraft({ ...d, shootISO: iso })} />
+            <span className="text-[14px] text-neutral-500">Budget cap {`€${d.cap.toLocaleString('en-US')}`}</span>
+          </div>
           <BriefOptions brief={b} draft={d} setDraft={setDraft} />
           <div className="mt-12 flex justify-center">
             <button onClick={() => {
