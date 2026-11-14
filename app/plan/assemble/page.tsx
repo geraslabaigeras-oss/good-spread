@@ -15,6 +15,7 @@ import { draftProduction, pinsFor } from '@/lib/plan-draft';
 import { BudgetLine, CAT_COLOR, Stage, Tilt, TopBar } from '@/components/glass/Stage';
 import { type GlobePin } from '@/components/glass/Globe';
 import { TeamSlots } from '@/components/team-slots';
+import { QuickAdd } from '@/components/quick-add';
 import { Scout } from '@/components/scout';
 import { AgencyCall } from '@/components/agency-call';
 import { OFFICES, flagUrl, type Office } from '@/lib/agencies';
@@ -29,6 +30,7 @@ export default function Assemble() {
   const [tab, setTab] = useState<Tab>('models');
   const [calling, setCalling] = useState<Office | null>(null);
   const [checking, setChecking] = useState<string | null>(null);
+  const [adding, setAdding] = useState<'model' | 'photographer' | 'mua' | 'stylist' | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -128,7 +130,11 @@ export default function Assemble() {
             <h1 className="mt-1 font-serif text-[52px] leading-[0.95] tracking-[-0.03em]">Build the team</h1>
             <p className="mt-2 max-w-[420px] text-[14px] text-grey-1">{needs ? <>Looking for: <span className="text-ink">{needs.model}</span></> : 'Pick from the list. The cost updates with each pick.'}</p>
           </div>
-          <div className="pt-36 pb-20"><TeamSlots p={p} place={draft.place ? { name: draft.place.name, image: draft.place.image } : null} /></div>
+          <div className="pt-36 pb-20"><TeamSlots p={p} place={draft.place ? { name: draft.place.name, image: draft.place.image } : null} onSlot={(role, open) => {
+            if (role === 'location') { setTab('location'); return; }
+            if (open || role === 'mua' || role === 'stylist') { setAdding(role as 'model'); return; }
+            setTab(role === 'model' ? 'models' : 'photographer');
+          }} /></div>
 
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }} className="glass -mt-16 grid grid-cols-1 items-center gap-6 p-6 md:grid-cols-[auto_1fr_auto]">
             <div className="w-[260px]"><BudgetLine total={budget.total} cap={budget.cap} segments={CATS.map((c) => ({ value: budget.byCategory[c], color: CAT_COLOR[c] }))} /></div>
@@ -150,7 +156,7 @@ export default function Assemble() {
         {/* Talent / photographer / location */}
         <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, ease }} className="glass flex max-h-[calc(100dvh-110px)] flex-col p-4">
           <div className="relative flex gap-1 rounded-full bg-ink/[0.05] p-1">
-            {([['models', `Models ${picks.models.length}/${def.modelSlots}`], ['photographer', 'Photographer'], ['location', def.locationKinds.includes('location') ? 'Location' : 'Studio']] as [Tab, string][]).map(([k, label]) => (
+            {([['models', `Models ${picks.models.filter((m) => !isOpenSlot(m)).length}/${def.modelSlots}`], ['photographer', 'Photographer'], ['location', def.locationKinds.includes('location') ? 'Location' : 'Studio']] as [Tab, string][]).map(([k, label]) => (
               <button key={k} onClick={() => setTab(k)} className="relative flex-1 rounded-full py-2 text-[13px]">
                 {tab === k && <motion.span layoutId="tab-pill" className="absolute inset-0 rounded-full bg-white shadow-[0_2px_10px_rgb(80_60_40/0.1)]" transition={{ type: 'spring', stiffness: 400, damping: 34 }} />}
                 <span className={`relative ${tab === k ? 'text-ink' : 'text-grey-1'}`}>{label}</span>
@@ -178,7 +184,7 @@ export default function Assemble() {
               </motion.div>
             </AnimatePresence>
             {(tab === 'models' || tab === 'photographer') && (
-              <Link href="/people" className="mt-3 inline-flex items-center gap-1 text-[13px] text-grey-1 hover:text-ink">+ Add your own person (make-up, stylist, anyone)</Link>
+              <button onClick={() => setAdding(tab === 'models' ? 'model' : 'photographer')} className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-neutral-300 text-[14px] text-neutral-600 transition-colors hover:border-neutral-500 hover:text-neutral-900">+ Add a {tab === 'models' ? 'model' : 'photographer'} you work with</button>
             )}
             {(tab === 'models' || tab === 'photographer') && (
               <div className="mt-6">
@@ -211,6 +217,27 @@ export default function Assemble() {
             await fetch(`/api/people/${pp.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...data, availability: ans }) });
             await roster.mutate();
             setChecking(null);
+          }}
+        />
+      )}
+      {adding && (
+        <QuickAdd
+          key={adding}
+          role={adding}
+          city={def.city}
+          open={!!adding}
+          onOpenChange={(o) => !o && setAdding(null)}
+          onAdded={async (id, role) => {
+            await roster.mutate();
+            if (role === 'model') {
+              const slot = picks.models.findIndex((m) => isOpenSlot(m));
+              const m = slot >= 0 ? picks.models.map((x, i) => (i === slot ? id : x)) : [...picks.models, id].slice(-def.modelSlots);
+              setPicks({ ...picks, models: m });
+              setTab('models');
+            } else if (role === 'photographer') {
+              setPicks({ ...picks, photographer: id });
+              setTab('photographer');
+            }
           }}
         />
       )}
