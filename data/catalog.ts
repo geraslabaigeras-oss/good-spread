@@ -82,7 +82,18 @@ const SAMPLE_CREW: CatalogPerson[] = [
   { id: 'rita', name: 'Rita', role: 'stylist', dayRate: 420, otRatePerHour: 45, local: true, city: 'Lisbon', bio: 'Stylist.', tags: [] },
 ];
 
+/** Real Vilnius places scouted for the reference (photos: Wikimedia Commons, via the good-spread project). Day fees are estimates. */
+const SCOUTED: CatalogLocation[] = [
+  { id: 'pilies', name: 'Pilies courtyard, Vilnius', city: 'Vilnius', kind: 'location', address: 'Pilies g., Old Town, Vilnius', mapsUrl: 'https://maps.google.com/?q=Pilies+gatve+Vilnius',
+    hourlyRate: 80, permit: 650, opensMin: 420, closesMin: 1140, natural: true, note: 'White arches, soft north light, Old Town stone.', tags: ['courtyard', 'daylight'], photo: '/photos/loc/loc-court2.jpg' },
+  { id: 'uzupis', name: 'Užupis riverside yard, Vilnius', city: 'Vilnius', kind: 'location', address: 'Užupis, Vilnius', mapsUrl: 'https://maps.google.com/?q=Uzupis+Vilnius',
+    hourlyRate: 100, permit: 820, opensMin: 420, closesMin: 1140, natural: true, note: 'River, trees and soft daylight, quiet on weekends.', tags: ['river', 'daylight'], photo: '/photos/loc/loc-uzupis.jpg' },
+  { id: 'lukiskes', name: 'Lukiškės complex, Vilnius', city: 'Vilnius', kind: 'location', address: 'Lukiškių g. 6, Vilnius', mapsUrl: 'https://maps.google.com/?q=Lukiskes+prison+Vilnius',
+    hourlyRate: 140, permit: 1100, opensMin: 420, closesMin: 1140, natural: false, note: 'Brick, iron and long corridors, hard contrast.', tags: ['industrial', 'brick'], photo: '/photos/loc/loc-prison.jpg' },
+];
+
 export const LOCATIONS: CatalogLocation[] = [
+  ...SCOUTED,
   {
     id: 'demo-studio', name: 'Demo studio, Vilnius', city: 'Vilnius', kind: 'studio', address: 'Demo address, Vilnius', mapsUrl: 'https://maps.google.com/?q=Vilnius',
     hourlyRate: 60, opensMin: 420, closesMin: 1080, natural: false, note: 'Cyclorama, full lighting kit.', tags: ['cyclorama', 'lighting kit'],
@@ -142,7 +153,7 @@ const BASE_STRATEGIES: StrategyDef[] = [
   {
     id: 'local', name: 'Local', city: 'Vilnius', tagline: 'Studio in Vilnius. Full shoot, one day.',
     modelSlots: 2, physical: 'full', defaultPicks: { models: ['ieva', 'marta'], photographer: 'tomas', location: 'demo-studio' },
-    crew: { mua: 'greta', stylist: 'lukas' }, locationKinds: ['studio'], prepDays: 7, postDays: 4, retouchRate: 20,
+    crew: { mua: 'greta', stylist: 'lukas' }, locationKinds: ['studio', 'location'], prepDays: 7, postDays: 4, retouchRate: 20,
   },
   {
     id: 'destination', name: 'Destination', city: 'Lisbon', tagline: 'On location in Lisbon. Outdoor light.',
@@ -171,7 +182,7 @@ export const strategyDef = (id: StrategyId): StrategyDef => {
     defaultPicks: {
       models: pickFrom(MODELS, base.city, base.modelSlots),
       photographer: pickFrom(PHOTOGRAPHERS, base.city, 1)[0] ?? '',
-      location: base.defaultPicks.location,
+      location: LOCATIONS.find((l) => l.city === base.city && base.locationKinds.includes(l.kind) && !!l.photo)?.id ?? '',
     },
     crew: {
       mua: pickFrom(CREW.filter((c) => c.role === 'mua'), base.city, 1)[0] ?? '',
@@ -188,6 +199,7 @@ export function rosterGaps(id: StrategyId): string[] {
   if (!s.defaultPicks.photographer) gaps.push('a photographer');
   if (!s.crew.mua) gaps.push('a hair and makeup artist');
   if (!s.crew.stylist) gaps.push('a stylist');
+  if (!s.defaultPicks.location) gaps.push(`a scouted location in ${s.city}`);
   return gaps;
 }
 
@@ -200,5 +212,6 @@ export function candidates(id: StrategyId, role: Role): CatalogPerson[] {
 
 export function locationCandidates(id: StrategyId): CatalogLocation[] {
   const s = strategyDef(id);
-  return LOCATIONS.filter((l) => l.city === s.city && s.locationKinds.includes(l.kind));
+  // With a real roster, only show real places (scouted, with photos); invented sample spots stay for the tests.
+  return LOCATIONS.filter((l) => l.city === s.city && s.locationKinds.includes(l.kind) && (!rosterActive || !!l.photo));
 }

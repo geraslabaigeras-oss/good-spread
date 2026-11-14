@@ -12,7 +12,8 @@ import { fmtDate, fmtEur } from '@/lib/format';
 import { useDraft } from '@/lib/plan-store';
 import { draftProduction, pinsFor } from '@/lib/plan-draft';
 import { BudgetLine, CAT_COLOR, Stage, Tilt, TopBar } from '@/components/glass/Stage';
-import { Globe, type GlobePin } from '@/components/glass/Globe';
+import { type GlobePin } from '@/components/glass/Globe';
+import { FlightGlobe } from '@/components/flight-globe';
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
 const CATS = ['talent', 'crew', 'studio', 'travel', 'post', 'usage'] as const;
@@ -30,7 +31,7 @@ export default function Assemble() {
   const def = strategyDef(strategy);
   const gaps = roster.ready ? rosterGaps(strategy) : [];
   // Saved picks only count if those people are still on your roster.
-  const valid = (x?: Picks) => !!x && x.models.length > 0 && x.models.every((m) => catalogPerson(m) && candidates(strategy, 'model').some((c) => c.id === m)) && candidates(strategy, 'photographer').some((c) => c.id === x.photographer);
+  const valid = (x?: Picks) => !!x && x.models.length > 0 && x.models.every((m) => catalogPerson(m) && candidates(strategy, 'model').some((c) => c.id === m)) && candidates(strategy, 'photographer').some((c) => c.id === x.photographer) && locationCandidates(strategy).some((l) => l.id === x.location);
   const picks: Picks = valid(draft?.picks) ? draft!.picks! : def.defaultPicks;
 
   const view = useMemo(() => {
@@ -119,7 +120,7 @@ export default function Assemble() {
             <h1 className="mt-1 font-serif text-[52px] leading-[0.95] tracking-[-0.03em]">Build the team</h1>
             <p className="mt-2 max-w-[380px] text-[14px] text-grey-1">Pick on the globe or in the list. Cost and call times update with each pick.</p>
           </div>
-          <Globe pins={pins} arcs={chosen.arcs} focus={def.city} hub={def.city} onPin={onPin} height="64vh" altitude={0.62} />
+          <div className="pt-28"><FlightGlobe from={chosen.arcs[0]?.from ?? null} to={def.city} label={chosen.arcs[0] ? `${chosen.arcs[0].label} flies in` : 'no flights'} height="56vh" /></div>
 
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }} className="glass -mt-16 grid grid-cols-1 items-center gap-6 p-6 md:grid-cols-[auto_1fr_auto]">
             <div className="w-[260px]"><BudgetLine total={budget.total} cap={budget.cap} segments={CATS.map((c) => ({ value: budget.byCategory[c], color: CAT_COLOR[c] }))} /></div>
@@ -165,13 +166,13 @@ export default function Assemble() {
                 {tab === 'photographer' && photos.map((c) => <CompCard key={c.id} c={c} selected={picks.photographer === c.id} onClick={() => setPicks({ ...picks, photographer: c.id })} travel={travel(c)} />)}
                 {tab === 'location' && locs.map((l) => (
                   <Tilt key={l.id} onClick={() => setPicks({ ...picks, location: l.id })} selected={picks.location === l.id} className="glass-soft cursor-pointer overflow-hidden">
-                    <div className="relative h-32 overflow-hidden" style={{ background: l.photo ? `url(${l.photo}) center 20%/cover` : (l.natural ? '#d8c8b4' : '#e4e1dc') }}>
+                    <div className="relative h-44 overflow-hidden" style={{ background: l.photo ? `url(${l.photo}) center 20%/cover` : (l.natural ? '#d8c8b4' : '#e4e1dc') }}>
                       <span className="absolute bottom-2 left-3 font-mono text-[10px] uppercase tracking-wider text-ink/70">{l.tags.join(' · ')}</span>
                     </div>
                     <div className="p-3">
                       <div className="font-serif text-[20px] leading-6">{l.name.split(',')[0]}</div>
                       <div className="mt-1 text-[12px] text-grey-1">{l.note}</div>
-                      <div className="mt-2 font-mono text-[12px]">{l.kind === 'location' ? `Permit ${fmtEur(l.permit ?? 0)} · fixer ${fmtEur(l.fixer ?? 0)}` : `${fmtEur(l.hourlyRate)}/h`}</div>
+                      <div className="mt-2 font-mono text-[12px]">{l.kind === 'location' ? `${fmtEur(l.permit ?? 0)}/day (est.)${l.fixer ? ` · fixer ${fmtEur(l.fixer)}` : ''}` : `${fmtEur(l.hourlyRate)}/h`}</div>
                     </div>
                   </Tilt>
                 ))}

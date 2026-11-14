@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 import { useCallback, useRef, useState } from 'react';
 import { ArrowUpRight, QrCode, RotateCcw } from 'lucide-react';
 import type { BoardState, PublicPending } from '@/lib/server/views';
-import type { Receipt } from '@/lib/types';
+import type { Change, Receipt } from '@/lib/types';
 import { fmtDate, fmtEur } from '@/lib/format';
 import { useReveal, APPROVE } from '@/lib/motion';
 import { Button, ToastProvider, useToast, Wordmark } from '@/components/kit';
@@ -25,7 +25,7 @@ const fetcher = async (url: string) => {
 };
 
 export type Approving = { fixId: string; x: number; y: number; pending: PublicPending };
-export type Applied = { version: number; label: string; receipt: Receipt; at: string; changedIds?: string[] };
+export type Applied = { version: number; label: string; receipt: Receipt; at: string; changedIds?: string[]; changes?: Change[] };
 
 export function Board({ slug }: { slug: string }) {
   return (
@@ -73,7 +73,7 @@ function BoardInner({ slug }: { slug: string }) {
         }
         // t = 0 of the approve sequence (DESIGN §5.6)
         setApproving({ fixId, x, y, pending: frozen });
-        setJustApproved({ version: j.version, label: j.label, receipt: j.receipt, at: new Date().toISOString(), changedIds: (j.changes ?? []).map((c: { personId: string }) => c.personId) });
+        setJustApproved({ version: j.version, label: j.label, receipt: j.receipt, at: new Date().toISOString(), changedIds: (j.changes ?? []).map((c: { personId: string }) => c.personId), changes: j.changes ?? [] });
         mutate();
         setTimeout(() => setApproving(null), APPROVE.slotSwap);
       } finally {
@@ -112,7 +112,7 @@ function BoardInner({ slug }: { slug: string }) {
     justApproved && justApproved.version === p.version
       ? justApproved
       : rev?.receipt && rev.version === p.version
-        ? { version: rev.version, label: rev.receipt.label ?? rev.fix_kind ?? '', receipt: rev.receipt, at: rev.created_at }
+        ? { version: rev.version, label: rev.receipt.label ?? rev.fix_kind ?? '', receipt: rev.receipt, at: rev.created_at, changes: rev.changes }
         : null;
   const animateVersion = justApproved?.version === p.version ? p.version : null;
 

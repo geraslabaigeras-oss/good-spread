@@ -1,6 +1,10 @@
 'use client';
 
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { Change as FlowChange } from '@/components/flow/ui';
+import '@/components/flow/flow-theme.css';
+import { callTime } from '@/lib/engine';
+import type { Change } from '@/lib/types';
 import { useRef, useState } from 'react';
 import { Check, TriangleAlert } from 'lucide-react';
 import type { Production } from '@/lib/types';
@@ -52,7 +56,7 @@ export function Decision({
           )}
           {state === 'applied' && applied && (
             <motion.div key={`a-${applied.version}`} className="flex h-full flex-col gap-3" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.2 } }}>
-              <ReceiptView applied={applied} countUp={countUp} />
+              <ReceiptView applied={applied} countUp={countUp} p={p} />
             </motion.div>
           )}
           {state === 'empty' && (
@@ -162,7 +166,32 @@ function FixCard({
   );
 }
 
-function ReceiptView({ applied, countUp }: { applied: Applied; countUp: boolean }) {
+/** The good-spread call sheet: old call struck, new call rolls in (components/flow/ui Change + Roll). */
+function CallSheet({ p, changes }: { p: Production; changes: Change[] }) {
+  const rows = p.people.filter((x) => x.role !== 'producer').map((x) => {
+    const c = changes.find((y) => y.personId === x.id && y.kind === 'call_time');
+    const now = callTime(p, x.id);
+    return { id: x.id, name: x.name, old: c?.before ?? (now != null ? fmt(now) : '—'), now: now != null ? fmt(now) : '—' };
+  });
+  const moved = rows.filter((r) => r.old !== r.now).length;
+  return (
+    <div className="flow !bg-transparent">
+      <div className="f-panel is-glass" style={{ padding: '14px 18px' }}>
+        <div className="f-split f-label"><span>Call sheet</span><span className="f-new">{moved ? `${moved} call${moved > 1 ? 's' : ''} moved` : 'No calls moved'}</span></div>
+        <div className="mt-1 grid grid-cols-2 gap-x-8">
+          {rows.map((r) => (
+            <div key={r.id} className="f-split" style={{ fontSize: 15, lineHeight: '30px' }}>
+              <span className="f-display">{r.name}</span>
+              <span className="f-num"><FlowChange old={r.old} now={r.now} /></span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReceiptView({ applied, countUp, p }: { applied: Applied; countUp: boolean; p: Production }) {
   const r = applied.receipt;
   return (
     <>
@@ -177,7 +206,7 @@ function ReceiptView({ applied, countUp }: { applied: Applied; countUp: boolean 
         <span className="flex-1 truncate text-[14px] font-medium leading-5">Fix applied: {applied.label}</span>
         <span className="font-mono text-[12px] uppercase leading-4 num">v{applied.version} · {clock(applied.at)}</span>
       </motion.div>
-      <div className="grid min-h-0 grid-cols-4 gap-3" style={{ height: 'min(140px, 100%)' }}>
+      <div className="grid min-h-0 grid-cols-4 gap-3" style={{ height: 'min(104px, 100%)' }}>
         <Metric label="People updated" value={r.peopleUpdated} i={0} countUp={countUp} k={applied.version} />
         <Metric label="Messages typed" value={0} i={1} countUp={false} k={applied.version} />
         {r.saved != null ? (
@@ -187,6 +216,7 @@ function ReceiptView({ applied, countUp }: { applied: Applied; countUp: boolean 
         )}
         <Metric label="Fixed in" value={r.fixedInSeconds} i={3} countUp={countUp} k={applied.version} suffix=" s" />
       </div>
+      <CallSheet p={p} changes={applied.changes ?? []} />
     </>
   );
 }
