@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useRef, useState } from 'react';
 import { Loader2, Mic, Square, X } from 'lucide-react';
 import { loadDraft } from '@/lib/plan-store';
-import { BrandLogo } from '@/components/brand-logo';
 
 type Turn = { q: string; a: string; verdict?: string };
 
@@ -74,7 +73,7 @@ export function VoiceOrb() {
                 <p className="mt-2 max-w-[92%] rounded-2xl rounded-bl-md bg-neutral-950 px-3 py-2 text-[14px] leading-5 text-white">{turn.a}</p>
               </>
             )}
-            <p className="mt-2 inline-flex items-center gap-1 text-[11px] text-neutral-400"><BrandLogo name="elevenlabs" size={10} color="#a3a3a3" /> voice by ElevenLabs · advice by Claude</p>
+            
           </motion.div>
         )}
       </AnimatePresence>

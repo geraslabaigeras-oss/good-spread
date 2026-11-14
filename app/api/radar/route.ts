@@ -12,6 +12,7 @@ const AIRPORTS: Record<string, { name: string; lat: number; lon: number }> = {
   LHR: { name: 'London Heathrow', lat: 51.47, lon: -0.4543 },
   ARN: { name: 'Stockholm Arlanda', lat: 59.6498, lon: 17.9238 },
   CPH: { name: 'Copenhagen', lat: 55.618, lon: 12.656 },
+  AMS: { name: 'Amsterdam', lat: 52.3105, lon: 4.7683 },
 };
 
 type Plane = { id: string; callsign: string; country: string; lat: number; lon: number; altM: number | null; speedKmh: number | null; heading: number | null; climb: number | null; onGround: boolean; distKm: number };

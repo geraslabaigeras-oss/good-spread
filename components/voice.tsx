@@ -2,7 +2,6 @@
 
 import { useRef, useState } from 'react';
 import { Loader2, Mic, Square, Volume2 } from 'lucide-react';
-import { BrandLogo } from '@/components/brand-logo';
 
 /** Record a spoken brief; ElevenLabs Scribe turns it into text. */
 export function VoiceBrief({ onText }: { onText: (text: string) => void }) {
@@ -47,7 +46,7 @@ export function VoiceBrief({ onText }: { onText: (text: string) => void }) {
         {state === 'rec' ? <Square className="size-3.5" /> : state === 'busy' ? <Loader2 className="size-3.5 animate-spin" /> : <Mic className="size-3.5" />}
         {state === 'rec' ? 'Stop' : state === 'busy' ? 'Transcribing…' : 'Speak the brief'}
       </button>
-      <span className="inline-flex items-center gap-1 text-[11px] text-neutral-500"><BrandLogo name="elevenlabs" size={11} color="#737373" /> ElevenLabs</span>
+      
       {err && <span className="text-[12px] text-red-600">{err}</span>}
     </div>
   );

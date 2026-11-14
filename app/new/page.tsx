@@ -26,6 +26,7 @@ function Dial({ label, value, children }: { label: string; value: string; childr
 }
 const refUrl = (id: string, w: number) => `https://images.unsplash.com/${id}?fm=jpg&q=70&w=${w}&auto=format&fit=crop`;
 import { Scout } from '@/components/scout';
+import { BriefOptions } from '@/components/brief-options';
 import { Stage, TopBar } from '@/components/glass/Stage';
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
@@ -231,7 +232,6 @@ export default function NewBrief() {
                     ))}
                   </div>
                 )}
-                <button onClick={() => router.push('/plan')} className="g-btn mt-7 w-full">See the plans →</button>
                 <Tabs defaultValue="shots" className="mt-7">
                   <TabsList className="w-full">
                     <TabsTrigger value="shots">Shots</TabsTrigger>
@@ -288,6 +288,14 @@ export default function NewBrief() {
           </AnimatePresence>
         </div>
       </div>
+      {b && (
+        <div className="mx-auto max-w-[1200px] px-8 pb-24">
+          <BriefOptions brief={b} draft={d} setDraft={setDraft} />
+          <div className="mt-12 flex justify-center">
+            <button onClick={() => router.push('/plan')} className="g-btn h-14 px-10 text-[16px]">{d.shortlist?.length || d.place ? 'Build the plans with these →' : 'See the plans →'}</button>
+          </div>
+        </div>
+      )}
     </Stage>
   );
 }

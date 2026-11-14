@@ -89,7 +89,7 @@ export function AnalysisStage({ image, brief, onDone }: { image: string; brief: 
             {brief ? `${brief.garment}. ${brief.aesthetic.slice(0, 3).join(', ')}.` : LINES[line]}
           </motion.p>
         </AnimatePresence>
-        <p className="mt-1 text-[13px] text-neutral-400">{brief ? 'Your brief is ready' : 'Claude is reading your reference'}</p>
+        <p className="mt-1 text-[13px] text-neutral-400">{brief ? 'Your brief is ready' : 'Reading your references'}</p>
       </div>
     </motion.div>
   );

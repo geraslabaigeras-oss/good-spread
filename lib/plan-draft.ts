@@ -3,16 +3,17 @@ import { buildProduction } from '@/lib/engine';
 import { DEMO_BRIEF } from '@/data/demo';
 import type { PlanDraft } from '@/lib/plan-store';
 import type { GlobeArc, GlobePin } from '@/components/glass/Globe';
-import { catalogLocation, catalogPerson } from '@/data/catalog';
+import { catalogLocation, catalogPerson, setBriefPrefs } from '@/data/catalog';
 
 /** Build a draft production in the browser from the brief + a strategy (+ picks). Pure engine, no I/O. */
 export function draftProduction(d: PlanDraft, strategy: StrategyId, picks?: PlanDraft['picks']): Production {
+  setBriefPrefs({ city: d.scoutCity, shortlist: d.shortlist });
   const p = buildProduction({
     slug: 'draft', title: d.title, brand: d.brand, strategy, picks,
     brief: d.brief ?? { ...DEMO_BRIEF, title: d.title, brand: d.brand }, deliverables: d.deliverables, cap: d.cap, startISO: d.startISO,
   });
   if (p.dna) p.dna = p.dna.map((x) => (x.id in d.dnaPreserve ? { ...x, preserve: d.dnaPreserve[x.id] } : x));
-  if (d.place) p.studio = { ...p.studio, name: d.place.name, address: d.place.description ?? d.place.name, mapsUrl: d.place.mapsUrl };
+  if (d.place && (!d.place.city || d.place.city === p.city)) p.studio = { ...p.studio, name: d.place.name, address: d.place.description ?? d.place.name, mapsUrl: d.place.mapsUrl };
   return p;
 }
 

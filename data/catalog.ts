@@ -4,9 +4,9 @@ import type { Person, Role, StrategyId } from '@/lib/types';
  * People pool. In the app this is YOUR roster (people you added on /people, see setRoster).
  * The SAMPLE_* lists are fictional and only used by the engine tests and the old sample shoot.
  */
-export const CITIES = ['Vilnius', 'Lisbon', 'Milan', 'Riga', 'Warsaw', 'Berlin', 'Paris', 'London', 'Stockholm', 'Copenhagen'] as const;
+export const CITIES = ['Vilnius', 'Lisbon', 'Milan', 'Riga', 'Warsaw', 'Berlin', 'Paris', 'London', 'Stockholm', 'Copenhagen', 'Amsterdam'] as const;
 export type City = (typeof CITIES)[number];
-export const IATA: Record<City, string> = { Vilnius: 'VNO', Lisbon: 'LIS', Milan: 'MXP', Riga: 'RIX', Warsaw: 'WAW', Berlin: 'BER', Paris: 'CDG', London: 'LHR', Stockholm: 'ARN', Copenhagen: 'CPH' };
+export const IATA: Record<City, string> = { Vilnius: 'VNO', Lisbon: 'LIS', Milan: 'MXP', Riga: 'RIX', Warsaw: 'WAW', Berlin: 'BER', Paris: 'CDG', London: 'LHR', Stockholm: 'ARN', Copenhagen: 'CPH', Amsterdam: 'AMS' };
 
 export type TravelTemplate = {
   // same-day flight (arrives on the shoot day) or day-before flight + hotel
@@ -196,14 +196,21 @@ export const STRATEGIES = BASE_STRATEGIES;
 const pickFrom = (pool: CatalogPerson[], city: City, n: number) =>
   [...pool].sort((a, b) => Number(b.city === city) - Number(a.city === city) || a.dayRate - b.dayRate).slice(0, n).map((x) => x.id);
 
-/** With a roster, defaults come from your people: locals first, then cheapest. */
+/** What the brief page chose: the city the scout picked for the location, and shortlisted models. */
+let PREFS: { city?: string; shortlist?: string[] } = {};
+export function setBriefPrefs(p: { city?: string; shortlist?: string[] }) { PREFS = p; }
+
+/** With a roster, defaults come from your people: shortlisted first, then locals, then cheapest. */
 export const strategyDef = (id: StrategyId): StrategyDef => {
-  const base = BASE_STRATEGIES.find((s) => s.id === id)!;
-  if (!rosterActive) return base;
+  const base0 = BASE_STRATEGIES.find((s) => s.id === id)!;
+  if (!rosterActive) return base0;
+  const away = PREFS.city && (CITIES as readonly string[]).includes(PREFS.city) && PREFS.city !== 'Vilnius' ? (PREFS.city as City) : null;
+  const base = id === 'destination' && away ? { ...base0, city: away, tagline: `On location near ${away}. Outdoor light.` } : base0;
+  const sl = (PREFS.shortlist ?? []).filter((x) => MODELS.some((m) => m.id === x));
   return {
     ...base,
     defaultPicks: {
-      models: (() => { const m = pickFrom(MODELS, base.city, base.modelSlots); while (m.length < base.modelSlots) m.push(`open-model${m.length ? `-${m.length + 1}` : ''}`); return m; })(),
+      models: (() => { const m = [...sl, ...pickFrom(MODELS.filter((x) => !sl.includes(x.id)), base.city, base.modelSlots)].slice(0, base.modelSlots); while (m.length < base.modelSlots) m.push(`open-model${m.length ? `-${m.length + 1}` : ''}`); return m; })(),
       photographer: pickFrom(PHOTOGRAPHERS, base.city, 1)[0] ?? 'open-photographer',
       location: LOCATIONS.find((l) => l.city === base.city && base.locationKinds.includes(l.kind) && !!l.photo)?.id ?? (base.locationKinds.includes('location') ? 'open-location' : 'open-studio'),
     },

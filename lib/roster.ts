@@ -25,7 +25,7 @@ export const RosterInput = z.object({
   }).optional().nullable(),
 });
 export type RosterInput = z.infer<typeof RosterInput>;
-export type RosterPerson = RosterInput & { id: string; createdAt: string };
+export type RosterPerson = RosterInput & { id: string; createdAt: string; source?: 'talent-book'; instagram?: string | null; heightCm?: number | null; statsText?: string | null; rateIsEstimate?: boolean; board?: string | null };
 
 export const ROLE_LABEL: Record<RosterInput['role'], string> = { model: 'Model', photographer: 'Photographer', mua: 'Hair & makeup', stylist: 'Stylist' };
 
@@ -51,7 +51,7 @@ export function toCatalog(r: RosterPerson): CatalogPerson {
     bio: r.notes ?? '', tags: [], photo: r.photo ?? undefined,
     motion: r.role === 'photographer' ? true : undefined,
     travelTo: travelFor(r),
-    lookWords: r.look ? [r.look.look, r.look.hair, ...r.look.vibe, ...r.look.features, ...r.look.bookShows].join(' ').toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 2) : (r.notes ?? '').toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 2),
+    lookWords: r.look ? [r.look.look, r.look.hair, ...r.look.vibe, ...r.look.features, ...r.look.bookShows, r.board === 'men' ? 'male man men masculine' : r.board === 'women' ? 'female woman women feminine' : ''].join(' ').toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 2) : (r.notes ?? '').toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 2),
     availability: r.availability ?? null,
   };
 }

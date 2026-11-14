@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowUp, ChevronDown, Loader2, Plane } from 'lucide-react';
 import type { StrategyId } from '@/lib/types';
 import { dnaViolations, evaluateDna, summarize } from '@/lib/engine';
-import { catalogLocation, stillToBook, STRATEGIES } from '@/data/catalog';
+import { catalogLocation, stillToBook, strategyDef, STRATEGIES } from '@/data/catalog';
 import { fmtDate, fmtEur } from '@/lib/format';
 import { useDraft } from '@/lib/plan-store';
 import { useRoster } from '@/lib/use-roster';
@@ -44,14 +44,15 @@ export default function Strategies() {
   const rows = useMemo(() => {
     if (!draft || !roster.ready) return [];
     const base = draftProduction(draft, STRATEGIES[0].id);
-    return STRATEGIES.map((s) => {
-      const p = draftProduction(draft, s.id);
+    return STRATEGIES.map((s0) => {
+      const p = draftProduction(draft, s0.id);
+      const s = strategyDef(s0.id);
       const sum = summarize(p);
       const broken = dnaViolations(evaluateDna(base, p)).filter((x) => !['casting', 'photographer', 'studio', 'schedule'].includes(x.id));
       return { s, p, sum, broken };
     });
   }, [draft, roster.ready, roster.key]); // eslint-disable-line react-hooks/exhaustive-deps
-  const cityPhotos = useCityPhotos(STRATEGIES.map((s) => s.city));
+  const cityPhotos = useCityPhotos(rows.length ? rows.map((r) => r.s.city) : STRATEGIES.map((s) => s.city));
 
   if (!draft) return <Stage><div /></Stage>;
   const recommended = rows
@@ -81,7 +82,7 @@ export default function Strategies() {
     }
   }
 
-  const photoFor = (city: string, kind: string) => (draft.place?.image && kind !== 'Destination' ? draft.place.image : cityPhotos[city]);
+  const photoFor = (city: string) => (draft.place?.image && (!draft.place.city || draft.place.city === city) ? draft.place.image : cityPhotos[city]);
 
   return (
     <Stage voice>
@@ -120,7 +121,7 @@ export default function Strategies() {
           {rows.map(({ s, p, sum, broken }, i) => {
             const team = p.people.filter((x) => x.role !== 'producer');
             const loc = p.picks ? catalogLocation(p.picks.location) : null;
-            const img = loc?.photo ?? photoFor(s.city, s.name);
+            const img = loc?.photo ?? photoFor(s.city);
             const toBook = stillToBook(s.id);
             const isRec = s.id === recommended;
             return (

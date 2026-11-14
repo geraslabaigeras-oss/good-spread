@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { fail, handle, ok, parseJson } from '@/lib/server/http';
 import { scout } from '@/lib/ai/scout';
 import { cacheExtraction, cachedExtraction } from '@/lib/server/db';
+import { CITIES } from '@/data/catalog';
 
 /** AI location scouting: Claude proposes real places for the brief; each is verified on Wikipedia (photo, coordinates). */
 export async function POST(req: Request) {
@@ -11,11 +12,11 @@ export async function POST(req: Request) {
     const parsed = await parseJson(req, z.object({ brief: z.string().trim().min(10).max(1200), city: z.string().trim().min(2).max(60) }));
     if ('error' in parsed) return parsed.error;
     const { brief, city } = parsed.data;
-    const sha = createHash('sha256').update(`scout:v2|${city}|${brief}`).digest('hex');
-    const hit = await cachedExtraction(sha).catch(() => null);
-    if (hit) return ok({ places: hit, cached: true });
-    const places = await scout(brief, city);
-    if (places.length) await cacheExtraction(sha, places).catch(() => {});
-    return ok({ places, cached: false });
+    const sha = createHash('sha256').update(`scout:v3|${city}|${brief}`).digest('hex');
+    const hit = (await cachedExtraction(sha).catch(() => null)) as { city: string; places: unknown[] } | null;
+    if (hit) return ok({ ...hit, cached: true });
+    const res = await scout(brief, city, city === 'auto' ? CITIES : undefined);
+    if (res.places.length) await cacheExtraction(sha, res).catch(() => {});
+    return ok({ ...res, cached: false });
   });
 }

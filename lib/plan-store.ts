@@ -5,7 +5,7 @@ import type { CreativeBrief, Deliverables, Picks, StrategyId } from '@/lib/types
 import { DEMO_CAP, DEMO_DELIVERABLES } from '@/data/demo';
 
 /** Pre-production draft, kept in the browser between /new → /plan → /plan/assemble. */
-export type ScoutedPlace = { name: string; why: string; description: string | null; image: string | null; lat: number; lng: number; url: string; mapsUrl: string };
+export type ScoutedPlace = { name: string; why: string; from?: string; shootNote?: string; city?: string; description: string | null; image: string | null; lat: number; lng: number; url: string; mapsUrl: string };
 
 export type PlanDraft = {
   title: string;
@@ -20,6 +20,8 @@ export type PlanDraft = {
   strategy?: StrategyId;
   picks?: Picks;
   place?: ScoutedPlace | null; // AI-scouted real location chosen on the Brief page
+  shortlist?: string[]; // models picked on the Brief page
+  scoutCity?: string; // base city the scout chose for this brief
 };
 
 const KEY = 'gs-plan-draft';

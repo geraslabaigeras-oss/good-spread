@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { ConversationProvider, useConversation } from '@elevenlabs/react';
 import { motion } from 'motion/react';
 import { Loader2, PhoneCall, PhoneOff } from 'lucide-react';
-import { BrandLogo } from '@/components/brand-logo';
 
 type Msg = { role: string; text: string };
 type Props = { language: string; agency: string; city: string; model: string; date: string; firstMessage?: string; brief?: string };
@@ -30,7 +29,7 @@ function LiveCallInner({ language, agency, city, model, date, firstMessage, brie
       await navigator.mediaDevices.getUserMedia({ audio: true });
       const r = await fetch('/api/calls/live', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ language, agency, city, model, date, firstMessage, brief }) });
       const j = await r.json();
-      if (!r.ok) throw new Error(j.error === 'elevenlabs_not_configured' ? 'ElevenLabs is not configured.' : 'Could not start the call.');
+      if (!r.ok) throw new Error(j.error === 'elevenlabs_not_configured' ? 'Voice calls are not set up.' : 'Could not start the call.');
       conv.startSession({ signedUrl: j.signedUrl, overrides: { agent: { prompt: { prompt: j.prompt }, firstMessage: j.firstMessage, language: j.language } } });
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Microphone not available.');
@@ -46,7 +45,7 @@ function LiveCallInner({ language, agency, city, model, date, firstMessage, brie
           <span className={`size-2 rounded-full ${live ? 'animate-pulse bg-emerald-400' : 'bg-white/30'}`} />
           {live ? (conv.isSpeaking ? 'Agent speaking' : 'Listening to you') : conv.status === 'connecting' || opening ? 'Connecting…' : 'Live call'}
         </div>
-        <span className="inline-flex items-center gap-1 text-[11px] text-white/50"><BrandLogo name="elevenlabs" size={10} color="rgba(255,255,255,.5)" /> Eleven v4 Turbo</span>
+        
       </div>
       {live && (
         <div className="mt-3 flex h-6 items-end justify-center gap-1">

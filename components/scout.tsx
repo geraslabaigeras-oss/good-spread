@@ -39,7 +39,7 @@ export function Scout({ brief, chosen, onChoose, city: initialCity = 'Vilnius' }
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 text-[15px] font-medium"><Sparkles className="size-4" /> Locations for this look</div>
-          <p className="mt-0.5 text-[13px] text-grey-1">Claude reads the brief and proposes real places. Each one is checked on Wikipedia.</p>
+          <p className="mt-0.5 text-[13px] text-grey-1">Real places that match the brief, each one checked against a public record with a photo.</p>
         </div>
         <div className="flex items-center gap-2">
           <select value={city} onChange={(e) => { setCity(e.target.value); run(e.target.value); }} className="h-9 rounded-full border border-hairline-strong bg-white/70 px-3 text-[13px]">

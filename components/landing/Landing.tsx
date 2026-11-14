@@ -193,14 +193,14 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
           </div>
 
           <div className="mt-12 grid gap-4 md:grid-cols-3">
-            <Feature title="Scouts real places for the look" tag="Claude · Wikipedia" date="Brief">
+            <Feature title="Scouts real places for the look" tag="Location scout" date="Brief">
               <div className="relative h-full bg-[radial-gradient(120%_90%_at_10%_10%,#ffffff_0%,#e3ebf5_40%,#b9cbe0_75%,#8ea8c6_100%)]">
                 <Grain />
                 <div className="absolute left-6 top-6 text-[34px] leading-none tracking-[-0.03em] text-neutral-900">Locations</div>
                 <div className="absolute bottom-6 right-6 text-[34px] leading-none tracking-[-0.03em] text-neutral-800">Vilnius · Riga</div>
               </div>
             </Feature>
-            <Feature title="Calls agencies in their language" tag="ElevenLabs" date="Team">
+            <Feature title="Calls agencies in their language" tag="Voice" date="Team">
               <div className="relative flex h-full items-center justify-center bg-[radial-gradient(90%_70%_at_75%_15%,#ffffff_0%,transparent_60%),radial-gradient(80%_80%_at_20%_85%,#9fb8d8_0%,transparent_65%),linear-gradient(135deg,#dfe8f4,#a9bfdb)]">
                 <Grain />
                 <div className="relative flex items-center gap-3 text-[40px] tracking-[-0.03em] text-neutral-900">Calls <span className="rounded-full border-2 border-neutral-900 px-3 py-0.5 text-[24px]">FR · IT · SE</span></div>
