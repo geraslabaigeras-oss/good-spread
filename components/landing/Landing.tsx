@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
+import { Wordmark } from '@/components/kit';
 import { motion } from 'motion/react';
 import Grainient from '@/components/Grainient';
 import { TextAnimate } from '@/components/ui/text-animate';
@@ -129,7 +130,7 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
       {/* Hero: headline, then one living stage (Grainient, our fog palette) with the product's moments floating out in 3D */}
       <section className="relative overflow-hidden bg-[#fafafa] pb-24">
         <header className="relative z-30 mx-auto flex h-20 max-w-7xl items-center justify-between px-6 text-[14px] text-neutral-700">
-          <span className="font-medium text-neutral-900">good spread</span>
+          <Wordmark className="h-[24px]" />
           <nav className="flex items-center gap-8">
             <a href="#how" className="hidden hover:text-neutral-950 md:inline">How it works</a>
             <Link href="/people" className="hidden hover:text-neutral-950 md:inline">Your people</Link>

@@ -99,7 +99,7 @@
   --radius-block: 20px;
 
   --font-serif: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist), ui-sans-serif, system-ui, sans-serif; /* no monospace in the UI */
   --animate-shimmer-slide: shimmer-slide var(--speed) ease-in-out infinite alternate;
   --animate-spin-around: spin-around calc(var(--speed) * 2) infinite linear;

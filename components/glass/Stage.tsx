@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Wordmark } from '@/components/kit';
 import Grainient from '@/components/Grainient';
 import { VoiceOrb } from '@/components/voice-orb';
 import { animate, motion, useMotionValue, useTransform } from 'motion/react';
@@ -13,7 +14,7 @@ export function Stage({ children, backdrop, voice = false }: { children: React.R
   return (
     <div className="stage">
       {/* living background: one slow grainy colour field (React Bits Grainient), 1x pixel ratio, no blur on top */}
-      <div className="pointer-events-none fixed inset-0 z-0 opacity-90"><Grainient colors={['#f7f9fc', '#e0e9f4', '#c2d3e7', '#f2f6fb']} lightMode grainAnimated grainAmount={0.1} speed={0.18} flow={1} softness={0.95} dpr={1} /></div>
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-90"><Grainient colors={['#f7f7f7', '#ececec', '#dde2e8', '#f4f4f4']} lightMode grainAnimated grainAmount={0.1} speed={0.18} flow={1} softness={0.95} dpr={1} /></div>
       {backdrop && <div className="backdrop-img" style={{ backgroundImage: `url(${backdrop})` }} />}
       <div className="grain" />
       <div className="content">{children}</div>
@@ -34,7 +35,7 @@ export function TopBar({ step, right }: { step: number; right?: React.ReactNode 
   const last = useSyncExternalStore(noop, lastSlug, () => 'jacket-campaign');
   return (
     <div className="flex items-center justify-between px-8 pt-6">
-      <Link href="/" className="text-[15px] font-medium tracking-[-0.15px]">good spread</Link>
+      <Link href="/" aria-label="good spread"><Wordmark /></Link>
       <nav className="glass-soft relative flex gap-1 p-1">
         {STEPS.map((s) => (
           <Link key={s.n} href={s.n === 4 ? `/board/${last}` : s.href} className="relative rounded-full px-4 py-1.5 text-[13px]">

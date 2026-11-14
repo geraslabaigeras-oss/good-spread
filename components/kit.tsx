@@ -90,12 +90,10 @@ export function SectionHead({ label, meta, className }: { label: string; meta?: 
   );
 }
 
-export function Wordmark({ demo }: { demo?: boolean }) {
-  return (
-    <span className="whitespace-nowrap text-[15px] font-medium leading-[22px] tracking-[-0.15px] text-ink">
-      good spread
-    </span>
-  );
+/** The good spread wordmark (Identity 01), drawn from /brand/logo.svg in the current text colour. */
+export function Wordmark({ className = 'h-[22px]' }: { className?: string; demo?: boolean }) {
+  const mask = 'url(/brand/logo.svg) no-repeat left center / contain';
+  return <span role="img" aria-label="good spread" className={cn('inline-block aspect-[3372/952] bg-current align-middle text-ink', className)} style={{ WebkitMask: mask, mask }} />;
 }
 
 /* ---------- Toasts (§4.12 / §5.15) ---------- */
