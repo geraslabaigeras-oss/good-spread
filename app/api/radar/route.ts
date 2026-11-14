@@ -1,19 +1,6 @@
 import { fail, handle, ok } from '@/lib/server/http';
 
-/** Airports we plan around, with coordinates (public data). */
-const AIRPORTS: Record<string, { name: string; lat: number; lon: number }> = {
-  VNO: { name: 'Vilnius', lat: 54.6341, lon: 25.2858 },
-  LIS: { name: 'Lisbon', lat: 38.7742, lon: -9.1342 },
-  MXP: { name: 'Milan Malpensa', lat: 45.6306, lon: 8.7281 },
-  RIX: { name: 'Riga', lat: 56.9236, lon: 23.9711 },
-  WAW: { name: 'Warsaw', lat: 52.1657, lon: 20.9671 },
-  BER: { name: 'Berlin', lat: 52.3667, lon: 13.5033 },
-  CDG: { name: 'Paris CDG', lat: 49.0097, lon: 2.5479 },
-  LHR: { name: 'London Heathrow', lat: 51.47, lon: -0.4543 },
-  ARN: { name: 'Stockholm Arlanda', lat: 59.6498, lon: 17.9238 },
-  CPH: { name: 'Copenhagen', lat: 55.618, lon: 12.656 },
-  AMS: { name: 'Amsterdam', lat: 52.3105, lon: 4.7683 },
-};
+import { AIRPORTS } from '@/lib/airports';
 
 type Plane = { id: string; callsign: string; country: string; lat: number; lon: number; altM: number | null; speedKmh: number | null; heading: number | null; climb: number | null; onGround: boolean; distKm: number };
 const cache = new Map<string, { at: number; planes: Plane[] }>();

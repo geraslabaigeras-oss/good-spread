@@ -10,6 +10,7 @@ import { toCatalog } from '@/lib/roster';
 import { lookMatch } from '@/lib/match';
 import { useRoster } from '@/lib/use-roster';
 import { QuickAdd } from '@/components/quick-add';
+import { AgencyCall } from '@/components/agency-call';
 import { Plus } from 'lucide-react';
 import type { City } from '@/data/catalog';
 import type { PlanDraft, ScoutedPlace } from '@/lib/plan-store';
@@ -27,6 +28,7 @@ export function BriefOptions({ brief, draft, setDraft }: { brief: CreativeBrief;
     .sort((a, b) => b.m.score - a.m.score)
     .slice(0, 10), [roster.key, need]); // eslint-disable-line react-hooks/exhaustive-deps
   const shortlist = draft.shortlist ?? [];
+  const [viewing, setViewing] = useState<string | null>(null);
   const [adding, setAdding] = useState<'model' | 'photographer' | 'mua' | 'stylist' | null>(null);
   const photogs = useMemo(() => roster.people
     .filter((p) => p.role === 'photographer')
@@ -62,7 +64,7 @@ export function BriefOptions({ brief, draft, setDraft }: { brief: CreativeBrief;
         <div className="flex items-end justify-between gap-4">
           <div>
             <h3 className="text-[26px] font-light tracking-[-0.02em]">Models who fit</h3>
-            <p className="mt-1 text-[14px] text-neutral-500">Ranked by how close their look is to your references. Tap to shortlist.</p>
+            <p className="mt-1 text-[14px] text-neutral-500">Ranked by how close their look is to your references. Tap one to see their pictures and call their agent.</p>
           </div>
           {shortlist.length > 0 && <span className="shrink-0 text-[14px] text-neutral-700">{shortlist.length} shortlisted</span>}
         </div>
@@ -71,7 +73,7 @@ export function BriefOptions({ brief, draft, setDraft }: { brief: CreativeBrief;
           {models.map(({ p, m }, i) => {
             const on = shortlist.includes(p.id);
             return (
-              <motion.button key={p.id} onClick={() => toggle(p.id)} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: i * 0.05, ease }}
+              <motion.button key={p.id} onClick={() => setViewing(p.id)} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: i * 0.05, ease }}
                 className={`group w-[210px] shrink-0 snap-start overflow-hidden rounded-[22px] bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,.04),0_14px_34px_rgba(0,0,0,.06)] transition-shadow ${on ? 'ring-2 ring-neutral-950' : ''}`}>
                 <div className="relative h-[260px] overflow-hidden bg-neutral-200">
                   {p.photo && <img src={p.photo} alt={p.name} className="size-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.04]" />}
@@ -81,6 +83,7 @@ export function BriefOptions({ brief, draft, setDraft }: { brief: CreativeBrief;
                   <div className="truncate text-[15px] font-medium">{p.name}</div>
                   <div className="truncate text-[12px] text-neutral-500">{p.agency ?? p.city}</div>
                   {m.hits.length > 0 && <div className="mt-2 truncate text-[12px] text-neutral-700">Fits: {m.hits.slice(0, 3).join(', ')}</div>}
+                  {p.availability && <div className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${p.availability === 'available' ? 'bg-emerald-50 text-emerald-700' : p.availability === 'hold' ? 'bg-amber-50 text-amber-700' : 'bg-neutral-100 text-neutral-500'}`}>{p.availability === 'available' ? 'Available' : p.availability === 'hold' ? 'On hold' : 'Not available'}</div>}
                 </div>
               </motion.button>
             );
@@ -96,7 +99,7 @@ export function BriefOptions({ brief, draft, setDraft }: { brief: CreativeBrief;
           {photogs.map(({ p, m }) => {
             const on = shortlist.includes(p.id);
             return (
-              <button key={p.id} onClick={() => toggle(p.id)} className={`w-[210px] shrink-0 overflow-hidden rounded-[22px] bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,.04),0_14px_34px_rgba(0,0,0,.06)] ${on ? 'ring-2 ring-neutral-950' : ''}`}>
+              <button key={p.id} onClick={() => setViewing(p.id)} className={`w-[210px] shrink-0 overflow-hidden rounded-[22px] bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,.04),0_14px_34px_rgba(0,0,0,.06)] ${on ? 'ring-2 ring-neutral-950' : ''}`}>
                 <div className="relative h-[160px] bg-neutral-200">{p.photo && <img src={p.photo} alt={p.name} className="size-full object-cover" />}{on && <span className="absolute right-3 top-3 flex size-7 items-center justify-center rounded-full bg-neutral-950 text-white"><Check className="size-4" /></span>}</div>
                 <div className="p-3.5"><div className="truncate text-[15px] font-medium">{p.name}</div><div className="truncate text-[12px] text-neutral-500">{p.look?.look ?? p.city}</div>{m.hits.length > 0 && <div className="mt-2 truncate text-[12px] text-neutral-700">Fits: {m.hits.slice(0, 3).join(', ')}</div>}</div>
               </button>
@@ -159,6 +162,21 @@ export function BriefOptions({ brief, draft, setDraft }: { brief: CreativeBrief;
           {!busy && places && !places.length && <p className="text-[14px] text-neutral-500">Nothing that fits near {shown ?? city}. Try another city.</p>}
         </div>
       </section>
+      {viewing && roster.people.find((x) => x.id === viewing) && (() => {
+        const v = roster.people.find((x) => x.id === viewing)!;
+        const on = shortlist.includes(v.id);
+        return (
+          <AgencyCall key={v.id} person={v} open onOpenChange={(o) => !o && setViewing(null)}
+            actions={<button onClick={() => toggle(v.id)} className={`h-11 rounded-full px-5 text-[14px] font-medium ${on ? 'bg-neutral-950 text-white' : 'bg-white shadow-[inset_0_0_0_1px_rgba(0,0,0,.12)]'}`}>{on ? 'Shortlisted' : 'Add to shortlist'}</button>}
+            onAnswer={async (ans) => {
+              const { id: _i, createdAt: _c, ...data } = v;
+              await fetch(`/api/people/${v.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(v.id.startsWith('tb-') ? { availability: ans } : { ...data, availability: ans }) });
+              await roster.mutate();
+              if (ans !== 'unavailable' && !on) toggle(v.id);
+              setViewing(null);
+            }} />
+        );
+      })()}
       {adding && (
         <QuickAdd key={adding} role={adding} city={(draft.scoutCity && draft.scoutCity !== 'auto' ? draft.scoutCity : 'Vilnius') as City} open={!!adding} onOpenChange={(o) => !o && setAdding(null)}
           onAdded={async (id) => { await roster.mutate(); setDraft({ ...draft, shortlist: [...shortlist, id] }); }} />

@@ -1,0 +1,17 @@
+/** Airports we plan around (public coordinates). */
+export const AIRPORTS: Record<string, { name: string; lat: number; lon: number }> = {
+  VNO: { name: 'Vilnius', lat: 54.6341, lon: 25.2858 },
+  LIS: { name: 'Lisbon', lat: 38.7742, lon: -9.1342 },
+  MXP: { name: 'Milan Malpensa', lat: 45.6306, lon: 8.7281 },
+  LIN: { name: 'Milan Linate', lat: 45.4451, lon: 9.2767 },
+  RIX: { name: 'Riga', lat: 56.9236, lon: 23.9711 },
+  WAW: { name: 'Warsaw', lat: 52.1657, lon: 20.9671 },
+  BER: { name: 'Berlin', lat: 52.3667, lon: 13.5033 },
+  CDG: { name: 'Paris CDG', lat: 49.0097, lon: 2.5479 },
+  ORY: { name: 'Paris Orly', lat: 48.7262, lon: 2.3652 },
+  LHR: { name: 'London Heathrow', lat: 51.47, lon: -0.4543 },
+  LGW: { name: 'London Gatwick', lat: 51.1537, lon: -0.1821 },
+  ARN: { name: 'Stockholm Arlanda', lat: 59.6498, lon: 17.9238 },
+  CPH: { name: 'Copenhagen', lat: 55.618, lon: 12.656 },
+  AMS: { name: 'Amsterdam', lat: 52.3105, lon: 4.7683 },
+};

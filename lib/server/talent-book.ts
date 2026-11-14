@@ -37,7 +37,7 @@ export function talentBookPeople(): RosterPerson[] {
       agency: `${b.agency} ${b.city}`, commissionPct: 20, profileUrl: b.profileUrl, instagram: b.instagram,
       heightCm: b.heightCm, statsText: b.stats, board: b.look?.board ?? b.gender,
       photo: b.images[0] ? `/api/talent/img/${b.images.find((i) => i.label.startsWith('Polaroid'))?.file ?? b.images[0].file}` : null,
-      gallery: null,
+      gallery: b.images.map((i) => `/api/talent/img/${i.file}`),
       notes: b.look?.look ?? null,
       look: b.look ? { look: b.look.look, hair: b.look.hair, features: b.look.features, vibe: b.look.vibe, bookShows: b.look.fits, fitNotes: '' } : null,
       availability: state[b.id]?.availability ?? null, availabilityNote: state[b.id]?.availabilityNote ?? null,

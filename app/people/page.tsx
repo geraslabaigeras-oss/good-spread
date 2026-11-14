@@ -17,7 +17,6 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AGENCIES, flagUrl } from '@/lib/agencies';
 import { AgencyCall } from '@/components/agency-call';
 import { useDraft } from '@/lib/plan-store';
 import type { LookAnalysis } from '@/lib/ai/look';
@@ -157,14 +156,6 @@ export default function People() {
           </div>
         </div>
 
-        <div className="mt-5 flex flex-wrap items-center gap-2 text-sm">
-          <span className="mr-1 text-neutral-500">Agencies</span>
-          {AGENCIES.map((ag) => (
-            <a key={ag.name} href={ag.url} target="_blank" rel="noreferrer" title={ag.cities} className="inline-flex items-center gap-1 rounded-full bg-white/70 px-3 py-1 text-neutral-700 shadow-[inset_0_0_0_1px_rgba(0,0,0,.06)] transition-colors hover:bg-white hover:text-neutral-950">
-              <img src={flagUrl(ag.cc)} alt="" className="h-3 w-4 rounded-[2px] object-cover" />{ag.name} <ArrowUpRight className="size-3" />
-            </a>
-          ))}
-        </div>
 
         <div className="mt-6 overflow-hidden rounded-2xl bg-white/70 shadow-[inset_0_0_0_1px_rgba(255,255,255,.7),0_18px_48px_rgba(80,60,40,.06)] backdrop-blur-xl">
           {ready && !shown.length && (
