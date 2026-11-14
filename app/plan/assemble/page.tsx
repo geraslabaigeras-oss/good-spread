@@ -118,7 +118,7 @@ export default function Assemble() {
           <div className="pointer-events-none absolute left-0 top-2 z-10">
             <div className="g-label">{def.name} · shoot in {def.city}</div>
             <h1 className="mt-1 font-serif text-[52px] leading-[0.95] tracking-[-0.03em]">Build the team</h1>
-            <p className="mt-2 max-w-[380px] text-[14px] text-grey-1">Pick on the globe or in the list. Cost and call times update with each pick.</p>
+            <p className="mt-2 max-w-[380px] text-[14px] text-grey-1">Pick from the list. The cost updates with each pick.</p>
           </div>
           <div className="pt-28"><FlightGlobe from={chosen.arcs[0]?.from ?? null} to={def.city} label={chosen.arcs[0] ? `${chosen.arcs[0].label} flies in` : 'no flights'} height="56vh" /></div>
 

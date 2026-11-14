@@ -1,40 +1,31 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Globe from '@/components/flow/Globe';
-import '@/components/flow/flow-theme.css';
+import { useMemo } from 'react';
+import type { COBEOptions } from 'cobe';
+import { Plane } from 'lucide-react';
+import { Globe } from '@/components/ui/globe';
 import { CITY } from '@/components/glass/Globe';
-import { IATA, type City } from '@/data/catalog';
-import type { Airport } from '@/lib/flow/scenario';
-
-const airport = (c: string): Airport => {
-  const p = CITY[c] ?? CITY.Vilnius;
-  return { code: IATA[c as City] ?? c.slice(0, 3).toUpperCase(), city: c, lat: p.lat, lon: p.lng, utcOffsetH: 2 };
-};
 
 /**
- * The good-spread line globe with the plane, for the first person who travels in.
- * With nobody flying it rests on the shoot city.
+ * Magic UI Globe (cobe): light and smooth. Blue markers on the shoot city and on wherever someone flies in from.
  */
 export function FlightGlobe({ from, to, label, height = 520 }: { from?: string | null; to: string; label?: string; height?: number | string }) {
-  const [t, setT] = useState(0);
-  useEffect(() => {
-    if (!from || from === to) return;
-    let raf = 0;
-    const start = performance.now();
-    const tick = (now: number) => {
-      setT((((now - start) / 7000) % 1.25) / 1.25); // 7 s flight, short pause at arrival
-      raf = requestAnimationFrame(tick);
+  const config = useMemo<COBEOptions>(() => {
+    const pts = [to, ...(from && from !== to ? [from] : [])].map((c) => CITY[c] ?? CITY.Vilnius);
+    return {
+      width: 800, height: 800, onRender: () => {}, devicePixelRatio: 1.5,
+      phi: 0, theta: 0.35, dark: 0, diffuse: 1.1, mapSamples: 14000, mapBrightness: 5,
+      baseColor: [0.86, 0.9, 0.97], markerColor: [0.16, 0.35, 0.95], glowColor: [0.72, 0.82, 1],
+      markers: pts.map((p, i) => ({ location: [p.lat, p.lng] as [number, number], size: i === 0 ? 0.09 : 0.06 })),
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
   }, [from, to]);
 
-  const a = airport(from && from !== to ? from : to);
-  const b = airport(to);
   return (
-    <div className="flow relative overflow-hidden rounded-[32px] !bg-transparent" style={{ height }}>
-      <Globe from={a} to={b} progress={from && from !== to ? Math.min(1, t * 1.25) : 1} fromLabel={a.code} toLabel={label ?? b.code} shiftX={0} />
+    <div className="relative overflow-hidden rounded-[32px] bg-[radial-gradient(80%_70%_at_50%_40%,#eef3ff_0%,#dfe8f7_45%,#cdd9ec_100%)]" style={{ height }}>
+      <Globe config={config} className="top-[6%] max-w-[560px]" />
+      <div className="absolute bottom-5 left-5 inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-[13px] text-neutral-800 shadow-[0_8px_24px_rgba(30,60,140,.12)] backdrop-blur">
+        {from && from !== to ? <><Plane className="size-3.5" /> {from} → {to}{label ? ` · ${label}` : ''}</> : <>Shooting in {to} · nobody flies</>}
+      </div>
     </div>
   );
 }
