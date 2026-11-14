@@ -74,14 +74,20 @@ export default function NewBrief() {
   if (!draft) return <Stage><div /></Stage>;
   const d = draft;
 
+  // adds to the set (up to six); reading starts only when you press Read
   async function addFiles(list: FileList | File[]) {
-    const imgs = Array.from(list).filter((f) => f.type.startsWith('image/')).slice(0, 6);
+    const room = 6 - files.length;
+    const imgs = Array.from(list).filter((f) => f.type.startsWith('image/')).slice(0, Math.max(0, room));
     if (!imgs.length) return;
-    setFiles(imgs);
     const thumbs = await Promise.all(imgs.map((f) => thumb(f, 900)));
-    setDraft({ ...d, refImages: thumbs, brief: null });
-    setEditing(false);
-    await read(imgs, thumbs);
+    const keep = files.length ? d.refImages.slice(0, files.length) : [];
+    setFiles([...files, ...imgs]);
+    setDraft({ ...d, refImages: [...keep, ...thumbs], brief: null });
+    setEditing(true);
+  }
+  function removeRef(i: number) {
+    setFiles(files.filter((_, k) => k !== i));
+    setDraft({ ...d, refImages: d.refImages.filter((_, k) => k !== i), brief: null });
   }
 
   /** Use a ready-made reference photo: fetch it, then read it like a dropped file. */
@@ -122,7 +128,7 @@ export default function NewBrief() {
   return (
     <Stage backdrop={d.refImages[0]}>
       <TopBar step={1} />
-      <AnimatePresence>{stage && <AnalysisStage key="stage" image={stage.image} brief={stage.brief} onDone={() => setStage(null)} />}</AnimatePresence>
+      <AnimatePresence>{stage && <AnalysisStage key="stage" image={stage.image} images={d.refImages} brief={stage.brief} onDone={() => setStage(null)} />}</AnimatePresence>
       <div className={`mx-auto grid gap-8 px-8 pb-16 pt-8 ${b ? 'max-w-[760px] grid-cols-1' : 'max-w-[1400px] grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]'}`}>
         {/* Reference */}
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }} className={b ? 'hidden' : ''}>
@@ -140,10 +146,13 @@ export default function NewBrief() {
           >
             <AnimatePresence mode="popLayout">
               {d.refImages.length ? (
-                <motion.div key={d.refImages[0].slice(-40)} initial={{ opacity: 0, scale: 1.06 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, ease }} className={`grid h-full w-full gap-1 ${d.refImages.length > 1 ? 'grid-cols-2' : ''}`}>
+                <motion.div key={d.refImages.length} initial={{ opacity: 0, scale: 1.06 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, ease }} className={`grid h-full w-full gap-1 ${d.refImages.length > 1 ? 'grid-cols-2' : ''}`}>
                   {d.refImages.map((src, i) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img key={i} src={src} alt={`Reference ${i + 1}`} className={`h-full w-full object-cover ${d.refImages.length === 3 && i === 0 ? 'row-span-2' : ''}`} />
+                    <div key={i} className={`relative h-full w-full overflow-hidden ${d.refImages.length === 3 && i === 0 ? 'row-span-2' : ''}`}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={src} alt={`Reference ${i + 1}`} className="size-full object-cover" />
+                      {!busy && <button onClick={(e) => { e.stopPropagation(); removeRef(i); }} aria-label="Remove" className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-neutral-950/75 text-[14px] text-white">×</button>}
+                    </div>
                   ))}
                 </motion.div>
               ) : (
@@ -199,7 +208,7 @@ export default function NewBrief() {
                 </div>
                 <div className="mt-7"><VoiceBrief onText={(t) => setNotes((n) => (n ? `${n} ${t}` : t).slice(0, 1000))} />{notes && <p className="mt-2 text-[13px] text-grey-1">&ldquo;{notes}&rdquo;</p>}</div>
                 <button onClick={() => read()} disabled={busy || !files.length} className="g-btn mt-7 w-full">
-                  {busy ? 'Reading the reference…' : files.length ? 'Read the reference' : 'Pick or drop a reference to start'}
+                  {busy ? 'Reading…' : files.length ? `Read ${files.length} reference${files.length > 1 ? 's' : ''}` : 'Pick or drop references to start'}
                 </button>
                 {err && <p className="mt-3 text-[13px] text-[var(--g-bad)]">{err}</p>}
               </motion.div>

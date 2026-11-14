@@ -93,10 +93,19 @@ export function RouteGlobe({ legs, height = 460 }: { legs: Leg[]; height?: numbe
     const r = routes[0];
     if (!ready || !ref.current || !r) return;
     const mid = slerp(r.a, r.b, 0.5);
-    ref.current.pointOfView({ lat: mid.lat - 2, lng: mid.lon, altitude: Math.max(0.35, Math.min(1.6, r.dist / 3500)) }, 1200);
+    ref.current.pointOfView({ lat: mid.lat - 2, lng: mid.lon, altitude: Math.max(1.25, Math.min(2.2, 1 + r.dist / 3000)) }, 1200);
     const c = ref.current.controls() as unknown as { autoRotate: boolean; enableZoom: boolean };
     c.autoRotate = false; c.enableZoom = false;
   }, [routes, ready]);
+
+  // nothing moves on its own, so stop redrawing once the camera has settled (the main source of lag)
+  useEffect(() => {
+    if (!ready || !ref.current) return;
+    const g = ref.current as unknown as { pauseAnimation?: () => void; resumeAnimation?: () => void };
+    g.resumeAnimation?.();
+    const id = setTimeout(() => g.pauseAnimation?.(), 1800);
+    return () => clearTimeout(id);
+  }, [ready, radar, routes]);
 
   const live = radar?.planes ?? [];
   const objects = useMemo(() => {
@@ -106,15 +115,15 @@ export function RouteGlobe({ legs, height = 460 }: { legs: Leg[]; height?: numbe
       const p = slerp(r.a, r.b, 0.6), ahead = slerp(r.a, r.b, 0.61);
       return { id: `team-${r.l.id}`, lat: p.lat, lng: p.lon, alt: ARC(0.6, r.peak), heading: bearing(p, ahead), team: true, live: false };
     });
-    const traffic = live.filter((p) => !p.onGround && !routes.some((r) => r.l.callsign === p.callsign)).slice(0, 25)
+    const traffic = live.filter((p) => !p.onGround && !routes.some((r) => r.l.callsign === p.callsign)).slice(0, 6)
       .map((p) => ({ id: p.id, lat: p.lat, lng: p.lon, alt: 0.006 + Math.min(0.02, (p.altM ?? 0) / 600000), heading: p.heading ?? 0, team: false, live: true }));
     return [...ours, ...traffic];
   }, [routes, live]);
 
 
 
-  const teamObj = useMemo(() => makePlane('#0d0d0d', 1.1), []);
-  const trafficObj = useMemo(() => makePlane('#7d8ea3', 0.55), []);
+  const teamObj = useMemo(() => makePlane('#0d0d0d', 1.8), []);
+  const trafficObj = useMemo(() => makePlane('#9aa9bb', 0.7), []);
   const globeMat = useMemo(() => new THREE.MeshPhongMaterial({ color: '#dbe6f3', shininess: 8 }), []);
   const anyLive = objects.some((o) => o.team && o.live);
 

@@ -62,8 +62,16 @@ function Ring({ photos }: { photos: string[] }) {
 const LINES = ['Reading depth and light', 'Looking at the garment and styling', 'Comparing with similar campaigns', 'Writing your brief'];
 
 /** Calm full-screen reading: the reference in the centre, a slow 3D ring of similar looks spinning around it. */
-export function AnalysisStage({ image, brief, onDone }: { image: string; brief: CreativeBrief | null; onDone: () => void }) {
+export function AnalysisStage({ image, images, brief, onDone }: { image: string; images?: string[]; brief: CreativeBrief | null; onDone: () => void }) {
   const [line, setLine] = useState(0);
+  const all = images && images.length ? images : [image];
+  const [cur, setCur] = useState(0);
+  useEffect(() => {
+    if (all.length < 2) return;
+    const id = setInterval(() => setCur((n) => (n + 1) % all.length), 2600);
+    return () => clearInterval(id);
+  }, [all.length]);
+  const now = all[cur] ?? image;
   useEffect(() => {
     const t = setInterval(() => setLine((l) => Math.min(l + 1, LINES.length - 1)), 1600);
     return () => clearInterval(t);
@@ -84,11 +92,22 @@ export function AnalysisStage({ image, brief, onDone }: { image: string; brief: 
         <Ring photos={photos} />
         <motion.div initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.9 }}
           className="relative z-30 h-[380px] w-[290px] overflow-hidden rounded-[26px] shadow-[0_40px_90px_rgba(20,40,90,.3)] ring-1 ring-white/60">
-          <img src={image} alt="Your reference" className="size-full object-cover" />
-          <div className="absolute inset-0 bg-[#0b1a33]/35" />
-          <DepthScan src={image} className="absolute inset-0 size-full" />
+          <AnimatePresence mode="popLayout">
+            <motion.div key={now} initial={{ opacity: 0, scale: 1.04 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6 }} className="absolute inset-0">
+              <img src={now} alt="Your reference" className="size-full object-cover" />
+              <div className="absolute inset-0 bg-[#0b1a33]/35" />
+              <DepthScan src={now} className="absolute inset-0 size-full" />
+            </motion.div>
+          </AnimatePresence>
         </motion.div>
       </div>
+      {all.length > 1 && (
+        <div className="relative z-30 mt-5 flex gap-2">
+          {all.map((src, i) => (
+            <img key={i} src={src} alt="" className={`h-14 w-11 rounded-lg object-cover transition-all duration-500 ${i === cur ? 'opacity-100 ring-2 ring-neutral-950' : 'opacity-40'}`} />
+          ))}
+        </div>
+      )}
       <div className="relative z-10 mt-6 h-14 text-center">
         <AnimatePresence mode="wait">
           <motion.p key={brief ? 'done' : line} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.4 }}

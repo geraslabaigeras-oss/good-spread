@@ -16,7 +16,7 @@ import { Decision } from './Decision';
 import { Inbox } from './Inbox';
 import { BudgetPanel } from './BudgetPanel';
 import { Activity } from './Activity';
-import { BoardingPass } from './BoardingPass';
+import { Arrivals } from './Arrivals';
 import { DelayAlert } from './DelayAlert';
 import { MessageThread } from './MessageThread';
 import { WeatherCard } from './WeatherCard';
@@ -259,22 +259,8 @@ function BoardInner({ slug }: { slug: string }) {
           <div className="mt-10"><Decision production={p} pending={null} approving={null} applied={applied} countUp={!!animateVersion} onApprove={approve} /></div>
         )}
 
-        {/* Travel: globe with the route and a 3D plane, boarding pass per traveller */}
-        {p.travel.length > 0 ? (
-          <div className="mt-10 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
-            <RouteGlobe legs={p.travel.map((t) => ({ id: t.personId, from: t.from, to: t.to, label: nameOf(t.personId), callsign: callsignFor(t.number), departMin: t.departMin, arriveMin: t.arriveMin, dateISO: p.dateISO }))} height={p.travel.length > 1 ? 640 : 520} />
-            <div className="flex flex-col gap-4">
-              {p.travel.map((t, i) => <BoardingPass key={t.personId} p={p} t={t} index={i} />)}
-            </div>
-          </div>
-        ) : (
-          <div className="mt-10 rounded-[28px] bg-white/70 p-6 text-[15px] text-neutral-500 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">Nobody flies in. Everyone is based in {p.city ?? 'Vilnius'}.</div>
-        )}
-
-        {(() => { const c = CITY[p.city ?? 'Vilnius'] ?? CITY.Vilnius; const ext = p.blocks.find((b) => b.kind === 'shoot'); return <WeatherCard lat={c.lat} lng={c.lng} dateISO={p.dateISO} place={p.studio.name.split(',')[0]} exteriorAt={ext ? `the exterior look at ${fmt(ext.startMin)}` : undefined} />; })()}
-
-        {/* Schedule + budget */}
-        <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
+        {/* Today: the schedule is the main thing; arrivals and the route sit beside it */}
+        <div className="mt-8 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
           <div id="schedule" className="rounded-[28px] bg-white/70 p-6 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">
             <div className="flex justify-between border-b border-black/[0.06] pb-4"><span className="text-[17px] font-medium">Day schedule</span><span className="text-[14px] text-neutral-500">{p.studio.name.split(',')[0]}</span></div>
             <div className="divide-y divide-black/[0.06]">
@@ -288,6 +274,15 @@ function BoardInner({ slug }: { slug: string }) {
               ))}
             </div>
           </div>
+          <div className="flex flex-col gap-5">
+            {p.travel.length > 0 ? <Arrivals p={p} /> : <div className="rounded-[24px] bg-white/80 p-5 text-[15px] text-neutral-500 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">Nobody flies in. Everyone is based in {p.city ?? 'Vilnius'}.</div>}
+            {p.travel.length > 0 && <RouteGlobe legs={p.travel.map((t) => ({ id: t.personId, from: t.from, to: t.to, label: nameOf(t.personId), callsign: callsignFor(t.number), departMin: t.departMin, arriveMin: t.arriveMin, dateISO: p.dateISO }))} height={340} />}
+          </div>
+        </div>
+
+        {/* Weather and money */}
+        <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
+          <div className="-mt-5">{(() => { const c = CITY[p.city ?? 'Vilnius'] ?? CITY.Vilnius; const ext = p.blocks.find((b) => b.kind === 'shoot'); return <WeatherCard lat={c.lat} lng={c.lng} dateISO={p.dateISO} place={p.studio.name.split(',')[0]} exteriorAt={ext ? `the exterior look at ${fmt(ext.startMin)}` : undefined} />; })()}</div>
           <div id="budget" className="rounded-[28px] bg-white/70 p-6 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">
             <div className="flex justify-between"><span className="text-[17px] font-medium">Budget</span><span className="text-[14px] text-neutral-500">{fmtDate(p.dateISO).slice(4, 10)}</span></div>
             <div className="mt-6 flex items-baseline gap-3"><span className="text-[34px] font-light tabular-nums">{fmtEur(Math.round(b.total))}</span><span className="text-[20px] font-light text-neutral-500">of {fmtEur(b.cap)}</span></div>

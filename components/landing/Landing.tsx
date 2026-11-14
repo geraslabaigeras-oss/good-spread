@@ -144,22 +144,17 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
           </nav>
         </header>
 
-        <div className="relative z-20 mx-auto grid max-w-[1320px] grid-cols-1 items-center gap-12 px-6 pt-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.3fr)]">
-          <div>
-            <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.2, 0.7, 0.2, 1] }} className="text-5xl font-normal leading-[1.02] tracking-[-0.04em] text-neutral-950 md:text-[72px]">
-              Stay creative.<br /><span className="text-neutral-400">Production&rsquo;s handled.</span>
-            </motion.h1>
-            <p className="mt-6 max-w-md text-[17px] leading-7 text-neutral-600">
-              For producers of fashion shoots. Drop your references: we find the models, crew and places, call their agents, plan the day and the budget, and keep everyone updated when something changes.
-            </p>
-            <p className="mt-6 text-[14px] text-neutral-500">Drop a few references on the right, or pick from the examples. The reading starts when you press Read.</p>
-          </div>
-          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15, ease: [0.2, 0.7, 0.2, 1] }} className="relative">
-            <HeroDrop />
-          </motion.div>
+        <div className="relative z-20 mx-auto max-w-4xl px-6 pt-14 text-center">
+          <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.2, 0.7, 0.2, 1] }} className="text-5xl font-normal leading-[1.02] tracking-[-0.04em] text-neutral-950 md:text-[84px]">
+            Stay creative.<br /><span className="text-neutral-400">Production&rsquo;s handled.</span>
+          </motion.h1>
+          <p className="mx-auto mt-6 max-w-xl text-[17px] leading-7 text-neutral-600">
+            For producers of fashion shoots. Drop your references: we find the models, crew and places, call their agents, plan the day, and keep everyone updated when something changes.
+          </p>
         </div>
-
-        {/* the stage is the reference drop: drop or pick, and the analysis starts */}
+        <div className="relative z-20 mx-auto mt-12 max-w-5xl px-6">
+          <HeroDrop />
+        </div>
       </section>
 
       {/* ElevenLabs-style: framed column, grainy gradient cards, the agency call as bubbles */}
