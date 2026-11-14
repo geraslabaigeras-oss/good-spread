@@ -15,6 +15,7 @@ const serif = Instrument_Serif({ subsets: ['latin', 'latin-ext'], weight: '400',
 export const metadata: Metadata = {
   title: 'Good Spread',
   description: 'Producers plan it. Talent lives it. One change updates everyone.',
+  robots: { index: false, follow: false },
 };
 
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover', themeColor: '#f1efe8' };

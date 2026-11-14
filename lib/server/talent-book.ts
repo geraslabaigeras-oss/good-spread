@@ -9,7 +9,7 @@ import type { RosterPerson } from '@/lib/roster';
  * It is read only on a local machine, never on Vercel, and never committed (private/ is git-ignored).
  */
 const DIR = path.join(process.cwd(), 'private', 'talent');
-export const talentBookEnabled = () => !process.env.VERCEL && process.env.TALENT_BOOK !== 'off' && fs.existsSync(path.join(DIR, 'book.json'));
+export const talentBookEnabled = () => (!process.env.VERCEL || process.env.TALENT_BOOK === 'on') && process.env.TALENT_BOOK !== 'off' && fs.existsSync(path.join(DIR, 'book.json'));
 
 type Entry = {
   id: string; name: string; agency: string; city: string; gender: string | null; heightCm: number | null; stats: string | null;
@@ -21,7 +21,7 @@ type State = Record<string, { availability?: 'available' | 'hold' | 'unavailable
 
 const statePath = path.join(DIR, 'state.json');
 const MEM: State = {}; // public site: answers kept in memory (read-only file system)
-const readState = (): State => { if (!talentBookEnabled()) return MEM; try { return JSON.parse(fs.readFileSync(statePath, 'utf8')); } catch { return {}; } };
+const readState = (): State => { if (!talentBookEnabled() || process.env.VERCEL) return MEM; try { return JSON.parse(fs.readFileSync(statePath, 'utf8')); } catch { return {}; } };
 
 /** Day rates are not public: estimates by agency level, shown as estimates until the agent confirms. */
 const TOP = /(next|elite|storm|select|viva model management|women|img|oui|why not|webber|streeters|art \+ commerce|art partner|camilla lowther|management artists|bryant|lalaland|ag agency)/i;
@@ -58,6 +58,7 @@ export function talentBookImages(id: string): { url: string; label: string }[] {
 
 export function setTalentAvailability(id: string, availability: 'available' | 'hold' | 'unavailable' | null, note?: string | null) {
   if (!talentBookEnabled()) { if (!/^sample-/.test(id)) return false; MEM[id] = { availability, availabilityNote: note ?? null }; return true; }
+  if (process.env.VERCEL) { MEM[id] = { availability, availabilityNote: note ?? null }; return true; } // read-only file system
   const s = readState();
   s[id] = { availability, availabilityNote: note ?? null };
   fs.writeFileSync(statePath, JSON.stringify(s, null, 1));

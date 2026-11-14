@@ -42,7 +42,5 @@ next-env.d.ts
 .data/
 
 # local-only talent book (do not publish or deploy)
-/private
 
-private
 .env*
