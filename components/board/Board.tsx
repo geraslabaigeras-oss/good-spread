@@ -18,6 +18,7 @@ import { BudgetPanel } from './BudgetPanel';
 import { Activity } from './Activity';
 import { BoardingPass } from './BoardingPass';
 import { DelayAlert } from './DelayAlert';
+import { CallRun } from '@/components/call-run';
 import { RouteGlobe } from './RouteGlobe';
 import { BrandLogo } from '@/components/brand-logo';
 import { callsignFor } from './LiveRadar';
@@ -52,6 +53,7 @@ function BoardInner({ slug }: { slug: string }) {
   const { parent, item } = useReveal();
   const [approving, setApproving] = useState<Approving | null>(null);
   const [justApproved, setJustApproved] = useState<Applied | null>(null);
+  const [telling, setTelling] = useState<Change[] | null>(null);
   const busy = useRef(false);
 
   /** Runs a call; after 3 s without an answer, says so (DESIGN §4.2). */
@@ -82,6 +84,7 @@ function BoardInner({ slug }: { slug: string }) {
         // t = 0 of the approve sequence (DESIGN §5.6)
         setApproving({ fixId, x, y, pending: frozen });
         setJustApproved({ version: j.version, label: j.label, receipt: j.receipt, at: new Date().toISOString(), changedIds: (j.changes ?? []).map((c: { personId: string }) => c.personId), changes: j.changes ?? [] });
+        if ((j.changes ?? []).length) setTimeout(() => setTelling(j.changes), 1200);
         mutate();
         setTimeout(() => setApproving(null), APPROVE.slotSwap);
       } finally {
@@ -192,6 +195,11 @@ function BoardInner({ slug }: { slug: string }) {
   return (
     <div className="board-dark flex min-h-dvh">
       <DelayAlert p={p} pending={data.pending} />
+      {telling && (
+        <CallRun open onClose={() => setTelling(null)}
+          targets={telling.map((c) => { const x = data.people.find((y) => y.id === c.personId); return { id: c.personId, name: x?.name ?? c.personId, role: x?.role ?? '', photo: x?.photo }; })}
+          mode={{ kind: 'update', lines: Object.fromEntries(telling.map((c) => [c.personId, c.text])) }} />
+      )}
       {/* Sidebar */}
       <aside className="sticky top-0 hidden h-dvh w-[260px] shrink-0 flex-col border-r border-black/[0.06] bg-white/40 px-5 py-8 lg:flex">
         <a href="/" aria-label="good spread"><Wordmark className="h-[26px]" /></a>

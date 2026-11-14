@@ -24,6 +24,7 @@ const ease = [0.2, 0.8, 0.2, 1] as const;
 const CATS = ['talent', 'crew', 'studio', 'travel', 'post', 'usage'] as const;
 type Tab = 'models' | 'photographer' | 'location' | 'stay' | 'costs';
 const STEPS: [Tab, string][] = [['models', 'Models'], ['photographer', 'Photographer'], ['location', 'Location'], ['stay', 'Stay'], ['costs', 'Costs']];
+const HOTEL: Record<string, number> = { Vilnius: 90, Riga: 90, Tallinn: 100, Warsaw: 95, Berlin: 130, Lisbon: 130, Barcelona: 160, Milan: 170, Paris: 200, London: 220, Copenhagen: 190, Stockholm: 170, Amsterdam: 200, Reykjavik: 210, Athens: 120 };
 const CAT_LABEL: Record<string, string> = { talent: 'Talent', crew: 'Crew', studio: 'Studio and location', travel: 'Travel and stay', post: 'Post-production', usage: 'Usage' };
 
 export default function Assemble() {
@@ -110,163 +111,68 @@ export default function Assemble() {
 
   return (
     <Stage backdrop={draft.refImages[0]}>
-      <TopBar step={3} right={<button onClick={() => router.push('/plan')} className="text-[12px] text-grey-1 underline underline-offset-4 hover:text-ink">Change strategy</button>} />
-      <div className="mx-auto grid max-w-[1480px] grid-cols-1 gap-6 px-8 pb-10 pt-4 xl:grid-cols-[minmax(0,1fr)_560px]">
-        {/* Globe + live plan */}
-        <div className="relative">
-          <div className="pointer-events-none absolute left-0 top-2 z-10">
-            <div className="g-label">{def.name} · shoot in {def.city}</div>
-            <h1 className="mt-1 font-serif text-[52px] leading-[0.95] tracking-[-0.03em]">Build the team</h1>
-            <p className="mt-2 max-w-[420px] text-[14px] text-grey-1">{needs ? <>Looking for: <span className="text-ink">{needs.model}</span></> : 'Pick from the list. The cost updates with each pick.'}</p>
-          </div>
-          <div className="pt-36 pb-20"><TeamSlots p={p} place={draft.place ? { name: draft.place.name, image: draft.place.image } : null} onSlot={(role, open) => {
-            if (role === 'location') { setTab('location'); return; }
-            if (open || role === 'mua' || role === 'stylist') { setAdding(role as 'model'); return; }
-            setTab(role === 'model' ? 'models' : 'photographer');
-          }} /></div>
+      <TopBar step={3} right={<button onClick={() => router.push('/new')} className="text-[13px] text-neutral-500 underline underline-offset-4 hover:text-neutral-950">Back to picks</button>} />
+      <div className="mx-auto max-w-[1280px] px-8 pb-16 pt-6">
+        <h1 className="text-[52px] font-light leading-[1.05] tracking-[-0.03em]">Your team. <span className="text-neutral-400">Check it, then go.</span></h1>
+        <p className="mt-2 text-[15px] text-neutral-600">{fmtDate(sum.shootISO)} · {draft.place?.name ?? def.city} · {fmtEur(Math.round(budget.total))} of {fmtEur(budget.cap)}</p>
 
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }} className="glass -mt-16 grid grid-cols-1 items-center gap-6 p-6 md:grid-cols-[auto_1fr_auto]">
-            <div className="w-[260px]"><BudgetLine total={budget.total} cap={budget.cap} segments={CATS.map((c) => ({ value: budget.byCategory[c], color: CAT_COLOR[c] }))} /></div>
-            <div>
-              <div className="mt-3 text-[13px]">
-                {ok && <span className="text-[var(--g-good)]">No conflicts · brief kept · within budget · delivered {fmtDate(sum.deliveryISO)}</span>}
-                {sum.overCap && <div className="text-[var(--g-bad)]">Over the {fmtEur(budget.cap)} cap</div>}
-                {conflicts.map((c, i) => <div key={i} className="text-[var(--g-bad)]">{c.message}</div>)}
-                {broken.map((x) => <div key={x.id} className="text-[var(--g-bad)]">Breaks must-keep: {x.label}{x.note ? ` (${x.note})` : ''}</div>)}
+        <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+          <TeamSlots p={p} place={draft.place ? { name: draft.place.name, image: draft.place.image } : null} onSlot={(role, open) => {
+            if (role === 'location') { router.push('/new'); return; }
+            if (open) { setAdding(role as 'model'); return; }
+            const person = p.people.find((x) => x.role === role && !isOpenSlot(x.id));
+            if (person) setChecking(person.id);
+          }} />
+
+          <div className="flex flex-col gap-5">
+            {/* Travel and stay */}
+            {(() => {
+              const away = p.people.filter((x) => x.role !== 'producer' && !isOpenSlot(x.id) && !x.local);
+              const night = HOTEL[def.city] ?? 130;
+              const before = new Date(new Date(`${sum.shootISO}T12:00:00Z`).getTime() - 86400000).toISOString().slice(0, 10);
+              const n = Math.max(1, away.length);
+              return (
+                <div className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,.04),0_14px_34px_rgba(0,0,0,.06)]">
+                  <div className="text-[17px] font-medium">Travel and stay</div>
+                  {away.length === 0 ? <p className="mt-2 text-[14px] text-neutral-500">Everyone is based in {def.city}. No flights, no hotel.</p> : (
+                    <>
+                      <p className="mt-1 text-[14px] text-neutral-500">{away.length} {away.length === 1 ? 'person flies' : 'people fly'} in the day before and {away.length === 1 ? 'needs' : 'need'} one night.</p>
+                      <div className="mt-3 flex -space-x-2">{away.map((x) => x.photo ? <img key={x.id} src={x.photo} alt={x.name} title={x.name} className="size-9 rounded-full object-cover object-top ring-2 ring-white" /> : <span key={x.id} className="flex size-9 items-center justify-center rounded-full bg-neutral-200 text-[13px] ring-2 ring-white">{x.name[0]}</span>)}</div>
+                      <div className="mt-4 grid grid-cols-2 gap-2">
+                        <a href={`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(def.city)}&checkin=${before}&checkout=${sum.shootISO}&group_adults=${n}&no_rooms=${n}`} target="_blank" rel="noreferrer" className="rounded-2xl bg-[#f3f5f8] p-3 hover:bg-[#eceff3]">
+                          <div className="text-[13px] text-neutral-500">Hotel near set</div>
+                          <div className="text-[22px] font-light tabular-nums">€{night}<span className="text-[13px] text-neutral-500">/night est.</span></div>
+                          <div className="text-[12px] text-neutral-500">Booking.com ↗</div>
+                        </a>
+                        <a href={`https://www.airbnb.com/s/${encodeURIComponent(def.city)}/homes?checkin=${before}&checkout=${sum.shootISO}&adults=${n}`} target="_blank" rel="noreferrer" className="rounded-2xl bg-[#f3f5f8] p-3 hover:bg-[#eceff3]">
+                          <div className="text-[13px] text-neutral-500">Apartment for {n}</div>
+                          <div className="text-[22px] font-light tabular-nums">€{Math.round(night * 0.8 * Math.max(1, n * 0.6))}<span className="text-[13px] text-neutral-500">/night est.</span></div>
+                          <div className="text-[12px] text-neutral-500">Airbnb ↗</div>
+                        </a>
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Costs, short */}
+            <div className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,.04),0_14px_34px_rgba(0,0,0,.06)]">
+              <div className="flex items-baseline justify-between"><span className="text-[17px] font-medium">Cost</span><span className={`text-[13px] ${sum.overCap ? 'text-red-600' : 'text-neutral-500'}`}>{sum.overCap ? `${fmtEur(Math.round(budget.total - budget.cap))} over` : `${fmtEur(Math.round(budget.cap - budget.total))} left`}</span></div>
+              <div className="mt-2 text-[40px] font-light leading-none tracking-[-0.03em] tabular-nums">{fmtEur(Math.round(budget.total))}</div>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-neutral-200"><div className={`h-full rounded-full ${sum.overCap ? 'bg-red-600' : 'bg-neutral-950'}`} style={{ width: `${Math.min(100, (budget.total / budget.cap) * 100)}%` }} /></div>
+              <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-[13px]">
+                {(['talent', 'crew', 'studio', 'travel'] as const).map((c) => <div key={c} className="flex justify-between"><span className="text-neutral-500">{CAT_LABEL[c]}</span><span className="tabular-nums">{fmtEur(Math.round(budget.byCategory[c]))}</span></div>)}
               </div>
             </div>
-            <div className="flex flex-col items-stretch gap-2">
-              <button onClick={create} disabled={busy || conflicts.length > 0} className="g-btn">{busy ? 'Creating…' : 'Create production →'}</button>
-              {err && <p className="text-[12px] text-[var(--g-bad)]">{err}</p>}
-            </div>
-          </motion.div>
+
+            {(conflicts.length > 0 || broken.length > 0) && (
+              <div className="rounded-2xl bg-red-50 p-4 text-[13px] text-red-700">{conflicts.map((c, i) => <div key={i}>{c.message}</div>)}{broken.map((x) => <div key={x.id}>Changes the brief: {x.label}</div>)}</div>
+            )}
+            <button onClick={create} disabled={busy || conflicts.length > 0} className="h-14 rounded-full bg-neutral-950 text-[16px] font-medium text-white disabled:opacity-40">{busy ? 'Creating…' : 'Create the production →'}</button>
+            {err && <p className="text-[13px] text-red-600">{err}</p>}
+          </div>
         </div>
-
-        {/* The search, step by step: models, photographer, location, stay, costs */}
-        <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, ease }} className="glass flex max-h-[calc(100dvh-110px)] flex-col p-4">
-          <div className="flex gap-1 rounded-full bg-ink/[0.05] p-1">
-            {STEPS.map(([k, label]) => (
-              <button key={k} onClick={() => setTab(k)} className={`flex-1 rounded-full py-2 text-[13px] transition-colors ${tab === k ? 'bg-white text-ink shadow-[0_2px_10px_rgba(20,40,90,.08)]' : 'text-grey-1 hover:text-ink'}`}>{label}</button>
-            ))}
-          </div>
-          <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
-            <AnimatePresence mode="wait">
-              <motion.div key={tab} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.3 }}>
-                {(tab === 'models' || tab === 'photographer') && (() => {
-                  const isModel = tab === 'models';
-                  const list = (isModel ? models : photos).filter((c) => !isOpenSlot(c.id));
-                  const query = (isModel ? qModel : qPhoto) ?? (isModel ? needs?.model : needs?.photographer) ?? '';
-                  const ranked = [...list].sort((a, b) => lookMatch(query, b.lookWords).score - lookMatch(query, a.lookWords).score);
-                  const noun = isModel ? 'model' : 'photographer';
-                  return (
-                    <>
-                      <label className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-[inset_0_0_0_1px_rgba(0,0,0,.06)]">
-                        <Search className="size-4 shrink-0 text-neutral-400" />
-                        <input value={query} onChange={(e) => (isModel ? setQModel : setQPhoto)(e.target.value)} placeholder={isModel ? 'Model look, e.g. short hair, freckles, editorial' : 'Style, e.g. 35mm film, natural light'} className="min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-neutral-400" />
-                      </label>
-                      <p className="mt-2 px-1 text-[12px] text-grey-1">{needs ? 'Filled in from your references. ' : ''}{list.length ? `${list.length} ${noun}${list.length === 1 ? '' : 's'} in your people, best match first.` : `No ${noun}s in your people yet.`}</p>
-                      <div className="mt-3 grid grid-cols-2 gap-3">
-                        {ranked.map((c) => isModel
-                          ? <CompCard key={c.id} c={c} selected={picks.models.includes(c.id)} onClick={() => toggleModel(c.id)} travel={travel(c)} match={lookMatch(query, c.lookWords)} onCheck={() => setChecking(c.id)} />
-                          : <CompCard key={c.id} c={c} selected={picks.photographer === c.id} onClick={() => setPicks({ ...picks, photographer: c.id })} travel={travel(c)} match={lookMatch(query, c.lookWords)} onCheck={() => setChecking(c.id)} />)}
-                        <button onClick={() => setAdding(isModel ? 'model' : 'photographer')} className="flex min-h-40 flex-col items-center justify-center gap-1 rounded-[22px] border-2 border-dashed border-neutral-300 px-4 text-center text-[14px] text-neutral-600 transition-colors hover:border-neutral-500 hover:text-neutral-900">
-                          <Plus className="size-5" /> Add a {noun}
-                          <span className="text-[12px] text-neutral-400">someone you work with, or a profile link</span>
-                        </button>
-                      </div>
-                      <a href={isModel ? modelsComSearch(def.city, query) : `https://www.google.com/search?q=${encodeURIComponent(`fashion photographer ${def.city} ${query}`)}`} target="_blank" rel="noreferrer" className="mt-4 flex items-center justify-between rounded-2xl bg-white/70 px-4 py-3 text-[14px] hover:bg-white">
-                        <span>Find more {isModel ? 'on models.com' : 'photographers on the web'}<span className="block text-[12px] text-grey-1">Opens a search for &ldquo;{query.slice(0, 40) || def.city}&rdquo;. Add the ones you like here.</span></span>
-                        <ArrowUpRight className="size-4 shrink-0 text-grey-1" />
-                      </a>
-                    </>
-                  );
-                })()}
-
-                {tab === 'location' && (
-                  <>
-                    {draft.brief && <Scout brief={draft.brief} city={def.city} chosen={draft.place} onChoose={(pl) => setDraft({ ...draft, place: pl })} />}
-                    {!draft.brief && (
-                      <div className="grid grid-cols-2 gap-3">
-                        {locs.filter((l) => !l.id.startsWith('open-')).map((l) => (
-                          <button key={l.id} onClick={() => setPicks({ ...picks, location: l.id })} className={`overflow-hidden rounded-[22px] bg-white text-left ${picks.location === l.id ? 'ring-2 ring-neutral-950' : ''}`}>
-                            <div className="h-36" style={{ background: l.photo ? `url(${l.photo}) center/cover` : '#e7ebf1' }} />
-                            <div className="p-3"><div className="text-[15px] font-medium">{l.name.split(',')[0]}</div><div className="mt-0.5 text-[12px] text-grey-1">{l.note}</div></div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    <a href={`https://www.google.com/maps/search/${encodeURIComponent(`photo studio ${def.city}`)}`} target="_blank" rel="noreferrer" className="mt-4 flex items-center justify-between rounded-2xl bg-white/70 px-4 py-3 text-[14px] hover:bg-white">
-                      <span>Studios in {def.city}<span className="block text-[12px] text-grey-1">Real studios on Google Maps, with hours and phone numbers.</span></span>
-                      <ArrowUpRight className="size-4 shrink-0 text-grey-1" />
-                    </a>
-                  </>
-                )}
-
-                {tab === 'stay' && (() => {
-                  const away = p.people.filter((x) => x.role !== 'producer' && !isOpenSlot(x.id) && !x.local);
-                  const before = new Date(new Date(`${sum.shootISO}T12:00:00Z`).getTime() - 86400000).toISOString().slice(0, 10);
-                  const after = sum.shootISO;
-                  const n = Math.max(1, away.length);
-                  return (
-                    <>
-                      <p className="px-1 text-[15px]">{away.length ? `${away.length === 1 ? `${away[0].name} flies` : `${away.length} people fly`} in the day before and ${away.length === 1 ? 'needs' : 'need'} a bed for one night.` : `Everyone is based in ${def.city}. Nobody needs a bed.`}</p>
-                      {away.length > 0 && (
-                        <>
-                          <div className="mt-3 space-y-2">
-                            {away.map((x) => {
-                              const t = p.travel.find((tr) => tr.personId === x.id);
-                              return (
-                                <div key={x.id} className="flex items-center gap-3 rounded-2xl bg-white p-3">
-                                  {x.photo ? <img src={x.photo} alt="" className="size-10 rounded-full object-cover object-top" /> : <span className="flex size-10 items-center justify-center rounded-full bg-neutral-200 text-[13px]">{x.name[0]}</span>}
-                                  <span className="flex-1"><span className="block text-[14px] font-medium">{x.name}</span><span className="text-[12px] text-grey-1">{t ? `${t.from} → ${t.to}` : 'Travels in'}</span></span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                          <div className="mt-4 grid grid-cols-2 gap-3">
-                            <a href={`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(def.city)}&checkin=${before}&checkout=${after}&group_adults=${n}&no_rooms=${n}`} target="_blank" rel="noreferrer" className="rounded-2xl bg-white p-4 hover:bg-neutral-50">
-                              <span className="text-[15px] font-medium">Hotels</span><span className="mt-0.5 block text-[12px] text-grey-1">Booking.com, {n} {n === 1 ? 'room' : 'rooms'}, {fmtDate(before).slice(4, 10)} to {fmtDate(after).slice(4, 10)}</span>
-                            </a>
-                            <a href={`https://www.airbnb.com/s/${encodeURIComponent(def.city)}/homes?checkin=${before}&checkout=${after}&adults=${n}`} target="_blank" rel="noreferrer" className="rounded-2xl bg-white p-4 hover:bg-neutral-50">
-                              <span className="text-[15px] font-medium">Apartments</span><span className="mt-0.5 block text-[12px] text-grey-1">Airbnb, {n} {n === 1 ? 'guest' : 'guests'}, same dates</span>
-                            </a>
-                          </div>
-                          <p className="mt-3 px-1 text-[12px] text-grey-1">The plan counts {fmtEur(120)} a night per person until you book.</p>
-                        </>
-                      )}
-                    </>
-                  );
-                })()}
-
-                {tab === 'costs' && (
-                  <>
-                    <div className="flex items-baseline justify-between px-1">
-                      <span className="text-[40px] font-light tracking-[-0.03em] tabular-nums">{fmtEur(Math.round(budget.total))}</span>
-                      <span className={`text-[13px] ${sum.overCap ? 'text-[var(--g-bad)]' : 'text-grey-1'}`}>{sum.overCap ? `${fmtEur(Math.round(budget.total - budget.cap))} over the cap` : `${fmtEur(Math.round(budget.cap - budget.total))} left of ${fmtEur(budget.cap)}`}</span>
-                    </div>
-                    {CATS.filter((c) => budget.byCategory[c] > 0).map((c) => (
-                      <div key={c} className="mt-3 rounded-2xl bg-white p-4">
-                        <div className="flex justify-between text-[14px] font-medium"><span>{CAT_LABEL[c]}</span><span className="tabular-nums">{fmtEur(Math.round(budget.byCategory[c]))}</span></div>
-                        <div className="mt-2 space-y-1">
-                          {budget.lines.filter((l) => l.category === c).map((l) => (
-                            <div key={l.id} className="flex justify-between gap-3 text-[13px] text-grey-1">
-                              <span className="truncate">{l.label}{l.source === 'estimate' ? ' (estimate)' : ''}</span>
-                              <span className={`shrink-0 tabular-nums ${l.overtime ? 'text-amber-700' : ''}`}>{fmtEur(Math.round(l.amount))}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                    {budget.contingency > 0 && <div className="mt-3 flex justify-between px-4 text-[13px] text-grey-1"><span>Contingency</span><span className="tabular-nums">{fmtEur(Math.round(budget.contingency))}</span></div>}
-                  </>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-          {next && (
-            <button onClick={() => setTab(next[0])} className="mt-3 h-12 shrink-0 rounded-full bg-neutral-950 text-[15px] font-medium text-white">Next: {next[1]}</button>
-          )}
-        </motion.div>
       </div>
       {checking && roster.people.find((x) => x.id === checking) && (
         <AgencyCall
