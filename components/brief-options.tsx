@@ -205,7 +205,7 @@ export function BriefOptions({ brief, draft, setDraft }: { brief: CreativeBrief;
         const on = shortlist.includes(v.id);
         return (
           <AgencyCall key={v.id} person={v} open onOpenChange={(o) => !o && setViewing(null)}
-            actions={<button onClick={() => toggle(v.id)} className={`h-11 rounded-full px-5 text-[14px] font-medium ${on ? 'bg-neutral-950 text-white' : 'bg-white shadow-[inset_0_0_0_1px_rgba(0,0,0,.12)]'}`}>{on ? 'Shortlisted' : 'Add to shortlist'}</button>}
+            actions={<button onClick={() => { toggle(v.id); setViewing(null); }} className={`h-12 w-full rounded-full text-[15px] font-medium ${on ? 'bg-white shadow-[inset_0_0_0_1px_rgba(0,0,0,.12)]' : 'bg-neutral-950 text-white'}`}>{on ? 'Remove from shortlist' : 'Add to shortlist'}</button>}
             onAnswer={async (ans) => {
               const { id: _i, createdAt: _c, ...data } = v;
               await fetch(`/api/people/${v.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(v.id.startsWith('tb-') ? { availability: ans } : { ...data, availability: ans }) });
