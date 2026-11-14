@@ -72,7 +72,10 @@ export function swapTalent(p: Production, outId: string, incoming: Person): Prod
 }
 
 function finish(p: Production, kind: FixKind, label: string, detail: string, plan: Production, changesCreative: boolean): Fix | null {
-  if (detectConflicts(plan).length > 0) return null;
+  // A fix must clear the timing problems. Being over budget is shown as a warning, not a reason to drop a fix,
+  // unless the original plan was within budget and this fix pushes it over.
+  const before = detectConflicts(p).some((c) => c.code === 'BUDGET');
+  if (detectConflicts(plan).some((c) => c.code !== 'BUDGET' || !before)) return null;
   const changes = diffPeople(p, plan);
   const dna = p.dna ? evaluateDna(p, plan) : undefined;
   return {
