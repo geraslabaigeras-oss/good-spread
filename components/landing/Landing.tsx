@@ -8,7 +8,7 @@ import { VoiceOrb } from '@/components/voice-orb';
 import { TextAnimate } from '@/components/ui/text-animate';
 import { Card, Carousel } from '@/components/ui/apple-cards-carousel';
 import { Safari } from '@/components/ui/safari';
-import { Iphone } from '@/components/ui/iphone';
+import { DevicePhone } from '@/components/device-phone';
 import { MessagesScreen } from '@/components/messages-screen';
 import { BrandLogo } from '@/components/brand-logo';
 import { HeroDrop } from '@/components/hero-drop';
@@ -169,12 +169,9 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
           <div className="relative mt-14">
 
             <motion.div initial={{ opacity: 0, y: 60 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.9, delay: 0.25 }} className="relative mx-auto mt-6 w-[280px] md:w-[320px]">
-              <div className="relative">
-                <Iphone className="drop-shadow-[0_30px_60px_rgba(0,0,0,.25)]" />
-                <div className="absolute overflow-hidden" style={{ left: `${(21.25 / 433) * 100}%`, top: `${(19.25 / 882) * 100}%`, width: `${(389.5 / 433) * 100}%`, height: `${(843.5 / 882) * 100}%`, borderRadius: `${(55.75 / 389.5) * 100}% / ${(55.75 / 843.5) * 100}%` }}>
-                  <MessagesScreen name="Model" before={moment.call} after={moment.newCall} place="Pilies courtyard, Vilnius" url="good-spread.app/p/k3f9" />
-                </div>
-              </div>
+              <DevicePhone width={320} className="mx-auto drop-shadow-[0_40px_60px_rgba(20,40,90,.25)]">
+                <MessagesScreen name="Model" before={moment.call} after={moment.newCall} place="Pilies courtyard, Vilnius" url="good-spread.app/p/k3f9" />
+              </DevicePhone>
               <motion.div initial={{ opacity: 0, y: -20, scale: 0.9, rotateX: 18, rotateY: -22 }} whileInView={{ opacity: 1, y: [0, -8, 0], scale: 1.06, rotateX: 10, rotateY: -16 }} viewport={{ once: true }}
                 transition={{ opacity: { duration: 0.6, delay: 1.1 }, scale: { duration: 0.6, delay: 1.1 }, y: { duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1.7 } }}
                 style={{ transformPerspective: 900 }}

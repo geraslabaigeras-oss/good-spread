@@ -5,9 +5,9 @@
  */
 export function MessagesScreen({ name, before, after, place, url }: { name: string; before: string; after: string; place: string; url: string }) {
   return (
-    <div className="flex size-full flex-col bg-white font-sans text-[13px] text-neutral-900">
-      <div className="flex items-center justify-between px-7 pt-4 text-[12px] font-semibold"><span>9:41</span><span className="tracking-tight">▮▮▮ ◔</span></div>
-      <div className="mt-3 flex flex-col items-center border-b border-neutral-200 pb-3">
+    <div className="flex h-full w-full flex-col bg-white font-sans text-[13px] text-neutral-900">
+      <div className="flex w-full items-center justify-between px-9 pt-[18px] text-[14px] font-semibold"><span>9:41</span><span className="text-[11px] tracking-tight">▮▮▮ ◔</span></div>
+      <div className="mt-5 flex w-full flex-col items-center border-b border-neutral-200 pb-3 text-center">
         <div className="flex size-11 items-center justify-center rounded-full bg-gradient-to-b from-neutral-300 to-neutral-400 text-[15px] font-semibold text-white">gs</div>
         <div className="mt-1 text-[11px] text-neutral-900">good spread ›</div>
       </div>

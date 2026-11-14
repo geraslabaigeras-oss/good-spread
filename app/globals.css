@@ -402,3 +402,8 @@
 /* analysis: slow 3D ring of similar looks */
 .ring3d { transform-style: preserve-3d; animation: ring3d 40s linear infinite; }
 @keyframes ring3d { from { transform: rotateX(-8deg) rotateY(0deg); } to { transform: rotateX(-8deg) rotateY(360deg); } }
+
+/* devices.css forces display:block on everything inside .device (unlayered, so it beats Tailwind).
+   Inside our phone screen, hand display back to the Tailwind utilities. */
+.device .device-screen .screen-content,
+.device .device-screen .screen-content * { display: revert-layer; }

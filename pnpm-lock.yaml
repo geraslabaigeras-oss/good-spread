@@ -35,6 +35,9 @@ importers:
       d3-geo:
         specifier: ^3.1.2
         version: 3.1.2
+      devices.css:
+        specifier: ^0.2.0
+        version: 0.2.0
       lucide-react:
         specifier: ^1.72.0
         version: 1.72.0(@types/react@19.3.0)(react@19.3.0)
@@ -1755,6 +1758,9 @@ packages:
   detect-libc@2.1.2:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
+
+  devices.css@0.2.0:
+    resolution: {integrity: sha512-CE59M+4PuH87+A4clpC1xA/lkfCSGFWfeFx5sNadDdy1kXUqJ28SdTp+tBlwkHfI7G+h/Wf4Ddt9QGPLLlky3Q==}
 
   diff@8.0.4:
     resolution: {integrity: sha512-DPi0FmjiSU5EvQV0++GFDOJ9ASQUVFh5kD+OzOnYdi7n3Wpm9hWWGfB/O2blfHcMVTL5WkQXSnRiK9makhrcnw==}
@@ -5177,6 +5183,8 @@ snapshots:
   dequal@2.0.3: {}
 
   detect-libc@2.1.2: {}
+
+  devices.css@0.2.0: {}
 
   diff@8.0.4: {}
 
