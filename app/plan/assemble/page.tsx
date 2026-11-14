@@ -11,24 +11,27 @@ import { lookMatch } from '@/lib/match';
 import Link from 'next/link';
 import { fmtDate, fmtEur } from '@/lib/format';
 import { useDraft } from '@/lib/plan-store';
-import { draftProduction, pinsFor } from '@/lib/plan-draft';
+import { draftProduction } from '@/lib/plan-draft';
 import { BudgetLine, CAT_COLOR, Stage, Tilt, TopBar } from '@/components/glass/Stage';
-import { type GlobePin } from '@/components/glass/Globe';
 import { TeamSlots } from '@/components/team-slots';
 import { QuickAdd } from '@/components/quick-add';
 import { Scout } from '@/components/scout';
 import { AgencyCall } from '@/components/agency-call';
-import { OFFICES, flagUrl, type Office } from '@/lib/agencies';
+import { modelsComSearch } from '@/lib/roster';
+import { ArrowUpRight, Plus, Search } from 'lucide-react';
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
 const CATS = ['talent', 'crew', 'studio', 'travel', 'post', 'usage'] as const;
-type Tab = 'models' | 'photographer' | 'location';
+type Tab = 'models' | 'photographer' | 'location' | 'stay' | 'costs';
+const STEPS: [Tab, string][] = [['models', 'Models'], ['photographer', 'Photographer'], ['location', 'Location'], ['stay', 'Stay'], ['costs', 'Costs']];
+const CAT_LABEL: Record<string, string> = { talent: 'Talent', crew: 'Crew', studio: 'Studio and location', travel: 'Travel and stay', post: 'Post-production', usage: 'Usage' };
 
 export default function Assemble() {
   const router = useRouter();
   const [draft, setDraft] = useDraft();
   const [tab, setTab] = useState<Tab>('models');
-  const [calling, setCalling] = useState<Office | null>(null);
+  const [qModel, setQModel] = useState<string | null>(null);
+  const [qPhoto, setQPhoto] = useState<string | null>(null);
   const [checking, setChecking] = useState<string | null>(null);
   const [adding, setAdding] = useState<'model' | 'photographer' | 'mua' | 'stylist' | null>(null);
   const [busy, setBusy] = useState(false);
@@ -77,21 +80,6 @@ export default function Assemble() {
     if (m.length > def.modelSlots) m = m.slice(m.length - def.modelSlots);
     if (m.length) setPicks({ ...picks, models: m });
   };
-  const onPin = (id: string) => {
-    if (models.some((m) => m.id === id)) { toggleModel(id); setTab('models'); }
-    else if (photos.some((x) => x.id === id)) { setPicks({ ...picks, photographer: id }); setTab('photographer'); }
-    else if (locs.some((l) => l.id === id)) { setPicks({ ...picks, location: id }); setTab('location'); }
-  };
-
-  // Globe: every candidate, chosen ones lit; flights for chosen travellers
-  const chosen = pinsFor(p);
-  const pins: GlobePin[] = [
-    ...models.map((c) => ({ id: c.id, city: c.city, label: c.name, sub: 'model', kind: 'model' as const, photo: c.photo, selected: picks.models.includes(c.id), dim: !picks.models.includes(c.id) })),
-    ...photos.map((c) => ({ id: c.id, city: c.city, label: c.name, sub: 'photographer', kind: 'photographer' as const, selected: picks.photographer === c.id, dim: picks.photographer !== c.id })),
-    ...chosen.pins.filter((x) => x.kind === 'crew'),
-    ...locs.map((l) => ({ id: l.id, city: l.city, label: l.name.split(',')[0].replace(' (demo)', ''), sub: 'location', kind: 'location' as const, selected: picks.location === l.id, dim: picks.location !== l.id })),
-  ];
-
   async function create() {
     setBusy(true);
     setErr(null);
@@ -117,6 +105,7 @@ export default function Assemble() {
     if (!t) return c.city;
     return t.dayBefore ? `${t.from} → ${t.to} the day before · +${fmtEur(t.flight + t.taxi + (t.hotel ?? 0))}` : `${t.number} ${t.from} → ${t.to}, lands ${fmt(t.arriveMin)} · +${fmtEur(t.flight + t.taxi)}`;
   };
+  const next = STEPS[STEPS.findIndex(([k]) => k === tab) + 1];
   const ok = conflicts.length === 0 && !sum.overCap && broken.length === 0;
 
   return (
@@ -153,56 +142,130 @@ export default function Assemble() {
           </motion.div>
         </div>
 
-        {/* Talent / photographer / location */}
+        {/* The search, step by step: models, photographer, location, stay, costs */}
         <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, ease }} className="glass flex max-h-[calc(100dvh-110px)] flex-col p-4">
-          <div className="relative flex gap-1 rounded-full bg-ink/[0.05] p-1">
-            {([['models', `Models ${picks.models.filter((m) => !isOpenSlot(m)).length}/${def.modelSlots}`], ['photographer', 'Photographer'], ['location', def.locationKinds.includes('location') ? 'Location' : 'Studio']] as [Tab, string][]).map(([k, label]) => (
-              <button key={k} onClick={() => setTab(k)} className="relative flex-1 rounded-full py-2 text-[13px]">
-                {tab === k && <motion.span layoutId="tab-pill" className="absolute inset-0 rounded-full bg-white shadow-[0_2px_10px_rgb(80_60_40/0.1)]" transition={{ type: 'spring', stiffness: 400, damping: 34 }} />}
-                <span className={`relative ${tab === k ? 'text-ink' : 'text-grey-1'}`}>{label}</span>
-              </button>
+          <div className="flex gap-1 rounded-full bg-ink/[0.05] p-1">
+            {STEPS.map(([k, label]) => (
+              <button key={k} onClick={() => setTab(k)} className={`flex-1 rounded-full py-2 text-[13px] transition-colors ${tab === k ? 'bg-white text-ink shadow-[0_2px_10px_rgba(20,40,90,.08)]' : 'text-grey-1 hover:text-ink'}`}>{label}</button>
             ))}
           </div>
           <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
             <AnimatePresence mode="wait">
-              <motion.div key={tab} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.3 }} className="grid grid-cols-2 gap-3">
-                {tab === 'models' && models.filter((c) => !isOpenSlot(c.id)).map((c) => <CompCard key={c.id} c={c} selected={picks.models.includes(c.id)} onClick={() => toggleModel(c.id)} travel={travel(c)} match={lookMatch(needs?.model, c.lookWords)} onCheck={() => setChecking(c.id)} />)}
-                {tab === 'photographer' && photos.filter((c) => !isOpenSlot(c.id)).map((c) => <CompCard key={c.id} c={c} selected={picks.photographer === c.id} onClick={() => setPicks({ ...picks, photographer: c.id })} travel={travel(c)} match={lookMatch(needs?.photographer, c.lookWords)} onCheck={() => setChecking(c.id)} />)}
-                {tab === 'location' && draft.brief && <div className="col-span-2"><Scout brief={draft.brief} city={def.city} chosen={draft.place} onChoose={(pl) => setDraft({ ...draft, place: pl })} /></div>}
-                {tab === 'location' && !draft.brief && locs.filter((l) => !l.id.startsWith('open-')).map((l) => (
-                  <Tilt key={l.id} onClick={() => setPicks({ ...picks, location: l.id })} selected={picks.location === l.id} className="glass-soft cursor-pointer overflow-hidden">
-                    <div className="relative h-44 overflow-hidden" style={{ background: l.photo ? `url(${l.photo}) center 20%/cover` : (l.natural ? '#d8c8b4' : '#e4e1dc') }}>
-                      <span className="absolute bottom-2 left-3 font-mono text-[10px] tracking-wider text-ink/70">{l.tags.join(' · ')}</span>
+              <motion.div key={tab} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.3 }}>
+                {(tab === 'models' || tab === 'photographer') && (() => {
+                  const isModel = tab === 'models';
+                  const list = (isModel ? models : photos).filter((c) => !isOpenSlot(c.id));
+                  const query = (isModel ? qModel : qPhoto) ?? (isModel ? needs?.model : needs?.photographer) ?? '';
+                  const ranked = [...list].sort((a, b) => lookMatch(query, b.lookWords).score - lookMatch(query, a.lookWords).score);
+                  const noun = isModel ? 'model' : 'photographer';
+                  return (
+                    <>
+                      <label className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-[inset_0_0_0_1px_rgba(0,0,0,.06)]">
+                        <Search className="size-4 shrink-0 text-neutral-400" />
+                        <input value={query} onChange={(e) => (isModel ? setQModel : setQPhoto)(e.target.value)} placeholder={isModel ? 'Model look, e.g. short hair, freckles, editorial' : 'Style, e.g. 35mm film, natural light'} className="min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-neutral-400" />
+                      </label>
+                      <p className="mt-2 px-1 text-[12px] text-grey-1">{needs ? 'Filled in from your references. ' : ''}{list.length ? `${list.length} ${noun}${list.length === 1 ? '' : 's'} in your people, best match first.` : `No ${noun}s in your people yet.`}</p>
+                      <div className="mt-3 grid grid-cols-2 gap-3">
+                        {ranked.map((c) => isModel
+                          ? <CompCard key={c.id} c={c} selected={picks.models.includes(c.id)} onClick={() => toggleModel(c.id)} travel={travel(c)} match={lookMatch(query, c.lookWords)} onCheck={() => setChecking(c.id)} />
+                          : <CompCard key={c.id} c={c} selected={picks.photographer === c.id} onClick={() => setPicks({ ...picks, photographer: c.id })} travel={travel(c)} match={lookMatch(query, c.lookWords)} onCheck={() => setChecking(c.id)} />)}
+                        <button onClick={() => setAdding(isModel ? 'model' : 'photographer')} className="flex min-h-40 flex-col items-center justify-center gap-1 rounded-[22px] border-2 border-dashed border-neutral-300 px-4 text-center text-[14px] text-neutral-600 transition-colors hover:border-neutral-500 hover:text-neutral-900">
+                          <Plus className="size-5" /> Add a {noun}
+                          <span className="text-[12px] text-neutral-400">someone you work with, or a profile link</span>
+                        </button>
+                      </div>
+                      <a href={isModel ? modelsComSearch(def.city, query) : `https://www.google.com/search?q=${encodeURIComponent(`fashion photographer ${def.city} ${query}`)}`} target="_blank" rel="noreferrer" className="mt-4 flex items-center justify-between rounded-2xl bg-white/70 px-4 py-3 text-[14px] hover:bg-white">
+                        <span>Find more {isModel ? 'on models.com' : 'photographers on the web'}<span className="block text-[12px] text-grey-1">Opens a search for &ldquo;{query.slice(0, 40) || def.city}&rdquo;. Add the ones you like here.</span></span>
+                        <ArrowUpRight className="size-4 shrink-0 text-grey-1" />
+                      </a>
+                    </>
+                  );
+                })()}
+
+                {tab === 'location' && (
+                  <>
+                    {draft.brief && <Scout brief={draft.brief} city={def.city} chosen={draft.place} onChoose={(pl) => setDraft({ ...draft, place: pl })} />}
+                    {!draft.brief && (
+                      <div className="grid grid-cols-2 gap-3">
+                        {locs.filter((l) => !l.id.startsWith('open-')).map((l) => (
+                          <button key={l.id} onClick={() => setPicks({ ...picks, location: l.id })} className={`overflow-hidden rounded-[22px] bg-white text-left ${picks.location === l.id ? 'ring-2 ring-neutral-950' : ''}`}>
+                            <div className="h-36" style={{ background: l.photo ? `url(${l.photo}) center/cover` : '#e7ebf1' }} />
+                            <div className="p-3"><div className="text-[15px] font-medium">{l.name.split(',')[0]}</div><div className="mt-0.5 text-[12px] text-grey-1">{l.note}</div></div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <a href={`https://www.google.com/maps/search/${encodeURIComponent(`photo studio ${def.city}`)}`} target="_blank" rel="noreferrer" className="mt-4 flex items-center justify-between rounded-2xl bg-white/70 px-4 py-3 text-[14px] hover:bg-white">
+                      <span>Studios in {def.city}<span className="block text-[12px] text-grey-1">Real studios on Google Maps, with hours and phone numbers.</span></span>
+                      <ArrowUpRight className="size-4 shrink-0 text-grey-1" />
+                    </a>
+                  </>
+                )}
+
+                {tab === 'stay' && (() => {
+                  const away = p.people.filter((x) => x.role !== 'producer' && !isOpenSlot(x.id) && !x.local);
+                  const before = new Date(new Date(`${sum.shootISO}T12:00:00Z`).getTime() - 86400000).toISOString().slice(0, 10);
+                  const after = sum.shootISO;
+                  const n = Math.max(1, away.length);
+                  return (
+                    <>
+                      <p className="px-1 text-[15px]">{away.length ? `${away.length === 1 ? `${away[0].name} flies` : `${away.length} people fly`} in the day before and ${away.length === 1 ? 'needs' : 'need'} a bed for one night.` : `Everyone is based in ${def.city}. Nobody needs a bed.`}</p>
+                      {away.length > 0 && (
+                        <>
+                          <div className="mt-3 space-y-2">
+                            {away.map((x) => {
+                              const t = p.travel.find((tr) => tr.personId === x.id);
+                              return (
+                                <div key={x.id} className="flex items-center gap-3 rounded-2xl bg-white p-3">
+                                  {x.photo ? <img src={x.photo} alt="" className="size-10 rounded-full object-cover object-top" /> : <span className="flex size-10 items-center justify-center rounded-full bg-neutral-200 text-[13px]">{x.name[0]}</span>}
+                                  <span className="flex-1"><span className="block text-[14px] font-medium">{x.name}</span><span className="text-[12px] text-grey-1">{t ? `${t.from} → ${t.to}` : 'Travels in'}</span></span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <div className="mt-4 grid grid-cols-2 gap-3">
+                            <a href={`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(def.city)}&checkin=${before}&checkout=${after}&group_adults=${n}&no_rooms=${n}`} target="_blank" rel="noreferrer" className="rounded-2xl bg-white p-4 hover:bg-neutral-50">
+                              <span className="text-[15px] font-medium">Hotels</span><span className="mt-0.5 block text-[12px] text-grey-1">Booking.com, {n} {n === 1 ? 'room' : 'rooms'}, {fmtDate(before).slice(4, 10)} to {fmtDate(after).slice(4, 10)}</span>
+                            </a>
+                            <a href={`https://www.airbnb.com/s/${encodeURIComponent(def.city)}/homes?checkin=${before}&checkout=${after}&adults=${n}`} target="_blank" rel="noreferrer" className="rounded-2xl bg-white p-4 hover:bg-neutral-50">
+                              <span className="text-[15px] font-medium">Apartments</span><span className="mt-0.5 block text-[12px] text-grey-1">Airbnb, {n} {n === 1 ? 'guest' : 'guests'}, same dates</span>
+                            </a>
+                          </div>
+                          <p className="mt-3 px-1 text-[12px] text-grey-1">The plan counts {fmtEur(120)} a night per person until you book.</p>
+                        </>
+                      )}
+                    </>
+                  );
+                })()}
+
+                {tab === 'costs' && (
+                  <>
+                    <div className="flex items-baseline justify-between px-1">
+                      <span className="text-[40px] font-light tracking-[-0.03em] tabular-nums">{fmtEur(Math.round(budget.total))}</span>
+                      <span className={`text-[13px] ${sum.overCap ? 'text-[var(--g-bad)]' : 'text-grey-1'}`}>{sum.overCap ? `${fmtEur(Math.round(budget.total - budget.cap))} over the cap` : `${fmtEur(Math.round(budget.cap - budget.total))} left of ${fmtEur(budget.cap)}`}</span>
                     </div>
-                    <div className="p-3">
-                      <div className="font-serif text-[20px] leading-6">{l.name.split(',')[0]}</div>
-                      <div className="mt-1 text-[12px] text-grey-1">{l.note}</div>
-                      <div className="mt-2 font-mono text-[12px]">{l.kind === 'location' ? `${fmtEur(l.permit ?? 0)}/day (est.)${l.fixer ? ` · fixer ${fmtEur(l.fixer)}` : ''}` : `${fmtEur(l.hourlyRate)}/h`}</div>
-                    </div>
-                  </Tilt>
-                ))}
+                    {CATS.filter((c) => budget.byCategory[c] > 0).map((c) => (
+                      <div key={c} className="mt-3 rounded-2xl bg-white p-4">
+                        <div className="flex justify-between text-[14px] font-medium"><span>{CAT_LABEL[c]}</span><span className="tabular-nums">{fmtEur(Math.round(budget.byCategory[c]))}</span></div>
+                        <div className="mt-2 space-y-1">
+                          {budget.lines.filter((l) => l.category === c).map((l) => (
+                            <div key={l.id} className="flex justify-between gap-3 text-[13px] text-grey-1">
+                              <span className="truncate">{l.label}{l.source === 'estimate' ? ' (estimate)' : ''}</span>
+                              <span className={`shrink-0 tabular-nums ${l.overtime ? 'text-amber-700' : ''}`}>{fmtEur(Math.round(l.amount))}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                    {budget.contingency > 0 && <div className="mt-3 flex justify-between px-4 text-[13px] text-grey-1"><span>Contingency</span><span className="tabular-nums">{fmtEur(Math.round(budget.contingency))}</span></div>}
+                  </>
+                )}
               </motion.div>
             </AnimatePresence>
-            {(tab === 'models' || tab === 'photographer') && (
-              <button onClick={() => setAdding(tab === 'models' ? 'model' : 'photographer')} className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-neutral-300 text-[14px] text-neutral-600 transition-colors hover:border-neutral-500 hover:text-neutral-900">+ Add a {tab === 'models' ? 'model' : 'photographer'} you work with</button>
-            )}
-            {(tab === 'models' || tab === 'photographer') && (
-              <div className="mt-6">
-                <div className="text-[15px] font-medium">Request options from agencies</div>
-                <p className="mt-0.5 text-[13px] text-grey-1">Your voice agent calls the agency in its language and asks for {tab === 'models' ? 'models' : 'photographers'} that fit the brief.</p>
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  {OFFICES.map((o) => (
-                    <button key={o.agency + o.city} onClick={() => setCalling(o)} className="flex items-center gap-3 rounded-2xl bg-white/80 p-3 text-left shadow-[inset_0_0_0_1px_rgba(0,0,0,.06)] transition-colors hover:bg-white">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={flagUrl(o.cc)} alt="" className="h-6 w-8 rounded object-cover" />
-                      <span className="min-w-0 flex-1"><span className="block truncate text-[14px] font-medium">{o.agency} {o.city}</span><span className="text-[12px] text-grey-1">{o.language}</span></span>
-                      <span className="text-[12px] text-grey-1">Call</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
+          {next && (
+            <button onClick={() => setTab(next[0])} className="mt-3 h-12 shrink-0 rounded-full bg-neutral-950 text-[15px] font-medium text-white">Next: {next[1]}</button>
+          )}
         </motion.div>
       </div>
       {checking && roster.people.find((x) => x.id === checking) && (
@@ -239,15 +302,6 @@ export default function Assemble() {
               setTab('photographer');
             }
           }}
-        />
-      )}
-      {calling && (
-        <AgencyCall
-          key={calling.agency + calling.city + tab}
-          person={{ id: 'request', name: tab === 'models' ? `${def.modelSlots} models that fit our brief` : 'a photographer who fits our brief', role: tab === 'models' ? 'model' : 'photographer', city: def.city, dayRate: 0, createdAt: '', agency: `${calling.agency} ${calling.city}` }}
-          open={!!calling}
-          onOpenChange={(o) => !o && setCalling(null)}
-          onAnswer={async () => setCalling(null)}
         />
       )}
     </Stage>

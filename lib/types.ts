@@ -51,6 +51,8 @@ export type CreativeBrief = {
   styling: string; casting: string; shotList: string[];
   /** what to look for, read from the moodboard */
   needs?: { model: string; photographer: string; location: string };
+  /** what each reference image was read as */
+  references?: { index: number; usedFor: string; note: string }[];
   source: 'ai' | 'demo' | 'cache';
 };
 

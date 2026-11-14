@@ -190,6 +190,16 @@ export default function NewBrief() {
                   <span className="flex items-center gap-3"><span className="flex -space-x-3">{d.refImages.slice(0, 6).map((src, i) => <img key={i} src={src} alt="Reference" className="h-14 w-11 rounded-lg object-cover ring-2 ring-white" />)}</span><span className="text-[13px] text-grey-1">{d.briefVia === 'ai' || d.briefVia === 'cache' ? 'Read from your reference' : 'Example brief'}</span></span>
                   <button onClick={() => setEditing(true)} className="text-[12px] text-grey-1 underline underline-offset-4 hover:text-ink">Change reference</button>
                 </div>
+                {b.references && b.references.length > 1 && (
+                  <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {b.references.map((r) => d.refImages[r.index - 1] && (
+                      <div key={r.index} className="flex items-center gap-3 rounded-2xl bg-white/70 p-2 pr-3">
+                        <img src={d.refImages[r.index - 1]} alt={`Reference ${r.index}`} className="h-14 w-11 shrink-0 rounded-lg object-cover" />
+                        <span className="min-w-0"><span className="block text-[13px] font-medium capitalize text-neutral-900">{r.usedFor}</span><span className="block text-[12px] leading-4 text-neutral-500">{r.note}</span></span>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <motion.p initial={{ opacity: 0, filter: 'blur(8px)' }} animate={{ opacity: 1, filter: 'blur(0px)' }} transition={{ duration: 0.9, delay: 0.15 }} className="mt-4 font-serif text-[30px] leading-[1.15] tracking-[-0.01em]">
                   {b.summary}
                 </motion.p>

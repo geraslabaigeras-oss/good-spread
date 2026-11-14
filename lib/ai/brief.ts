@@ -11,6 +11,11 @@ const MODEL = 'claude-sonnet-5-5';
 const TIMEOUT_MS = 25000;
 
 const BriefSchema = z.object({
+  references: z.array(z.object({
+    index: z.number().int().describe('1-based number of the reference image'),
+    usedFor: z.enum(['model look', 'setting', 'styling', 'light', 'whole mood']).describe('what the producer most likely added this image for'),
+    note: z.string().describe('what to take from it, max 10 words, e.g. "short dark hair, bare face, strong jaw"'),
+  })).describe('one entry per reference image, in order'),
   garment: z.string().describe('the main garment or product, e.g. "Field jacket"'),
   summary: z.string().describe('one or two sentences on the visual direction'),
   aesthetic: z.array(z.string()).describe('3 to 5 short words, e.g. Editorial, Utilitarian'),
@@ -30,8 +35,12 @@ const BriefSchema = z.object({
 });
 
 const SYSTEM =
-  'You are a fashion production assistant. Read the campaign moodboard (one or more images) as a whole and describe the shared visual direction as a creative brief, including what model look, photographer style and location to look for. ' +
-  'Describe only what is visible or clearly implied: garment, palette, light, setting, styling, casting. Do not identify real people or brands. ' +
+  'You are a fashion producer reading a moodboard. The producer dropped several references, and each one is there for a reason: ' +
+  'close-ups or portraits of a person are usually for the MODEL LOOK (face, hair, body, attitude), not for the setting; ' +
+  'a campaign image the producer likes is usually for the SETTING, background and light; flat-lays or garment shots are for STYLING. ' +
+  'First decide what each reference is for. Then write ONE brief for ONE shoot that combines them: the model look from the model references, the setting and light from the setting reference, and so on. ' +
+  'Never describe the references as separate shoots or list two settings because two images have different backgrounds. A plain studio backdrop behind a model portrait is not a setting choice. ' +
+  'Pick a single setting value unless the producer asked for more. Describe only what is visible or clearly implied. Do not identify real people or brands. ' +
   'Keep every field short and concrete, in the voice of a producer writing a call sheet.';
 
 export type BriefInput = { images: { bytes: Buffer; mediaType: 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif' }[]; title: string; brand: string; notes?: string };
@@ -40,7 +49,7 @@ export type BriefResult = { brief: CreativeBrief; via: 'ai' | 'cache' | 'demo'; 
 export async function readBrief(input: BriefInput): Promise<BriefResult> {
   const started = Date.now();
   const h = createHash('sha256');
-  h.update('brief:v2');
+  h.update('brief:v3');
   input.images.forEach((i) => h.update(i.bytes));
   h.update(input.notes ?? '');
   const sha = h.digest('hex');
@@ -58,10 +67,11 @@ export async function readBrief(input: BriefInput): Promise<BriefResult> {
   try {
     if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY missing');
     const client = new Anthropic({ timeout: TIMEOUT_MS, maxRetries: 0 });
-    const content: Anthropic.ContentBlockParam[] = input.images.map((i) => ({
-      type: 'image', source: { type: 'base64', media_type: i.mediaType, data: i.bytes.toString('base64') },
-    }));
-    content.push({ type: 'text', text: `Campaign: ${input.title} for ${input.brand}.${input.notes ? ` Notes from the producer: ${input.notes}` : ''} Write the creative brief.` });
+    const content: Anthropic.ContentBlockParam[] = input.images.flatMap((i, n): Anthropic.ContentBlockParam[] => [
+      { type: 'text', text: `Reference ${n + 1}:` },
+      { type: 'image', source: { type: 'base64', media_type: i.mediaType, data: i.bytes.toString('base64') } },
+    ]);
+    content.push({ type: 'text', text: `Campaign: ${input.title} for ${input.brand}.${input.notes ? ` Notes from the producer: ${input.notes}` : ''} Decide what each reference is for, then write one brief for one shoot.` });
     const res = await client.messages.parse({
       model: MODEL,
       max_tokens: 3000,
