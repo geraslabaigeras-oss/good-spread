@@ -28,7 +28,7 @@ export async function speak(text: string): Promise<ArrayBuffer> {
   const r = await fetch(`${BASE}/text-to-speech/${voice}?output_format=mp3_44100_128`, {
     method: 'POST',
     headers: { 'xi-api-key': k, 'Content-Type': 'application/json', Accept: 'audio/mpeg' },
-    body: JSON.stringify({ text, model_id: 'eleven_multilingual_v2' }),
+    body: JSON.stringify({ text, model_id: process.env.ELEVENLABS_TTS_MODEL?.trim() || 'eleven_v4_turbo' }),
     signal: AbortSignal.timeout(30_000),
   });
   if (!r.ok) throw new Error(`elevenlabs_tts_${r.status}`);

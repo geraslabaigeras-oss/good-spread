@@ -6,6 +6,7 @@ import { Loader2, PhoneCall } from 'lucide-react';
 import { OFFICES, flagUrl, officeFor, type Office } from '@/lib/agencies';
 import { ROLE_LABEL, type RosterPerson } from '@/lib/roster';
 import { ListenButton } from '@/components/voice';
+import { LiveCall } from '@/components/live-call';
 import { BrandLogo } from '@/components/brand-logo';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -70,11 +71,11 @@ export function AgencyCall({ person, open, onOpenChange, onAnswer }: {
             )}
           </div>
 
+          <LiveCall language={office.language} agency={office.agency} city={office.city} model={person.name} date="the shoot date" firstMessage={lines?.find((l) => l.who === 'agent')?.text} />
           {lines && (
             <div className="flex flex-wrap items-center gap-2">
               <ListenButton text={opening} className="inline-flex h-9 items-center gap-2 rounded-full bg-white px-3.5 text-[13px] font-medium shadow-[inset_0_0_0_1px_rgba(0,0,0,.12)]" />
               <span className="inline-flex items-center gap-1 text-xs text-neutral-500"><BrandLogo name="elevenlabs" size={11} color="#737373" /> voice in {office.language}</span>
-              <Button variant="outline" size="sm" disabled className="ml-auto rounded-full" title="Needs an ElevenLabs voice agent and a phone number. You approve every call."><PhoneCall /> Place the call</Button>
             </div>
           )}
 
