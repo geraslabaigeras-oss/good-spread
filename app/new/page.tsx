@@ -209,16 +209,12 @@ export default function NewBrief() {
                   ))}
                 </div>
                 <button onClick={() => router.push('/plan')} className="g-btn mt-7 w-full">See the plans →</button>
-                <Tabs defaultValue="locations" className="mt-7">
+                <Tabs defaultValue="shots" className="mt-7">
                   <TabsList className="w-full">
-                    <TabsTrigger value="locations">Locations</TabsTrigger>
                     <TabsTrigger value="shots">Shots</TabsTrigger>
                     <TabsTrigger value="dna">Keep &amp; change</TabsTrigger>
                     <TabsTrigger value="details">Details</TabsTrigger>
                   </TabsList>
-                  <TabsContent value="locations">
-                <Scout brief={b} chosen={d.place} onChoose={(pl) => setDraft({ ...d, place: pl })} />
-                  </TabsContent>
                   <TabsContent value="shots" className="pt-3">
                   <ol className="mt-2 grid grid-cols-1 gap-1 md:grid-cols-2">
                     {b.shotList.map((s, i) => (

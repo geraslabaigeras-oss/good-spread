@@ -198,16 +198,16 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
 
           <div className="mt-12 grid gap-4 md:grid-cols-3">
             <Feature title="Scouts real places for the look" tag="Claude · Wikipedia" date="Brief">
-              <div className="relative h-full bg-[radial-gradient(120%_90%_at_10%_10%,#efe5d8_0%,#cdb79c_40%,#8f7863_75%,#4d4038_100%)]">
+              <div className="relative h-full bg-[radial-gradient(120%_90%_at_10%_10%,#ffffff_0%,#e3ebf5_40%,#b9cbe0_75%,#8ea8c6_100%)]">
                 <Grain />
-                <div className="absolute left-6 top-6 text-[34px] leading-none tracking-[-0.03em] text-white">Locations</div>
-                <div className="absolute bottom-6 right-6 text-[34px] leading-none tracking-[-0.03em] text-white/95">Vilnius · Riga</div>
+                <div className="absolute left-6 top-6 text-[34px] leading-none tracking-[-0.03em] text-neutral-900">Locations</div>
+                <div className="absolute bottom-6 right-6 text-[34px] leading-none tracking-[-0.03em] text-neutral-800">Vilnius · Riga</div>
               </div>
             </Feature>
             <Feature title="Calls agencies in their language" tag="ElevenLabs" date="Team">
-              <div className="relative flex h-full items-center justify-center bg-[radial-gradient(90%_70%_at_75%_15%,#dbe5f1_0%,transparent_60%),radial-gradient(80%_80%_at_20%_85%,#3a4a63_0%,transparent_65%),linear-gradient(135deg,#b9c8da,#55667f)]">
+              <div className="relative flex h-full items-center justify-center bg-[radial-gradient(90%_70%_at_75%_15%,#ffffff_0%,transparent_60%),radial-gradient(80%_80%_at_20%_85%,#9fb8d8_0%,transparent_65%),linear-gradient(135deg,#dfe8f4,#a9bfdb)]">
                 <Grain />
-                <div className="relative flex items-center gap-3 text-[40px] tracking-[-0.03em] text-white">Calls <span className="rounded-full border-2 border-white px-3 py-0.5 text-[24px]">FR · IT · SE</span></div>
+                <div className="relative flex items-center gap-3 text-[40px] tracking-[-0.03em] text-neutral-900">Calls <span className="rounded-full border-2 border-neutral-900 px-3 py-0.5 text-[24px]">FR · IT · SE</span></div>
               </div>
             </Feature>
             <Feature title="Re-plans the minute a flight slips" tag="Engine" date="Shoot day" light>
@@ -229,15 +229,15 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
 
           <div className="mt-4 grid gap-4 md:grid-cols-[1.4fr_1fr]">
             <div className="relative min-h-[460px] rounded-[28px] p-8">
-              <div className="absolute inset-0 overflow-hidden rounded-[28px] bg-[radial-gradient(120%_100%_at_20%_0%,#d7dfe8_0%,#8a9bb1_35%,#3c4656_70%,#1d2129_100%)]"><Grain /></div>
+              <div className="absolute inset-0 overflow-hidden rounded-[28px] bg-[radial-gradient(120%_100%_at_20%_0%,#ffffff_0%,#e6eef8_35%,#c4d4e8_70%,#9db5d3_100%)]"><Grain /></div>
               <div className="relative mx-auto flex max-w-[420px] flex-col gap-3 pt-6 [perspective:900px]">
-                <motion.span animate={{ y: [0, -6, 0] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} style={{ rotateY: -12, rotateX: 6 }} className="-mr-6 self-end rounded-full border border-white/50 bg-white/10 px-4 py-2 text-[14px] text-white shadow-[0_20px_40px_rgba(0,0,0,.25)] backdrop-blur md:-mr-24">Bonjour, je suis l&rsquo;assistant de la production. Votre mannequin est-elle disponible le 21 ?</motion.span>
+                <motion.span animate={{ y: [0, -6, 0] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} style={{ rotateY: -12, rotateX: 6 }} className="-mr-6 self-end rounded-full border border-neutral-900/15 bg-white/70 px-4 py-2 text-[14px] text-neutral-900 shadow-[0_20px_40px_rgba(0,0,0,.25)] backdrop-blur md:-mr-24">Bonjour, je suis l&rsquo;assistant de la production. Votre mannequin est-elle disponible le 21 ?</motion.span>
                 <motion.span animate={{ y: [0, 6, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }} style={{ rotateY: 10, rotateX: 4 }} className="-ml-4 self-start rounded-2xl bg-white px-4 py-2.5 text-[14px] text-neutral-900 shadow-[0_30px_60px_rgba(0,0,0,.35)] md:-ml-20">Oui, elle est disponible. Tarif journalier 600 €, usage web 12 mois.</motion.span>
-                <span className="self-end rounded-full border border-white/50 px-4 py-2 text-[14px] text-white">Parfait, je vous envoie le brief.</span>
+                <span className="self-end rounded-full border border-neutral-900/15 px-4 py-2 text-[14px] text-neutral-900">Parfait, je vous envoie le brief.</span>
                 <motion.span animate={{ y: [0, -5, 0] }} transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }} style={{ rotateY: 14, rotateZ: -2 }} className="-ml-2 inline-flex items-center gap-2 self-start rounded-full bg-white px-4 py-2 text-[14px] text-neutral-900 shadow-[0_24px_50px_rgba(0,0,0,.35)] md:-ml-28"><span className="size-2 rounded-full bg-emerald-500" /> Available · €600 · added to the plan</motion.span>
               </div>
-              <div className="absolute bottom-7 left-8 right-8 text-white">
-                <div className="text-[15px] text-white/70">Agency calls</div>
+              <div className="absolute bottom-7 left-8 right-8 text-neutral-900">
+                <div className="text-[15px] text-neutral-500">Agency calls</div>
                 <p className="mt-1 text-[17px] leading-6">The agent asks for availability, rate and usage in the agency&rsquo;s language. You read along in English and log the answer.</p>
               </div>
             </div>

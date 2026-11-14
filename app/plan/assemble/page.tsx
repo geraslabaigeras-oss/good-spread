@@ -14,6 +14,7 @@ import { draftProduction, pinsFor } from '@/lib/plan-draft';
 import { BudgetLine, CAT_COLOR, Stage, Tilt, TopBar } from '@/components/glass/Stage';
 import { type GlobePin } from '@/components/glass/Globe';
 import { FlightGlobe } from '@/components/flight-globe';
+import { Scout } from '@/components/scout';
 import { AgencyCall } from '@/components/agency-call';
 import { OFFICES, flagUrl, type Office } from '@/lib/agencies';
 
@@ -157,7 +158,8 @@ export default function Assemble() {
               <motion.div key={tab} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.3 }} className="grid grid-cols-2 gap-3">
                 {tab === 'models' && models.filter((c) => !isOpenSlot(c.id)).map((c) => <CompCard key={c.id} c={c} selected={picks.models.includes(c.id)} onClick={() => toggleModel(c.id)} travel={travel(c)} />)}
                 {tab === 'photographer' && photos.filter((c) => !isOpenSlot(c.id)).map((c) => <CompCard key={c.id} c={c} selected={picks.photographer === c.id} onClick={() => setPicks({ ...picks, photographer: c.id })} travel={travel(c)} />)}
-                {tab === 'location' && locs.filter((l) => !l.id.startsWith('open-')).map((l) => (
+                {tab === 'location' && draft.brief && <div className="col-span-2"><Scout brief={draft.brief} city={def.city} chosen={draft.place} onChoose={(pl) => setDraft({ ...draft, place: pl })} /></div>}
+                {tab === 'location' && !draft.brief && locs.filter((l) => !l.id.startsWith('open-')).map((l) => (
                   <Tilt key={l.id} onClick={() => setPicks({ ...picks, location: l.id })} selected={picks.location === l.id} className="glass-soft cursor-pointer overflow-hidden">
                     <div className="relative h-44 overflow-hidden" style={{ background: l.photo ? `url(${l.photo}) center 20%/cover` : (l.natural ? '#d8c8b4' : '#e4e1dc') }}>
                       <span className="absolute bottom-2 left-3 font-mono text-[10px] uppercase tracking-wider text-ink/70">{l.tags.join(' · ')}</span>

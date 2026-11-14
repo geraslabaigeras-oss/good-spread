@@ -10,8 +10,8 @@ import { Button } from '@/components/ui/button';
 const CITIES = ['Vilnius', 'Riga', 'Tallinn', 'Warsaw', 'Berlin', 'Copenhagen', 'Stockholm', 'Paris', 'Milan', 'Lisbon', 'Barcelona', 'London'];
 
 /** AI location scout: Claude reads the brief and proposes real places; each one is verified on Wikipedia. */
-export function Scout({ brief, chosen, onChoose }: { brief: CreativeBrief; chosen?: ScoutedPlace | null; onChoose: (p: ScoutedPlace | null) => void }) {
-  const [city, setCity] = useState('Vilnius');
+export function Scout({ brief, chosen, onChoose, city: initialCity = 'Vilnius' }: { brief: CreativeBrief; chosen?: ScoutedPlace | null; onChoose: (p: ScoutedPlace | null) => void; city?: string }) {
+  const [city, setCity] = useState(initialCity);
   const [places, setPlaces] = useState<ScoutedPlace[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -50,7 +50,7 @@ export function Scout({ brief, chosen, onChoose }: { brief: CreativeBrief; chose
       {busy && <div className="mt-4 flex items-center gap-2 text-[13px] text-grey-1"><Loader2 className="size-4 animate-spin" /> Scouting {city}…</div>}
       {err && <p className="mt-4 text-[13px] text-conflict">{err}</p>}
       {places && !busy && (
-        <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {places.map((p) => {
             const on = chosen?.url === p.url;
             return (
