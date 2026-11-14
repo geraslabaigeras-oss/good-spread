@@ -89,13 +89,13 @@ function BoardInner({ slug }: { slug: string }) {
         ? confirm('Full reset: restore the seed and delete every joined device and phone number?')
         : confirm('Reset the plan to the seed? Joined devices stay. (Shift-click Reset for a full reset.)');
       if (!ok) return;
-      await fetch('/api/reset', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ full }) });
+      await fetch('/api/reset', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ full, slug }) });
       setJustApproved(null);
       setApproving(null);
       await mutate();
       toast(full ? 'Board reset · devices removed' : 'Board reset', { check: true });
     },
-    [mutate, toast],
+    [mutate, toast, slug],
   );
 
   if (!data) {
@@ -141,9 +141,11 @@ function BoardInner({ slug }: { slug: string }) {
           <Button variant="ghost" onClick={() => window.open(`/wrap/${slug}`, '_blank')}>
             Wrap <ArrowUpRight strokeWidth={1.5} />
           </Button>
-          <Button variant="ghost" size="sm" className="text-grey-1" onClick={(e) => reset(e.shiftKey)} title="Shift-click for full reset">
-            <RotateCcw strokeWidth={1.5} /> Reset
-          </Button>
+          {slug === 'jacket-campaign' && (
+            <Button variant="ghost" size="sm" className="text-grey-1" onClick={(e) => reset(e.shiftKey)} title="Shift-click for full reset">
+              <RotateCcw strokeWidth={1.5} /> Reset
+            </Button>
+          )}
         </div>
       </motion.header>
 

@@ -2,7 +2,10 @@
 
 import Link from 'next/link';
 import { animate, motion, useMotionValue, useTransform } from 'motion/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
+
+const noop = () => () => {};
+const lastSlug = () => { try { return localStorage.getItem('gs-last-slug') ?? 'jacket-campaign'; } catch { return 'jacket-campaign'; } };
 
 export function Stage({ children, backdrop }: { children: React.ReactNode; backdrop?: string | null }) {
   return (
@@ -23,15 +26,16 @@ const STEPS = [
 ];
 
 export function TopBar({ step, right }: { step: number; right?: React.ReactNode }) {
+  const last = useSyncExternalStore(noop, lastSlug, () => 'jacket-campaign');
   return (
     <div className="flex items-center justify-between px-8 pt-6">
       <Link href="/" className="text-[15px] font-medium tracking-[-0.15px]">good spread</Link>
       <nav className="glass-soft relative flex gap-1 p-1">
         {STEPS.map((s) => (
-          <Link key={s.n} href={s.href} className="relative rounded-full px-4 py-1.5 text-[13px]">
+          <Link key={s.n} href={s.n === 4 ? `/board/${last}` : s.href} className="relative rounded-full px-4 py-1.5 text-[13px]">
             {s.n === step && <motion.span layoutId="step-pill" className="absolute inset-0 rounded-full bg-white shadow-[0_2px_10px_rgb(80_60_40/0.1)]" transition={{ type: 'spring', stiffness: 400, damping: 34 }} />}
             <span className={`relative ${s.n === step ? 'text-ink' : 'text-grey-1 hover:text-ink'}`}>
-              <span className="font-mono text-[11px] opacity-60">0{s.n}</span> {s.label}
+              {s.label}
             </span>
           </Link>
         ))}
@@ -53,42 +57,39 @@ export function AnimatedNumber({ value, format = (n: number) => String(Math.roun
   return <span className={className}>{shown}</span>;
 }
 
-/** Budget ring: segments per category, sweep animates; cap = full circle. */
-export function BudgetRing({
-  segments, cap, size = 168, stroke = 14, children,
-}: { segments: { value: number; color: string }[]; cap: number; size?: number; stroke?: number; children?: React.ReactNode }) {
-  const r = (size - stroke) / 2;
-  const C = 2 * Math.PI * r;
-  const total = segments.reduce((s, x) => s + x.value, 0);
+/** Clean budget line: big total, what's left, one thin bar split by category with a cap tick. */
+export function BudgetLine({
+  total, cap, segments, size = 'md',
+}: { total: number; cap: number; segments: { value: number; color: string }[]; size?: 'sm' | 'md' }) {
   const over = total > cap;
-  let acc = 0;
+  const scale = Math.max(cap, total);
+  const parts = segments.filter((x) => x.value > 0);
+  const starts = parts.map((_, i) => parts.slice(0, i).reduce((t, x) => t + x.value, 0));
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgb(13 13 13 / 0.07)" strokeWidth={stroke} />
-        {segments.map((s, i) => {
-          const frac = Math.min(s.value / Math.max(cap, total), 1);
-          const start = acc;
-          acc += frac;
+    <div className="w-full">
+      <div className="flex items-baseline justify-between gap-3">
+        <AnimatedNumber value={total} format={(n) => fmtEurPlain(n)} className={`font-serif leading-none tracking-[-0.04em] num ${size === 'sm' ? 'text-[30px]' : 'text-[40px]'} ${over ? 'text-conflict' : ''}`} />
+        <span className={`text-[13px] num ${over ? 'text-conflict' : 'text-grey-1'}`}>{over ? `${fmtEurPlain(total - cap)} over` : `${fmtEurPlain(cap - total)} left`} of {fmtEurPlain(cap)}</span>
+      </div>
+      <div className="relative mt-3 h-1.5 w-full overflow-visible rounded-full bg-ink/[0.07]">
+        {parts.map((x, i) => {
+          const left = (starts[i] / scale) * 100;
+          const width = (x.value / scale) * 100;
           return (
-            <motion.circle
-              key={i}
-              cx={size / 2} cy={size / 2} r={r} fill="none" stroke={s.color} strokeWidth={stroke} strokeLinecap="butt"
-              initial={{ strokeDasharray: `0 ${C}`, strokeDashoffset: -start * C }}
-              animate={{ strokeDasharray: `${Math.max(frac * C - 2, 0)} ${C}`, strokeDashoffset: -start * C }}
-              transition={{ duration: 0.9, ease: [0.2, 0.8, 0.2, 1], delay: i * 0.05 }}
-            />
+            <motion.span key={i} className="absolute inset-y-0 first:rounded-l-full" style={{ left: `${left}%`, background: x.color }}
+              initial={{ width: 0 }} animate={{ width: `${width}%` }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: i * 0.04 }} />
           );
         })}
-        {over && <circle cx={size / 2} cy={size / 2} r={r + stroke / 2 + 4} fill="none" stroke="var(--g-bad)" strokeWidth={1.5} strokeDasharray="4 4" />}
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">{children}</div>
+        <span className="absolute -top-1 bottom-[-4px] w-px bg-ink" style={{ left: `${(cap / scale) * 100}%` }} />
+      </div>
     </div>
   );
 }
 
+const fmtEurPlain = (n: number) => `€${Math.round(n).toLocaleString('en-US')}`;
+
 export const CAT_COLOR: Record<string, string> = {
-  talent: '#0d0d0d', crew: '#6e6a69', studio: '#c4ae92', travel: '#8fa1ad', post: '#b5b0aa', usage: '#e2d6c6',
+  talent: '#0d0d0d', crew: '#4a4744', studio: '#8a8580', travel: '#aaa59f', post: '#c8c3bd', usage: '#ddd8d1',
 };
 
 /** Tilt-on-hover wrapper for cards. */

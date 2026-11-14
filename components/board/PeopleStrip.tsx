@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { BoardState } from '@/lib/server/views';
 import { StatusChip } from '@/components/kit';
 import { APPROVE, chipFade, chipFlip } from '@/lib/motion';
+import { catalogPerson } from '@/data/catalog';
 
 type P = BoardState['people'][number];
 const ROLE: Record<string, string> = { model: 'Model', photographer: 'Photographer', mua: 'Hair & makeup', stylist: 'Stylist' };
@@ -35,14 +36,16 @@ export function PeopleStrip({ people, version, changedIds }: { people: P[]; vers
   const order = changed ? people.filter((x) => changed.from.has(x.id) || changedIds.includes(x.id)).map((x) => x.id) : [];
 
   return (
-    <div className="grid h-full grid-cols-5 border-y border-hairline" style={{ perspective: 400 }}>
+    <div className="grid h-full grid-cols-5 gap-3.5" style={{ perspective: 400 }}>
       {people.map((x) => {
         const idx = order.indexOf(x.id);
         const delay = idx >= 0 ? (APPROVE.stripStart + idx * APPROVE.stripStagger) / 1000 : 0;
         const from = changed?.from.get(x.id);
         const showFrom = changed && changed.from.has(x.id) && from && x.call;
         return (
-          <div key={x.id} className="relative isolate flex min-w-0 flex-col justify-center gap-1 border-r border-hairline px-4 py-3 last:border-r-0">
+          <div key={x.id} className="relative isolate flex min-w-0 items-center gap-3 overflow-hidden rounded-[20px] bg-white px-3 shadow-[0_0_0_1px_rgb(0_0_0/0.06),0_1px_2px_rgb(0_0_0/0.06),0_12px_32px_rgb(80_60_40/0.05)]">
+            <Avatar id={x.id} name={x.name} />
+            <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
             {idx >= 0 && changed && (
               <motion.div
                 key={`hl-${changed.version}`}
@@ -53,7 +56,7 @@ export function PeopleStrip({ people, version, changedIds }: { people: P[]; vers
             )}
             <div className="flex items-center justify-between gap-2">
               <span className="truncate text-[15px] font-medium leading-5 tracking-[-0.005em]">{x.name}</span>
-              <span className="shrink-0 font-mono text-[13px] font-medium leading-5 num">
+              <span className="shrink-0 font-serif text-[26px] leading-7 num">
                 {showFrom ? (
                   <motion.span initial={{ opacity: 1 }} animate={{ opacity: 1 }}>
                     <span className="text-grey-1 line-through decoration-1">{from}</span> → {x.call}
@@ -73,9 +76,20 @@ export function PeopleStrip({ people, version, changedIds }: { people: P[]; vers
                 </AnimatePresence>
               </span>
             </div>
+            </div>
           </div>
         );
       })}
     </div>
+  );
+}
+
+function Avatar({ id, name }: { id: string; name: string }) {
+  const photo = catalogPerson(id)?.photo;
+  return photo ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={photo} alt="" className="size-12 shrink-0 rounded-full object-cover object-top" />
+  ) : (
+    <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#ece7df] font-serif text-[20px] text-grey-1">{name[0]}</span>
   );
 }

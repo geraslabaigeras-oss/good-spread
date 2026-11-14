@@ -9,7 +9,7 @@ import { STRATEGIES } from '@/data/catalog';
 import { fmtDate, fmtEur } from '@/lib/format';
 import { useDraft } from '@/lib/plan-store';
 import { draftProduction, pinsFor } from '@/lib/plan-draft';
-import { AnimatedNumber, BudgetRing, CAT_COLOR, Stage, Tilt, TopBar } from '@/components/glass/Stage';
+import { BudgetLine, CAT_COLOR, Stage, Tilt, TopBar } from '@/components/glass/Stage';
 import { Globe } from '@/components/glass/Globe';
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
@@ -77,14 +77,10 @@ export default function Strategies() {
                 <div className="text-[13px] text-grey-1">{s.tagline}</div>
 
                 <div className="mt-5 flex items-center gap-5">
-                  <BudgetRing cap={sum.cap} size={132} stroke={11} segments={CATS.map((c) => ({ value: sum.byCategory[c], color: CAT_COLOR[c] }))}>
-                    <AnimatedNumber value={sum.total} format={(n) => fmtEur(Math.round(n))} className={`font-serif text-[24px] leading-none num ${sum.overCap ? 'text-[var(--g-bad)]' : ''}`} />
-                    <span className="mt-1 font-mono text-[10px] text-grey-2">of {fmtEur(sum.cap)}</span>
-                  </BudgetRing>
+                  <BudgetLine size="sm" total={sum.total} cap={sum.cap} segments={CATS.map((c) => ({ value: sum.byCategory[c], color: CAT_COLOR[c] }))} />
                   <div className="flex-1 space-y-1">
                     {CATS.filter((c) => sum.byCategory[c] > 0).map((c) => (
                       <div key={c} className="flex items-center gap-2 text-[12px]">
-                        <span className="size-2 rounded-full" style={{ background: CAT_COLOR[c] }} />
                         <span className="flex-1 capitalize text-grey-1">{c}</span>
                         <span className="font-mono text-ink num">{fmtEur(sum.byCategory[c])}</span>
                       </div>

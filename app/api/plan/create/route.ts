@@ -1,7 +1,18 @@
 import { z } from 'zod';
 import { buildProduction } from '@/lib/engine';
 import { logEvent, resetProduction } from '@/lib/server/db';
-import { DEMO_SLUG, handle, ok, parseJson } from '@/lib/server/http';
+import { handle, ok, parseJson } from '@/lib/server/http';
+import { getProduction } from '@/lib/server/db';
+import { randomBytes } from 'node:crypto';
+
+/** A readable, unique address per production: "spring-jacket-k3f9". */
+async function newSlug(title: string): Promise<string> {
+  const base = title.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'shoot';
+  for (;;) {
+    const slug = `${base}-${randomBytes(2).toString('hex')}`;
+    if (!(await getProduction(slug))) return slug;
+  }
+}
 import { candidates, catalogLocation, locationCandidates } from '@/data/catalog';
 
 const Brief = z.object({
@@ -33,13 +44,14 @@ export async function POST(req: Request) {
     if (!b.picks.models.every((m) => okModels.has(m)) || !okPhotos.has(b.picks.photographer) || !okLocs.has(b.picks.location) || !catalogLocation(b.picks.location)) {
       return ok({ error: 'invalid_picks' }, { status: 400 });
     }
+    const slug = await newSlug(b.brief.title);
     const p = buildProduction({
-      slug: DEMO_SLUG, title: b.brief.title, brand: b.brief.brand, strategy: b.strategy, picks: b.picks,
+      slug, title: b.brief.title, brand: b.brief.brand, strategy: b.strategy, picks: b.picks,
       brief: b.brief, deliverables: b.deliverables, cap: b.cap, startISO: b.startISO,
     });
     if (b.dnaPreserve && p.dna) p.dna = p.dna.map((d) => (d.id in b.dnaPreserve! ? { ...d, preserve: b.dnaPreserve![d.id] } : d));
-    const id = await resetProduction(DEMO_SLUG, false, p);
+    const id = await resetProduction(slug, false, p);
     await logEvent(id, 'created', { text: `Production created: ${b.strategy} plan` });
-    return ok({ slug: DEMO_SLUG });
+    return ok({ slug });
   });
 }

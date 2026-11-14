@@ -9,7 +9,7 @@ import { candidates, locationCandidates, strategyDef, type CatalogPerson } from 
 import { fmtDate, fmtEur } from '@/lib/format';
 import { useDraft } from '@/lib/plan-store';
 import { draftProduction, pinsFor } from '@/lib/plan-draft';
-import { AnimatedNumber, BudgetRing, CAT_COLOR, Stage, Tilt, TopBar } from '@/components/glass/Stage';
+import { BudgetLine, CAT_COLOR, Stage, Tilt, TopBar } from '@/components/glass/Stage';
 import { Globe, type GlobePin } from '@/components/glass/Globe';
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
@@ -74,6 +74,7 @@ export default function Assemble() {
       });
       const j = await r.json();
       if (!r.ok || j.error) throw new Error(j.error ?? `HTTP ${r.status}`);
+      try { localStorage.setItem('gs-last-slug', j.slug); } catch {}
       router.push(`/board/${j.slug}`);
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'failed');
@@ -103,10 +104,7 @@ export default function Assemble() {
           <Globe pins={pins} arcs={chosen.arcs} focus={def.city} hub={def.city} onPin={onPin} height="64vh" altitude={0.62} />
 
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }} className="glass -mt-16 grid grid-cols-1 items-center gap-6 p-6 md:grid-cols-[auto_1fr_auto]">
-            <BudgetRing cap={budget.cap} size={150} stroke={12} segments={CATS.map((c) => ({ value: budget.byCategory[c], color: CAT_COLOR[c] }))}>
-              <AnimatedNumber value={budget.total} format={(n) => fmtEur(Math.round(n))} className={`font-serif text-[28px] leading-none num ${sum.overCap ? 'text-[var(--g-bad)]' : ''}`} />
-              <span className="mt-1 font-mono text-[10px] text-grey-2">{sum.overCap ? `${fmtEur(budget.total - budget.cap)} over` : `${fmtEur(budget.remaining)} left`}</span>
-            </BudgetRing>
+            <div className="w-[260px]"><BudgetLine total={budget.total} cap={budget.cap} segments={CATS.map((c) => ({ value: budget.byCategory[c], color: CAT_COLOR[c] }))} /></div>
             <div>
               <div className="g-label">Call times · {fmtDate(sum.shootISO)} · {p.studio.name.split(',')[0]}</div>
               <div className="mt-2 flex flex-wrap gap-1.5">

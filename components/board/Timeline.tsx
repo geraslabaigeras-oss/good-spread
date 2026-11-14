@@ -15,9 +15,9 @@ const x = (m: number) => ((Math.min(Math.max(m, START), END) - START) / SPAN) * 
 
 const BAR: Record<Block['kind'], string> = {
   shoot: 'bg-ink text-paper',
-  hmu: 'bg-ink-24 text-ink',
-  setup: 'bg-ink-10 text-ink',
-  wrap: 'bg-ink-10 text-ink',
+  hmu: 'bg-[#cbbca8] text-ink',
+  setup: 'bg-[#e6e2dc] text-ink',
+  wrap: 'bg-[#e6e2dc] text-ink',
   lunch: 'bg-transparent border border-dashed border-hairline-strong text-grey-1',
 };
 
@@ -126,7 +126,7 @@ export function Timeline({ production: p, conflicts }: { production: Production;
                         style={{ left: `${x(Math.max(t.departMin, START))}%`, width: `${x(t.arriveMin) - x(Math.max(t.departMin, START))}%` }}
                       />
                       <div
-                        className={cn('absolute rounded-[4px] border', arrivalConflict ? 'border-conflict' : 'border-ink')}
+                        className={cn('absolute rounded-[9px] border', arrivalConflict ? 'border-conflict' : 'border-ink')}
                         style={{
                           left: `${x(t.arriveMin)}%`, width: `${x(t.arriveMin + t.transferMin) - x(t.arriveMin)}%`,
                           top: 'calc((var(--row-h) - var(--bar-h)) / 2)', height: 'var(--bar-h)',
@@ -146,14 +146,14 @@ export function Timeline({ production: p, conflicts }: { production: Production;
                         layout
                         layoutId={key}
                         transition={tLayout}
-                        className={cn('absolute rounded-[4px]', BAR[b.kind])}
+                        className={cn('absolute rounded-[9px]', BAR[b.kind])}
                         style={{ left: `${l}%`, width: `calc(${w}% - 2px)`, top: 'calc((var(--row-h) - var(--bar-h)) / 2)', height: 'var(--bar-h)' }}
                         title={`${barLabel(b)} ${fmt(b.startMin)}–${fmt(b.endMin)}`}
                       >
-                        <span className="block h-full overflow-hidden whitespace-nowrap pl-2 font-mono text-[11px] leading-[var(--bar-h)] tracking-[0.02em]">
+                        <span className="block h-full overflow-hidden whitespace-nowrap pl-2.5 text-[11.5px] font-medium leading-[var(--bar-h)]">
                           {barLabel(b)}
                         </span>
-                        {otFrom != null && <span className="absolute bottom-0 right-0 h-[3px] rounded-b-[4px] bg-overtime" style={{ left: `${otFrom}%` }} />}
+                        {otFrom != null && <span className="absolute bottom-0 right-0 h-[3px] rounded-b-[9px] bg-overtime" style={{ left: `${otFrom}%` }} />}
                         {(isConflict || (arrivalConflict && c?.blockId === b.id)) && (
                           <motion.span
                             initial={{ opacity: 0 }}
