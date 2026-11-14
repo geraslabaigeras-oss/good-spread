@@ -4,7 +4,7 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import type { CreativeBrief } from '@/lib/types';
-import { WavyBackground } from '@/components/ui/wavy-background';
+import { DepthScan } from '@/components/depth-scan';
 import { useRoster } from '@/lib/use-roster';
 
 const SHOOTS = ['photo-1550872199-63f4382fe925', 'photo-1613915617430-8ab0fd7c6baf', 'photo-1692180142575-c31fcd106b5b', 'photo-1508964801641-4b2410705b73', 'photo-1590972381381-c863cbbf9dd2', 'photo-1635262090780-2ed9e994fff4', 'photo-1603189343302-e603f7add05a', 'photo-1733322980454-62a1d5727460', 'photo-1739808914849-01ba195c4f93', 'photo-1645561305502-63a9ba09ab09'];
@@ -59,7 +59,7 @@ function Ring({ photos }: { photos: string[] }) {
   );
 }
 
-const LINES = ['Reading the light and the mood', 'Looking at the garment and styling', 'Comparing with similar campaigns', 'Writing your brief'];
+const LINES = ['Reading depth and light', 'Looking at the garment and styling', 'Comparing with similar campaigns', 'Writing your brief'];
 
 /** Calm full-screen reading: the reference in the centre, a slow 3D ring of similar looks spinning around it. */
 export function AnalysisStage({ image, brief, onDone }: { image: string; brief: CreativeBrief | null; onDone: () => void }) {
@@ -79,16 +79,14 @@ export function AnalysisStage({ image, brief, onDone }: { image: string; brief: 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.6 } }}
       className="fixed inset-0 z-[80] flex flex-col items-center justify-center overflow-hidden bg-[#f3f6fa]">
-      {/* blue waves with depth: a slow, blurred back layer and a sharper front layer */}
-      <div className="pointer-events-none absolute inset-0 opacity-70"><WavyBackground containerClassName="h-full" colors={['#dbe7f5', '#c4d7ef', '#e9f0f8']} backgroundFill="#f3f6fa" waveOpacity={0.6} blur={30} speed="slow" waveWidth={160} amplitude={260} spread={0.07} /></div>
-      <div className="pointer-events-none absolute inset-0 mix-blend-multiply"><WavyBackground containerClassName="h-full" colors={['#9dbbe3', '#7ea4d6', '#b9cfeb', '#5f8cc7']} backgroundFill="transparent" waveOpacity={0.4} blur={6} speed="slow" waveWidth={36} amplitude={180} spread={0.05} /></div>
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(243,246,250,0)_30%,rgba(243,246,250,.85)_85%)]" />
       {/* 3D ring of similar looks */}
       <div className="relative flex h-[440px] w-full items-center justify-center [perspective:1400px]">
         <Ring photos={photos} />
         <motion.div initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.9 }}
-          className="relative z-30 h-[300px] w-[230px] overflow-hidden rounded-[26px] shadow-[0_40px_90px_rgba(20,40,90,.3)] ring-1 ring-white/60">
+          className="relative z-30 h-[380px] w-[290px] overflow-hidden rounded-[26px] shadow-[0_40px_90px_rgba(20,40,90,.3)] ring-1 ring-white/60">
           <img src={image} alt="Your reference" className="size-full object-cover" />
+          <div className="absolute inset-0 bg-[#0b1a33]/35" />
+          <DepthScan src={image} className="absolute inset-0 size-full" />
         </motion.div>
       </div>
       <div className="relative z-10 mt-6 h-14 text-center">
