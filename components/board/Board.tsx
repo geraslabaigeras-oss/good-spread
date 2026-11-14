@@ -16,8 +16,10 @@ import { Decision } from './Decision';
 import { Inbox } from './Inbox';
 import { BudgetPanel } from './BudgetPanel';
 import { Activity } from './Activity';
-import { FlightCard } from './FlightCard';
-import { LiveRadar, callsignFor } from './LiveRadar';
+import { BoardingPass } from './BoardingPass';
+import { RouteGlobe } from './RouteGlobe';
+import { BrandLogo } from '@/components/brand-logo';
+import { callsignFor } from './LiveRadar';
 import { IATA, type City } from '@/data/catalog';
 import { callTime } from '@/lib/engine';
 import { fmt } from '@/lib/format';
@@ -136,8 +138,6 @@ function BoardInner({ slug }: { slug: string }) {
 
   const team = data.people.filter((x) => x.role !== 'producer');
   const b = data.budget;
-  const airport = p.travel[0]?.to ?? IATA[(p.city ?? 'Vilnius') as City] ?? 'VNO';
-  const watch = p.travel.map((t) => ({ callsign: callsignFor(t.number), label: `${p.people.find((x) => x.id === t.personId)?.name ?? ''}, ${t.number}` })).filter((w): w is { callsign: string; label: string } => !!w.callsign);
   const changes: Change[] = applied?.changes ?? [];
   const changedBy = new Map(changes.map((c) => [c.personId, c]));
   const nameOf = (id: string) => p.people.find((x) => x.id === id)?.name ?? id;
@@ -148,6 +148,17 @@ function BoardInner({ slug }: { slug: string }) {
     : applied ? `Plan adapted: ${applied.label.charAt(0).toLowerCase()}${applied.label.slice(1)}.`
     : 'Everything is on schedule.';
   const smsSent = data.events.some((e) => e.type === 'sms_sent');
+  const place = p.studio.name.split(',')[0];
+  const messages = team.filter((x) => x.booking !== 'to_book').map((x) => {
+    const c = changedBy.get(x.id);
+    const first = x.name.split(' ')[0];
+    const call = callTime(p, x.id);
+    const t = p.travel.find((tr) => tr.personId === x.id);
+    const text = c
+      ? `Hi ${first}, ${c.text.charAt(0).toLowerCase()}${c.text.slice(1)} ${place}. Reply OK when you've seen it.`
+      : `Hi ${first}, call sheet for ${dateLabel}: your call is ${call != null ? fmt(call) : 'tbc'} at ${place}${t ? `. Your flight ${t.number} lands ${fmt(t.arriveMin)}, a car takes you to set` : ''}. Reply OK when you've seen it.`;
+    return { id: x.id, name: x.name, role: ROLE_NAME[x.role] ?? x.role, photo: x.photo, text };
+  });
 
   // Day schedule: each person's call, plus flight landings, in time order; "was" when the last change moved it
   type Row = { at: number; text: string; where: string; was?: string; kind: 'call' | 'land' };
@@ -214,14 +225,36 @@ function BoardInner({ slug }: { slug: string }) {
           <div className="mt-10"><Decision production={p} pending={null} approving={null} applied={applied} countUp={!!animateVersion} onApprove={approve} /></div>
         )}
 
-        {/* Three cards */}
-        <div className="mt-10 grid grid-cols-1 gap-5 xl:grid-cols-3">
-          {p.travel[0] ? <FlightCard p={p} t={p.travel[0]} delayedBy={p.travel[0].scheduledArriveMin != null ? p.travel[0].arriveMin - p.travel[0].scheduledArriveMin : undefined} /> : (
-            <div className="rounded-[28px] bg-white/70 p-6 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]"><div className="text-[17px] font-medium">Travel</div><p className="mt-3 text-[15px] text-neutral-500">Nobody flies in. Everyone is based in {p.city ?? 'Vilnius'}.</p></div>
-          )}
+        {/* Travel: globe with the route and a 3D plane, boarding pass per traveller */}
+        {p.travel.length > 0 ? (
+          <div className="mt-10 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
+            <RouteGlobe legs={p.travel.map((t) => ({ id: t.personId, from: t.from, to: t.to, label: nameOf(t.personId), callsign: callsignFor(t.number), departMin: t.departMin, arriveMin: t.arriveMin, dateISO: p.dateISO }))} height={p.travel.length > 1 ? 640 : 520} />
+            <div className="flex flex-col gap-4">
+              {p.travel.map((t, i) => <BoardingPass key={t.personId} p={p} t={t} index={i} />)}
+            </div>
+          </div>
+        ) : (
+          <div className="mt-10 rounded-[28px] bg-white/70 p-6 text-[15px] text-neutral-500 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">Nobody flies in. Everyone is based in {p.city ?? 'Vilnius'}.</div>
+        )}
+
+        {/* Schedule + budget */}
+        <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
+          <div id="schedule" className="rounded-[28px] bg-white/70 p-6 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">
+            <div className="flex justify-between border-b border-black/[0.06] pb-4"><span className="text-[17px] font-medium">Day schedule</span><span className="text-[14px] text-neutral-500">{p.studio.name.split(',')[0]}</span></div>
+            <div className="divide-y divide-black/[0.06]">
+              {rows.map((r, i) => (
+                <div key={i} className="flex items-center gap-3 py-3">
+                  <span className={`w-[64px] shrink-0 rounded-full py-0.5 text-center text-[16px] tabular-nums ${r.was ? 'bg-neutral-950 text-white' : 'text-neutral-600'}`}>{fmt(r.at)}</span>
+                  <span className="min-w-0 flex-1 truncate text-[16px]">{r.text}</span>
+                  {r.was && <span className="shrink-0 rounded-full bg-neutral-950 px-2 py-0.5 text-[12px] text-white">was {r.was}</span>}
+                  <span className="shrink-0 text-[14px] text-neutral-500">{r.where}</span>
+                </div>
+              ))}
+            </div>
+          </div>
           <div id="budget" className="rounded-[28px] bg-white/70 p-6 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">
             <div className="flex justify-between"><span className="text-[17px] font-medium">Budget</span><span className="text-[14px] text-neutral-500">{fmtDate(p.dateISO).slice(4, 10)}</span></div>
-            <div className="mt-8 flex items-baseline gap-3"><span className="text-[34px] font-light tabular-nums">{fmtEur(Math.round(b.total))}</span><span className="text-[22px] font-light text-neutral-500">of {fmtEur(b.cap)}</span></div>
+            <div className="mt-6 flex items-baseline gap-3"><span className="text-[34px] font-light tabular-nums">{fmtEur(Math.round(b.total))}</span><span className="text-[20px] font-light text-neutral-500">of {fmtEur(b.cap)}</span></div>
             <div className="mt-4 h-2 overflow-hidden rounded-full bg-neutral-200"><motion.div className={`h-full rounded-full ${b.remaining < 0 ? 'bg-red-600' : 'bg-neutral-950'}`} initial={{ width: 0 }} animate={{ width: `${Math.min(100, (b.total / b.cap) * 100)}%` }} transition={{ duration: 1 }} /></div>
             <div className="mt-4 divide-y divide-black/[0.06]">
               {(['talent', 'crew', 'studio', 'travel', 'post', 'usage'] as const).filter((c) => b.byCategory[c] > 0).map((c) => (
@@ -230,37 +263,28 @@ function BoardInner({ slug }: { slug: string }) {
             </div>
             <p className="mt-3 text-[14px] text-neutral-500">{b.remaining >= 0 ? `${fmtEur(Math.round(b.remaining))} under the cap, ${fmtEur(Math.round(b.contingency))} kept for surprises.` : `${fmtEur(Math.round(-b.remaining))} over the cap.`}{b.overtime > 0 ? ` Includes ${fmtEur(Math.round(b.overtime))} overtime.` : ''}</p>
           </div>
-          <LiveRadar airport={airport} watch={watch} />
         </div>
 
-        {/* Schedule + messages */}
-        <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-2">
-          <div id="schedule" className="rounded-[28px] bg-white/70 p-6 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">
-            <div className="flex justify-between border-b border-black/[0.06] pb-4"><span className="text-[17px] font-medium">Day schedule</span><span className="text-[14px] text-neutral-500">{p.studio.name.split(',')[0]}</span></div>
-            <div className="divide-y divide-black/[0.06]">
-              {rows.map((r, i) => (
-                <div key={i} className="flex items-center gap-3 py-3">
-                  <span className={`rounded-full px-2.5 py-0.5 text-[16px] tabular-nums ${r.was ? 'bg-neutral-950 text-white' : 'text-neutral-500'}`}>{fmt(r.at)}</span>
-                  <span className="min-w-0 flex-1 truncate text-[16px]">{r.text}</span>
-                  {r.was && <span className="rounded-full bg-neutral-950 px-2 py-0.5 text-[12px] text-white">was {r.was}</span>}
-                  <span className="shrink-0 text-[14px] text-neutral-500">{r.where}</span>
-                </div>
-              ))}
-            </div>
+        {/* Crew messages: one per person, sent from your own phone */}
+        <div id="messages" className="mt-5 rounded-[28px] bg-white/70 p-6 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">
+          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-black/[0.06] pb-4">
+            <span className="text-[17px] font-medium">{changes.length ? 'What changed, per person' : 'Call sheet messages'}</span>
+            <span className="text-[14px] text-neutral-500">Each one opens WhatsApp or Messages with the text written. You press send.</span>
           </div>
-          <div id="messages" className="rounded-[28px] bg-white/70 p-6 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">
-            <div className="flex justify-between border-b border-black/[0.06] pb-4"><span className="text-[17px] font-medium">Crew messages</span><span className="text-[14px] text-neutral-500">{changes.length ? `${changes.length} ${smsSent ? 'sent' : 'ready'}` : 'nothing to send'}</span></div>
-            {changes.length === 0 && <p className="pt-4 text-[15px] text-neutral-500">When the plan changes, each person gets one short message about their own day. You approve first; nothing goes out on its own.</p>}
-            <div className="space-y-3 pt-4">
-              {changes.map((c, i) => (
-                <div key={c.personId} className="rounded-2xl bg-white/80 p-3">
-                  <div className="text-[13px] text-neutral-500">To {nameOf(c.personId)} · {roleOf(c.personId)} · {smsSent ? 'sent by text' : 'draft'}</div>
-                  <div className={`ml-auto mt-2 max-w-[92%] rounded-2xl px-4 py-2.5 text-[15px] leading-6 ${i % 2 ? 'bg-[#0a84ff] text-white' : 'bg-[#dcf8c6] text-neutral-900'}`}>
-                    Hi {nameOf(c.personId).split(' ')[0]}, {c.text.charAt(0).toLowerCase()}{c.text.slice(1)} {p.studio.name.split(',')[0]}.
-                  </div>
+          <div className="grid grid-cols-1 gap-3 pt-4 md:grid-cols-2 xl:grid-cols-3">
+            {messages.map((m) => (
+              <div key={m.id} className="flex flex-col rounded-2xl bg-white p-4">
+                <div className="flex items-center gap-2 text-[13px] text-neutral-500">
+                  {m.photo ? <img src={m.photo} alt="" className="size-6 rounded-full object-cover object-top" /> : <span className="flex size-6 items-center justify-center rounded-full bg-[#e3eaf3] text-[11px] text-neutral-700">{m.name[0]}</span>}
+                  <span className="text-neutral-900">{m.name}</span> · {m.role}
                 </div>
-              ))}
-            </div>
+                <div className="mt-3 flex-1 rounded-2xl rounded-tl-md bg-[#f1f4f8] px-3.5 py-2.5 text-[14px] leading-6 text-neutral-900">{m.text}</div>
+                <div className="mt-3 flex gap-2">
+                  <a href={`https://wa.me/?text=${encodeURIComponent(m.text)}`} target="_blank" rel="noreferrer" className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full bg-[#25D366] text-[13px] font-medium text-white hover:bg-[#1fb957]"><BrandLogo name="whatsapp" size={14} color="#fff" /> WhatsApp</a>
+                  <a href={`sms:&body=${encodeURIComponent(m.text)}`} className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full bg-[#0a84ff] text-[13px] font-medium text-white hover:bg-[#0a74e0]"><BrandLogo name="imessage" size={14} color="#fff" /> iMessage</a>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

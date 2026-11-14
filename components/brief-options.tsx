@@ -151,33 +151,34 @@ export function BriefOptions({ brief, draft, setDraft }: { brief: CreativeBrief;
       {/* Places: instant from the location library, AI scout on request */}
       <section>
         <h3 className="text-[26px] font-light tracking-[-0.02em]">Places that fit</h3>
-        <p className="mt-1 text-[14px] text-neutral-500">Looking for: {locNeed}. From our checked library of {LOCATIONS.length} shoot locations in Europe, each with permits, best light and a studio backup for bad weather.</p>
+        <p className="mt-1 text-[14px] text-neutral-500">Looking for: {locNeed}.</p>
         <div className="mt-4 flex flex-wrap gap-1.5">
           {['all', ...libCities].map((c) => (
             <button key={c} onClick={() => setLibCity(c)} className={`h-8 rounded-full px-3.5 text-[13px] transition-colors ${libCity === c ? 'bg-neutral-950 text-white' : 'bg-white/70 text-neutral-600 hover:bg-white hover:text-neutral-900'}`}>{c === 'all' ? 'All Europe' : c}</button>
           ))}
         </div>
         <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {library.map(({ l, hits }, i) => {
+          {library.map(({ l }, i) => {
             const on = draft.place?.url === l.source_url;
             const backup = backupStudios(l)[0];
             return (
               <motion.button key={l.id} onClick={() => pick(l)} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: i * 0.04, ease }}
                 className={`group flex flex-col justify-start overflow-hidden rounded-[22px] bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,.04),0_14px_34px_rgba(0,0,0,.06)] ${on ? 'ring-2 ring-neutral-950' : ''}`}>
-                <div className="relative h-[190px] overflow-hidden bg-neutral-200">
-                  <img src={l.image_url} alt={l.name} className="size-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+                <div className="relative h-[200px] w-full shrink-0 overflow-hidden bg-[linear-gradient(135deg,#dfe8f3,#b9cbe2)]">
+                  <img src={l.image_url} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} className="size-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
                   <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-0.5 text-[12px] capitalize">{l.type}</span>
                   {on && <span className="absolute right-3 top-3 flex size-7 items-center justify-center rounded-full bg-neutral-950 text-white"><Check className="size-4" /></span>}
+                  <span className="absolute bottom-1.5 right-2 max-w-[80%] truncate text-[10px] text-white/85 [text-shadow:0_1px_2px_rgba(0,0,0,.6)]">{l.image_author}, {l.image_licence}</span>
                 </div>
-                <div className="p-4">
-                  <div className="text-[16px] font-medium">{l.name}</div>
-                  <div className="mt-0.5 flex items-center gap-1 text-[12px] text-neutral-500"><MapPin className="size-3" /> {l.city}, {l.country} · fly into {l.airport_iata}</div>
-                  <p className="mt-2 text-[13px] leading-5 text-neutral-800">{l.look}</p>
-                  <p className="mt-1.5 text-[12px] leading-5 text-neutral-500">{l.season_light}</p>
-                  {l.permit_notes && <p className="mt-1.5 text-[12px] leading-5 text-neutral-500">Permit: {l.permit_notes}</p>}
-                  {backup && <p className="mt-1.5 text-[12px] leading-5 text-neutral-700">Rain backup: {backup.name}, {backup.day_rate_listed}</p>}
-                  {hits.length > 0 && <div className="mt-2 text-[12px] text-emerald-700">Fits: {hits.slice(0, 3).join(', ')}</div>}
-                  <p className="mt-2 text-[10px] leading-4 text-neutral-400">Photo: {l.image_author}, {l.image_licence}</p>
+                <div className="flex flex-1 flex-col p-4">
+                  <div className="text-[17px] font-medium leading-6">{l.name}</div>
+                  <div className="mt-0.5 flex items-center gap-1 text-[13px] text-neutral-500"><MapPin className="size-3" /> {l.city}, {l.country}</div>
+                  <p className="mt-2 line-clamp-2 text-[14px] leading-5 text-neutral-800">{l.look}</p>
+                  <div className="mt-auto flex flex-wrap gap-1.5 pt-3 text-[12px]">
+                    <span className="rounded-full bg-neutral-100 px-2.5 py-1">Fly into {l.airport_iata}</span>
+                    {l.permit_notes && <span className="rounded-full bg-neutral-100 px-2.5 py-1" title={l.permit_notes}>Permit needed</span>}
+                    {backup && <span className="rounded-full bg-neutral-100 px-2.5 py-1" title={`${backup.name}, ${backup.day_rate_listed}`}>Rain backup</span>}
+                  </div>
                 </div>
               </motion.button>
             );
