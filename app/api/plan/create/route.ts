@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { loadRoster } from '@/lib/server/roster';
 import { buildProduction } from '@/lib/engine';
 import { logEvent, resetProduction } from '@/lib/server/db';
 import { handle, ok, parseJson } from '@/lib/server/http';
@@ -35,6 +36,7 @@ const Body = z.object({
 /** Moment 3 → 4: build the production from the chosen strategy and picks, and open it on the board. */
 export async function POST(req: Request) {
   return handle(async () => {
+    await loadRoster();
     const parsed = await parseJson(req, Body);
     if ('error' in parsed) return parsed.error;
     const b = parsed.data;

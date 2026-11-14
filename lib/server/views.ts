@@ -27,7 +27,7 @@ export async function boardState(slug: string) {
     const seenBy = vs.filter((v) => acked.has(v.id)).length;
     const status: PersonStatus = x.role === 'producer' ? 'seen' : !vs.length ? 'no_device' : seenBy ? 'seen' : 'not_seen';
     const call = callTime(p, x.id);
-    return { id: x.id, name: x.name, role: x.role, call: call != null ? fmt(call) : null, devices: vs.length, seenBy, status };
+    return { id: x.id, name: x.name, role: x.role, photo: x.photo, call: call != null ? fmt(call) : null, devices: vs.length, seenBy, status };
   });
 
   return {

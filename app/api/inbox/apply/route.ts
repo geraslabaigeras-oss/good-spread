@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { loadRoster } from '@/lib/server/roster';
 import { getProduction, logEvent } from '@/lib/server/db';
 import { fail, handle, ok, parseJson, slugSchema } from '@/lib/server/http';
 import { applyFact, describeUpdate } from '@/lib/server/actions';
@@ -22,6 +23,7 @@ const Body = z.object({
 
 export async function POST(req: Request) {
   return handle(async () => {
+    await loadRoster();
     const parsed = await parseJson(req, Body);
     if ('error' in parsed) return parsed.error;
     const { slug, inboxId, source, manual } = parsed.data;

@@ -50,3 +50,11 @@ alter table revisions enable row level security;
 alter table viewers enable row level security;
 alter table acks enable row level security;
 alter table extractions enable row level security;
+
+-- The producer's real people (roster). id is a short text id like "p-1a2b3c4d".
+create table if not exists people (
+  id text primary key,
+  data jsonb not null,
+  created_at timestamptz not null default now()
+);
+alter table people enable row level security;

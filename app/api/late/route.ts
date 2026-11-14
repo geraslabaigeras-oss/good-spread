@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { loadRoster } from '@/lib/server/roster';
 import { getProductionById, logEvent, viewerByToken } from '@/lib/server/db';
 import { fail, handle, ok, parseJson, tokenSchema } from '@/lib/server/http';
 import { applyFact } from '@/lib/server/actions';
@@ -8,6 +9,7 @@ const Body = z.object({ token: tokenSchema, minutes: z.union([z.literal(15), z.l
 
 export async function POST(req: Request) {
   return handle(async () => {
+    await loadRoster();
     const parsed = await parseJson(req, Body);
     if ('error' in parsed) return parsed.error;
     const v = await viewerByToken(parsed.data.token);

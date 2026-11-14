@@ -6,6 +6,7 @@ export type Person = {
   dayRate: number; otRatePerHour: number;     // € ; producer has 0
   local: boolean;                             // false = travels in
   motion?: boolean;                           // photographer can shoot the motion deliverables
+  photo?: string; city?: string;              // from the roster, for faces on the board
 };
 
 export type Travel = {

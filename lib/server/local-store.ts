@@ -9,7 +9,7 @@ import { randomUUID } from 'node:crypto';
  * Not for Vercel (each instance would have its own copy).
  */
 type Row = Record<string, unknown>;
-type Tables = { productions: Row[]; events: Row[]; revisions: Row[]; viewers: Row[]; acks: Row[]; extractions: Row[]; seq: number };
+type Tables = { productions: Row[]; events: Row[]; revisions: Row[]; viewers: Row[]; acks: Row[]; extractions: Row[]; people?: Row[]; seq: number };
 
 const FILE = path.join(process.cwd(), '.data', 'local-db.json');
 

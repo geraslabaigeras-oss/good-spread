@@ -19,6 +19,7 @@ export function Stage({ children, backdrop }: { children: React.ReactNode; backd
 }
 
 const STEPS = [
+  { n: 0, label: 'People', href: '/people' },
   { n: 1, label: 'Brief', href: '/new' },
   { n: 2, label: 'Strategies', href: '/plan' },
   { n: 3, label: 'Team', href: '/plan/assemble' },

@@ -32,6 +32,8 @@ function toPerson(c: CatalogPerson, city: City): Person {
   const p: Person = { id: c.id, name: c.name, role: c.role, dayRate: c.dayRate, otRatePerHour: c.otRatePerHour, local: c.city === city };
   if (c.agency) { p.agency = c.agency; p.commissionPct = c.commissionPct; }
   if (c.role === 'photographer') p.motion = c.motion !== false;
+  if (c.photo) p.photo = c.photo;
+  p.city = c.city;
   return p;
 }
 

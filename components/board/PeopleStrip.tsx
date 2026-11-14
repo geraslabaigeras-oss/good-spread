@@ -44,7 +44,7 @@ export function PeopleStrip({ people, version, changedIds }: { people: P[]; vers
         const showFrom = changed && changed.from.has(x.id) && from && x.call;
         return (
           <div key={x.id} className="relative isolate flex min-w-0 items-center gap-3 overflow-hidden rounded-[20px] bg-white px-3 shadow-[0_0_0_1px_rgb(0_0_0/0.06),0_1px_2px_rgb(0_0_0/0.06),0_12px_32px_rgb(80_60_40/0.05)]">
-            <Avatar id={x.id} name={x.name} />
+            <Avatar id={x.id} name={x.name} photo={x.photo} />
             <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
             {idx >= 0 && changed && (
               <motion.div
@@ -84,8 +84,8 @@ export function PeopleStrip({ people, version, changedIds }: { people: P[]; vers
   );
 }
 
-function Avatar({ id, name }: { id: string; name: string }) {
-  const photo = catalogPerson(id)?.photo;
+function Avatar({ id, name, photo: own }: { id: string; name: string; photo?: string }) {
+  const photo = own ?? catalogPerson(id)?.photo;
   return photo ? (
     // eslint-disable-next-line @next/next/no-img-element
     <img src={photo} alt="" className="size-12 shrink-0 rounded-full object-cover object-top" />

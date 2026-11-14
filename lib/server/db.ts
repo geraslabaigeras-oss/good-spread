@@ -186,3 +186,33 @@ export async function resetProduction(slug: string, full: boolean, data?: Produc
   await logEvent(id, 'reset', { full, text: full ? 'Full reset' : 'Reset' });
   return id;
 }
+
+/* ---------- Roster: the producer's real people ---------- */
+import type { RosterInput, RosterPerson } from '@/lib/roster';
+
+const toRoster = (r: Record<string, unknown>): RosterPerson => ({ ...(r.data as RosterInput), id: r.id as string, createdAt: r.created_at as string });
+
+export async function listPeople(): Promise<RosterPerson[]> {
+  if (isLocal()) return read((t) => (t.people ?? []).map(toRoster));
+  return (must(await db().from('people').select('id, data, created_at').order('created_at')) as Record<string, unknown>[]).map(toRoster);
+}
+
+export async function addPerson(data: RosterInput): Promise<RosterPerson> {
+  if (isLocal()) {
+    return tx((t) => { const r = { id: `p-${uuid().slice(0, 8)}`, data, created_at: now() }; (t.people ??= []).push(r); return toRoster(r); });
+  }
+  return toRoster(must(await db().from('people').insert({ id: `p-${crypto.randomUUID().slice(0, 8)}`, data }).select('id, data, created_at').single()) as Record<string, unknown>);
+}
+
+export async function updatePerson(id: string, data: RosterInput): Promise<RosterPerson | null> {
+  if (isLocal()) {
+    return tx((t) => { const r = (t.people ?? []).find((x) => x.id === id); if (!r) return null; r.data = data; return toRoster(r); });
+  }
+  const row = must(await db().from('people').update({ data }).eq('id', id).select('id, data, created_at').maybeSingle()) as Record<string, unknown> | null;
+  return row ? toRoster(row) : null;
+}
+
+export async function deletePerson(id: string): Promise<void> {
+  if (isLocal()) { tx((t) => { t.people = (t.people ?? []).filter((x) => x.id !== id); }); return; }
+  must(await db().from('people').delete().eq('id', id));
+}

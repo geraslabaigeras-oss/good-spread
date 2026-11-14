@@ -11,6 +11,13 @@ export const CITY: Record<string, { lat: number; lng: number }> = {
   Vilnius: { lat: 54.6872, lng: 25.2797 },
   Lisbon: { lat: 38.7223, lng: -9.1393 },
   Milan: { lat: 45.4642, lng: 9.19 },
+  Riga: { lat: 56.9496, lng: 24.1052 },
+  Warsaw: { lat: 52.2297, lng: 21.0122 },
+  Berlin: { lat: 52.52, lng: 13.405 },
+  Paris: { lat: 48.8566, lng: 2.3522 },
+  London: { lat: 51.5072, lng: -0.1276 },
+  Stockholm: { lat: 59.3293, lng: 18.0686 },
+  Copenhagen: { lat: 55.6761, lng: 12.5683 },
 };
 
 export type GlobePin = {

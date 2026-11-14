@@ -5,7 +5,9 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Picks } from '@/lib/types';
 import { computeBudget, detectConflicts, dnaViolations, evaluateDna, fmt, summarize } from '@/lib/engine';
-import { candidates, locationCandidates, strategyDef, type CatalogPerson } from '@/data/catalog';
+import { candidates, locationCandidates, strategyDef, type CatalogPerson, rosterGaps, catalogPerson } from '@/data/catalog';
+import { useRoster } from '@/lib/use-roster';
+import Link from 'next/link';
 import { fmtDate, fmtEur } from '@/lib/format';
 import { useDraft } from '@/lib/plan-store';
 import { draftProduction, pinsFor } from '@/lib/plan-draft';
@@ -23,17 +25,33 @@ export default function Assemble() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  const roster = useRoster();
   const strategy = draft?.strategy ?? 'local';
   const def = strategyDef(strategy);
-  const picks: Picks = draft?.picks ?? def.defaultPicks;
+  const gaps = roster.ready ? rosterGaps(strategy) : [];
+  // Saved picks only count if those people are still on your roster.
+  const valid = (x?: Picks) => !!x && x.models.length > 0 && x.models.every((m) => catalogPerson(m) && candidates(strategy, 'model').some((c) => c.id === m)) && candidates(strategy, 'photographer').some((c) => c.id === x.photographer);
+  const picks: Picks = valid(draft?.picks) ? draft!.picks! : def.defaultPicks;
 
   const view = useMemo(() => {
-    if (!draft) return null;
+    if (!draft || !roster.ready || gaps.length) return null;
     const base = draftProduction(draft, strategy);
     const p = draftProduction(draft, strategy, picks);
     return { p, sum: summarize(p), budget: computeBudget(p), conflicts: detectConflicts(p).filter((c) => c.code !== 'BUDGET'), dna: evaluateDna(base, p) };
-  }, [draft, strategy, picks]);
+  }, [draft, strategy, picks, roster.ready, roster.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  if (draft && roster.ready && gaps.length) {
+    return (
+      <Stage>
+        <TopBar step={3} />
+        <div className="mx-auto max-w-[640px] px-8 pt-24">
+          <h1 className="font-serif text-[52px] leading-[0.95] tracking-[-0.03em]">Add your team first</h1>
+          <p className="mt-4 text-[17px] leading-7 text-grey-1">To plan the {def.name.toLowerCase()} shoot you need {gaps.join(', ')}. Add the real people you work with, or find models on models.com and add them once they say yes.</p>
+          <Link href="/people" className="g-btn mt-8">Add people →</Link>
+        </div>
+      </Stage>
+    );
+  }
   if (!draft || !view) return <Stage><div /></Stage>;
   const { p, sum, budget, conflicts, dna } = view;
   const broken = dnaViolations(dna);

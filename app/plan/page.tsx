@@ -5,7 +5,9 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { StrategyId } from '@/lib/types';
 import { dnaViolations, evaluateDna, summarize, type StrategySummary } from '@/lib/engine';
-import { STRATEGIES } from '@/data/catalog';
+import { rosterGaps, STRATEGIES } from '@/data/catalog';
+import { useRoster } from '@/lib/use-roster';
+import Link from 'next/link';
 import { fmtDate, fmtEur } from '@/lib/format';
 import { useDraft } from '@/lib/plan-store';
 import { draftProduction, pinsFor } from '@/lib/plan-draft';
@@ -20,16 +22,21 @@ export default function Strategies() {
   const [draft, setDraft] = useDraft();
   const [hover, setHover] = useState<StrategyId | null>(null);
 
+  const roster = useRoster();
+  const gapsFor = useMemo(() => Object.fromEntries(STRATEGIES.map((s) => [s.id, roster.ready ? rosterGaps(s.id) : []])), [roster.ready, roster.key]); // eslint-disable-line react-hooks/exhaustive-deps
   const rows = useMemo(() => {
-    if (!draft) return [];
-    const local = draftProduction(draft, 'local');
-    return STRATEGIES.map((s) => {
+    if (!draft || !roster.ready) return [];
+    const ok = STRATEGIES.filter((s) => !gapsFor[s.id].length);
+    if (!ok.length) return [];
+    const base = draftProduction(draft, ok[0].id);
+    return ok.map((s) => {
       const p = draftProduction(draft, s.id);
       const sum = summarize(p);
-      const broken = dnaViolations(evaluateDna(local, p)).filter((x) => !['casting', 'photographer', 'studio', 'schedule'].includes(x.id));
+      const broken = dnaViolations(evaluateDna(base, p)).filter((x) => !['casting', 'photographer', 'studio', 'schedule'].includes(x.id));
       return { s, p, sum, broken };
     });
-  }, [draft]);
+  }, [draft, roster.ready, gapsFor]);
+  const blocked = STRATEGIES.filter((s) => gapsFor[s.id]?.length);
 
   if (!draft) return <Stage><div /></Stage>;
 
@@ -76,7 +83,7 @@ export default function Strategies() {
                 <div className="mt-1 font-serif text-[40px] leading-[1.05] tracking-[-0.02em]">{s.name}</div>
                 <div className="text-[13px] text-grey-1">{s.tagline}</div>
 
-                <div className="mt-5 flex items-center gap-5">
+                <div className="mt-5 space-y-4">
                   <BudgetLine size="sm" total={sum.total} cap={sum.cap} segments={CATS.map((c) => ({ value: sum.byCategory[c], color: CAT_COLOR[c] }))} />
                   <div className="flex-1 space-y-1">
                     {CATS.filter((c) => sum.byCategory[c] > 0).map((c) => (
@@ -100,6 +107,15 @@ export default function Strategies() {
                 <button onClick={() => choose(s.id)} className={`${s.id === recommended ? 'g-btn' : 'g-btn-ghost h-[52px]'} mt-6 w-full`}>Build the {s.name.toLowerCase()} team →</button>
               </Tilt>
             </motion.div>
+          ))}
+          {blocked.map((s) => (
+            <div key={s.id} className="glass flex h-full flex-col p-6">
+              <span className="g-label">{s.city}</span>
+              <div className="mt-1 font-serif text-[40px] leading-[1.05] tracking-[-0.02em] text-grey-1">{s.name}</div>
+              <div className="text-[13px] text-grey-1">{s.tagline}</div>
+              <p className="mt-6 text-[15px] leading-6">To plan this, add {gapsFor[s.id].join(', ')} to your people.</p>
+              <Link href="/people" className="g-btn-ghost mt-auto w-full">Add people →</Link>
+            </div>
           ))}
         </div>
       </div>

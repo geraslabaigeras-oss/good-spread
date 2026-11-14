@@ -1,10 +1,12 @@
 import type { Person, Role, StrategyId } from '@/lib/types';
 
 /**
- * Demo catalog. Every person, company and place is fictional and labelled (demo).
- * `photo` is optional: drop permissioned images into public/catalog/ and set the path.
+ * People pool. In the app this is YOUR roster (people you added on /people, see setRoster).
+ * The SAMPLE_* lists are fictional and only used by the engine tests and the old sample shoot.
  */
-export type City = 'Vilnius' | 'Lisbon' | 'Milan';
+export const CITIES = ['Vilnius', 'Lisbon', 'Milan', 'Riga', 'Warsaw', 'Berlin', 'Paris', 'London', 'Stockholm', 'Copenhagen'] as const;
+export type City = (typeof CITIES)[number];
+export const IATA: Record<City, string> = { Vilnius: 'VNO', Lisbon: 'LIS', Milan: 'MXP', Riga: 'RIX', Warsaw: 'WAW', Berlin: 'BER', Paris: 'CDG', London: 'LHR', Stockholm: 'ARN', Copenhagen: 'CPH' };
 
 export type TravelTemplate = {
   // same-day flight (arrives on the shoot day) or day-before flight + hotel
@@ -39,7 +41,7 @@ const IEVA_TRAVEL: Partial<Record<City, TravelTemplate>> = {
 };
 const VNO_TO_LIS: TravelTemplate = { number: 'DA 210', from: 'VNO', to: 'LIS', departMin: 0, arriveMin: 0, transferMin: 30, flight: 230, taxi: 30, dayBefore: true, hotel: 120 };
 
-export const MODELS: CatalogPerson[] = [
+const SAMPLE_MODELS: CatalogPerson[] = [
   {
     id: 'ieva', photo: '/catalog/ieva.jpg', name: 'Ieva', stats: { height: 178, bust: 81, waist: 60, hips: 88, shoe: 39, hair: 'Dark blonde', eyes: 'Grey' }, role: 'model', agency: 'Milan agency (demo)', commissionPct: 20, dayRate: 600, otRatePerHour: 75, local: false,
     city: 'Milan', bio: 'Editorial and outerwear. Strong in movement.', tags: ['editorial', 'outerwear', 'motion'], travelTo: IEVA_TRAVEL,
@@ -66,14 +68,14 @@ export const MODELS: CatalogPerson[] = [
   },
 ];
 
-export const PHOTOGRAPHERS: CatalogPerson[] = [
+const SAMPLE_PHOTOGRAPHERS: CatalogPerson[] = [
   { id: 'tomas', name: 'Tomas', known: 'Outerwear, cold light, long lenses', role: 'photographer', dayRate: 900, otRatePerHour: 90, local: true, city: 'Vilnius', motion: true, bio: 'Stills and motion. Outerwear campaigns.', tags: ['stills', 'motion'], travelTo: { Lisbon: VNO_TO_LIS } },
   { id: 'ruta', name: 'Rūta', known: 'Daylight portraits, quiet colour', role: 'photographer', dayRate: 700, otRatePerHour: 70, local: true, city: 'Vilnius', motion: true, bio: 'Stills and motion. Natural light.', tags: ['stills', 'motion', 'natural light'], travelTo: { Lisbon: VNO_TO_LIS } },
   { id: 'paulius', name: 'Paulius', known: 'Clean e-commerce, flat light', role: 'photographer', dayRate: 550, otRatePerHour: 55, local: true, city: 'Vilnius', motion: false, bio: 'Stills only. E-commerce and lookbook.', tags: ['stills'] },
   { id: 'joao', name: 'João', known: 'Street light, movement, film grain', role: 'photographer', dayRate: 950, otRatePerHour: 95, local: true, city: 'Lisbon', motion: true, bio: 'Stills and motion. Outdoor editorial.', tags: ['stills', 'motion', 'outdoor'] },
 ];
 
-export const CREW: CatalogPerson[] = [
+const SAMPLE_CREW: CatalogPerson[] = [
   { id: 'greta', name: 'Greta', role: 'mua', dayRate: 350, otRatePerHour: 40, local: true, city: 'Vilnius', bio: 'Hair and makeup.', tags: [] },
   { id: 'lukas', name: 'Lukas', role: 'stylist', dayRate: 400, otRatePerHour: 45, local: true, city: 'Vilnius', bio: 'Brand stylist. Travels with the collection.', tags: [], travelTo: { Lisbon: VNO_TO_LIS } },
   { id: 'carla', name: 'Carla', role: 'mua', dayRate: 380, otRatePerHour: 45, local: true, city: 'Lisbon', bio: 'Hair and makeup.', tags: [] },
@@ -103,8 +105,26 @@ export const LOCATIONS: CatalogLocation[] = [
   },
 ];
 
-export const ALL_PEOPLE: CatalogPerson[] = [...MODELS, ...PHOTOGRAPHERS, ...CREW];
-export const catalogPerson = (id: string) => ALL_PEOPLE.find((x) => x.id === id);
+const SAMPLE_ALL: CatalogPerson[] = [...SAMPLE_MODELS, ...SAMPLE_PHOTOGRAPHERS, ...SAMPLE_CREW];
+
+// Live bindings: setRoster() swaps these for the producer's real people.
+export let MODELS: CatalogPerson[] = SAMPLE_MODELS;
+export let PHOTOGRAPHERS: CatalogPerson[] = SAMPLE_PHOTOGRAPHERS;
+export let CREW: CatalogPerson[] = SAMPLE_CREW;
+export let ALL_PEOPLE: CatalogPerson[] = SAMPLE_ALL;
+let rosterActive = false;
+
+/** Use the producer's real people everywhere (pickers, defaults, budget levers). */
+export function setRoster(list: CatalogPerson[]) {
+  rosterActive = true;
+  ALL_PEOPLE = list;
+  MODELS = list.filter((x) => x.role === 'model');
+  PHOTOGRAPHERS = list.filter((x) => x.role === 'photographer');
+  CREW = list.filter((x) => x.role === 'mua' || x.role === 'stylist');
+}
+export const isRosterActive = () => rosterActive;
+
+export const catalogPerson = (id: string) => ALL_PEOPLE.find((x) => x.id === id) ?? SAMPLE_ALL.find((x) => x.id === id);
 export const catalogLocation = (id: string) => LOCATIONS.find((x) => x.id === id);
 
 export type StrategyDef = {
@@ -118,7 +138,7 @@ export type StrategyDef = {
   retouchRate: number;
 };
 
-export const STRATEGIES: StrategyDef[] = [
+const BASE_STRATEGIES: StrategyDef[] = [
   {
     id: 'local', name: 'Local', city: 'Vilnius', tagline: 'Studio in Vilnius. Full shoot, one day.',
     modelSlots: 2, physical: 'full', defaultPicks: { models: ['ieva', 'marta'], photographer: 'tomas', location: 'demo-studio' },
@@ -137,7 +157,39 @@ export const STRATEGIES: StrategyDef[] = [
   },
 ];
 
-export const strategyDef = (id: StrategyId) => STRATEGIES.find((s) => s.id === id)!;
+export const STRATEGIES = BASE_STRATEGIES;
+
+const pickFrom = (pool: CatalogPerson[], city: City, n: number) =>
+  [...pool].sort((a, b) => Number(b.city === city) - Number(a.city === city) || a.dayRate - b.dayRate).slice(0, n).map((x) => x.id);
+
+/** With a roster, defaults come from your people: locals first, then cheapest. */
+export const strategyDef = (id: StrategyId): StrategyDef => {
+  const base = BASE_STRATEGIES.find((s) => s.id === id)!;
+  if (!rosterActive) return base;
+  return {
+    ...base,
+    defaultPicks: {
+      models: pickFrom(MODELS, base.city, base.modelSlots),
+      photographer: pickFrom(PHOTOGRAPHERS, base.city, 1)[0] ?? '',
+      location: base.defaultPicks.location,
+    },
+    crew: {
+      mua: pickFrom(CREW.filter((c) => c.role === 'mua'), base.city, 1)[0] ?? '',
+      stylist: pickFrom(CREW.filter((c) => c.role === 'stylist'), base.city, 1)[0] ?? '',
+    },
+  };
+};
+
+/** What's missing from the roster before this strategy can be planned. */
+export function rosterGaps(id: StrategyId): string[] {
+  const s = strategyDef(id);
+  const gaps: string[] = [];
+  if (s.defaultPicks.models.length < s.modelSlots) gaps.push(s.modelSlots === 1 ? 'a model' : `${s.modelSlots - s.defaultPicks.models.length} more model${s.modelSlots - s.defaultPicks.models.length > 1 ? 's' : ''}`);
+  if (!s.defaultPicks.photographer) gaps.push('a photographer');
+  if (!s.crew.mua) gaps.push('a hair and makeup artist');
+  if (!s.crew.stylist) gaps.push('a stylist');
+  return gaps;
+}
 
 /** People a strategy can pick from (assemble screen). Travelling talent is allowed and costed. */
 export function candidates(id: StrategyId, role: Role): CatalogPerson[] {
