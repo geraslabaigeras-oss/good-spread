@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     const brand = String(form.get('brand') ?? '').slice(0, 120) || 'Brand (demo)';
     const notes = String(form.get('notes') ?? '').slice(0, 1000);
     const images: { bytes: Buffer; mediaType: (typeof TYPES)[number] }[] = [];
-    for (const f of form.getAll('image').slice(0, 3)) {
+    for (const f of form.getAll('image').slice(0, 6)) {
       if (!(f instanceof File)) continue;
       if (f.size > MAX) return fail(413, 'image_too_large');
       if (!(TYPES as readonly string[]).includes(f.type)) return fail(415, 'unsupported_image', { type: f.type });

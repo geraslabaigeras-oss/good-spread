@@ -23,6 +23,9 @@ export type CatalogPerson = Person & {
   photo?: string;
   motion?: boolean; // photographers: can also shoot the motion deliverables
   travelTo?: Partial<Record<City, TravelTemplate>>;
+  /** from the roster: analysed look words and the last availability answer */
+  lookWords?: string[];
+  availability?: 'available' | 'hold' | 'unavailable' | null;
 };
 
 export type CatalogLocation = {

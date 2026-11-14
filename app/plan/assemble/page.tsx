@@ -7,6 +7,7 @@ import type { Picks } from '@/lib/types';
 import { computeBudget, detectConflicts, dnaViolations, evaluateDna, fmt, summarize } from '@/lib/engine';
 import { candidates, locationCandidates, strategyDef, type CatalogPerson, rosterGaps, catalogPerson, isOpenSlot } from '@/data/catalog';
 import { useRoster } from '@/lib/use-roster';
+import { lookMatch } from '@/lib/match';
 import Link from 'next/link';
 import { fmtDate, fmtEur } from '@/lib/format';
 import { useDraft } from '@/lib/plan-store';
@@ -27,6 +28,7 @@ export default function Assemble() {
   const [draft, setDraft] = useDraft();
   const [tab, setTab] = useState<Tab>('models');
   const [calling, setCalling] = useState<Office | null>(null);
+  const [checking, setChecking] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -60,8 +62,10 @@ export default function Assemble() {
   if (!draft || !view) return <Stage><div /></Stage>;
   const { p, sum, budget, conflicts, dna } = view;
   const broken = dnaViolations(dna);
-  const models = candidates(strategy, 'model');
-  const photos = candidates(strategy, 'photographer');
+  const needs = draft?.brief?.needs;
+  const byMatch = (need?: string) => (a: CatalogPerson, b: CatalogPerson) => lookMatch(need, b.lookWords).score - lookMatch(need, a.lookWords).score;
+  const models = [...candidates(strategy, 'model')].sort(byMatch(needs?.model));
+  const photos = [...candidates(strategy, 'photographer')].sort(byMatch(needs?.photographer));
   const locs = locationCandidates(strategy);
 
   const setPicks = (next: Picks) => setDraft({ ...draft, picks: next });
@@ -122,7 +126,7 @@ export default function Assemble() {
           <div className="pointer-events-none absolute left-0 top-2 z-10">
             <div className="g-label">{def.name} · shoot in {def.city}</div>
             <h1 className="mt-1 font-serif text-[52px] leading-[0.95] tracking-[-0.03em]">Build the team</h1>
-            <p className="mt-2 max-w-[380px] text-[14px] text-grey-1">Pick from the list. The cost updates with each pick.</p>
+            <p className="mt-2 max-w-[420px] text-[14px] text-grey-1">{needs ? <>Looking for: <span className="text-ink">{needs.model}</span></> : 'Pick from the list. The cost updates with each pick.'}</p>
           </div>
           <div className="pt-28"><FlightGlobe from={chosen.arcs[0]?.from ?? null} to={def.city} label={chosen.arcs[0] ? `${chosen.arcs[0].label} flies in` : 'no flights'} height="56vh" /></div>
 
@@ -156,8 +160,8 @@ export default function Assemble() {
           <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
             <AnimatePresence mode="wait">
               <motion.div key={tab} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.3 }} className="grid grid-cols-2 gap-3">
-                {tab === 'models' && models.filter((c) => !isOpenSlot(c.id)).map((c) => <CompCard key={c.id} c={c} selected={picks.models.includes(c.id)} onClick={() => toggleModel(c.id)} travel={travel(c)} />)}
-                {tab === 'photographer' && photos.filter((c) => !isOpenSlot(c.id)).map((c) => <CompCard key={c.id} c={c} selected={picks.photographer === c.id} onClick={() => setPicks({ ...picks, photographer: c.id })} travel={travel(c)} />)}
+                {tab === 'models' && models.filter((c) => !isOpenSlot(c.id)).map((c) => <CompCard key={c.id} c={c} selected={picks.models.includes(c.id)} onClick={() => toggleModel(c.id)} travel={travel(c)} match={lookMatch(needs?.model, c.lookWords)} onCheck={() => setChecking(c.id)} />)}
+                {tab === 'photographer' && photos.filter((c) => !isOpenSlot(c.id)).map((c) => <CompCard key={c.id} c={c} selected={picks.photographer === c.id} onClick={() => setPicks({ ...picks, photographer: c.id })} travel={travel(c)} match={lookMatch(needs?.photographer, c.lookWords)} onCheck={() => setChecking(c.id)} />)}
                 {tab === 'location' && draft.brief && <div className="col-span-2"><Scout brief={draft.brief} city={def.city} chosen={draft.place} onChoose={(pl) => setDraft({ ...draft, place: pl })} /></div>}
                 {tab === 'location' && !draft.brief && locs.filter((l) => !l.id.startsWith('open-')).map((l) => (
                   <Tilt key={l.id} onClick={() => setPicks({ ...picks, location: l.id })} selected={picks.location === l.id} className="glass-soft cursor-pointer overflow-hidden">
@@ -173,6 +177,9 @@ export default function Assemble() {
                 ))}
               </motion.div>
             </AnimatePresence>
+            {(tab === 'models' || tab === 'photographer') && (
+              <Link href="/people" className="mt-3 inline-flex items-center gap-1 text-[13px] text-grey-1 hover:text-ink">+ Add your own person (make-up, stylist, anyone)</Link>
+            )}
             {(tab === 'models' || tab === 'photographer') && (
               <div className="mt-6">
                 <div className="text-[15px] font-medium">Request options from agencies</div>
@@ -192,6 +199,21 @@ export default function Assemble() {
           </div>
         </motion.div>
       </div>
+      {checking && roster.people.find((x) => x.id === checking) && (
+        <AgencyCall
+          key={checking}
+          person={roster.people.find((x) => x.id === checking)!}
+          open={!!checking}
+          onOpenChange={(o) => !o && setChecking(null)}
+          onAnswer={async (ans) => {
+            const pp = roster.people.find((x) => x.id === checking)!;
+            const { id: _i, createdAt: _c, ...data } = pp;
+            await fetch(`/api/people/${pp.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...data, availability: ans }) });
+            await roster.mutate();
+            setChecking(null);
+          }}
+        />
+      )}
       {calling && (
         <AgencyCall
           key={calling.agency + calling.city + tab}
@@ -205,13 +227,14 @@ export default function Assemble() {
   );
 }
 
-function CompCard({ c, selected, onClick, travel }: { c: CatalogPerson; selected: boolean; onClick: () => void; travel: string }) {
+function CompCard({ c, selected, onClick, travel, match, onCheck }: { c: CatalogPerson; selected: boolean; onClick: () => void; travel: string; match?: { score: number; hits: string[] }; onCheck?: () => void }) {
   return (
     <Tilt onClick={onClick} selected={selected} className="glass-soft relative cursor-pointer overflow-hidden">
       <div className="relative h-40 overflow-hidden" style={{ background: c.photo ? `url(${c.photo}) center 20%/cover` : '#e4e1dc' }}>
         {!c.photo && <span className="absolute bottom-0 right-3 font-serif text-[110px] leading-[0.8] text-ink/10">{c.name[0]}</span>}
         {selected && <motion.span layoutId={undefined} initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute right-2 top-2 rounded-full bg-ink px-2 py-0.5 text-[11px] font-medium text-white">Booked</motion.span>}
         <span className="absolute left-2 top-2 rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-medium text-ink">{c.agency?.replace(' (demo)', '') ?? 'Freelance'}</span>
+        {c.availability && <span className={`absolute bottom-2 left-2 rounded-full px-2 py-0.5 text-[11px] font-medium text-white ${c.availability === 'available' ? 'bg-emerald-600' : c.availability === 'hold' ? 'bg-amber-500' : 'bg-neutral-500'}`}>{c.availability === 'available' ? 'Available' : c.availability === 'hold' ? 'On hold' : 'Not available'}</span>}
       </div>
       <div className="p-3">
         <div className="flex items-baseline justify-between">
@@ -227,6 +250,12 @@ function CompCard({ c, selected, onClick, travel }: { c: CatalogPerson; selected
           <div className="mt-1 text-[12px] text-grey-1">{c.known ?? c.bio}{c.motion === false ? ' · stills only' : c.role === 'photographer' ? ' · stills + motion' : ''}</div>
         )}
         <div className="mt-2 text-[11px] text-grey-2">{travel}</div>
+        {match && match.score > 0 && <div className="mt-2 inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-800">Matches: {match.hits.slice(0, 3).join(', ')}</div>}
+        {onCheck && (
+          <button onClick={(e) => { e.stopPropagation(); onCheck(); }} className="mt-2 flex h-8 w-full items-center justify-center rounded-full bg-neutral-950 text-[12px] font-medium text-white">
+            {c.availability ? 'Check again' : 'Check availability'}
+          </button>
+        )}
       </div>
     </Tilt>
   );

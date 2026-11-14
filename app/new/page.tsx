@@ -46,10 +46,9 @@ export default function NewBrief() {
   useEffect(() => {
     if (!draft || draft.brief || !draft.refImages[0] || typeof window === 'undefined' || !window.location.search.includes('auto=1')) return;
     window.history.replaceState(null, '', '/new');
-    fetch(draft.refImages[0]).then((r) => r.blob()).then((blob) => {
-      const f = new File([blob], 'reference.jpg', { type: blob.type || 'image/jpeg' });
-      setFiles([f]);
-      read([f], draft.refImages);
+    Promise.all(draft.refImages.map((src, i) => fetch(src).then((r) => r.blob()).then((blob) => new File([blob], `reference-${i + 1}.jpg`, { type: blob.type || 'image/jpeg' })))).then((fs) => {
+      setFiles(fs);
+      read(fs, draft.refImages);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft]);
@@ -58,7 +57,7 @@ export default function NewBrief() {
   const d = draft;
 
   async function addFiles(list: FileList | File[]) {
-    const imgs = Array.from(list).filter((f) => f.type.startsWith('image/')).slice(0, 3);
+    const imgs = Array.from(list).filter((f) => f.type.startsWith('image/')).slice(0, 6);
     if (!imgs.length) return;
     setFiles(imgs);
     const thumbs = await Promise.all(imgs.map((f) => thumb(f, 900)));
@@ -133,7 +132,7 @@ export default function NewBrief() {
                 <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex h-full flex-col items-center justify-center p-10 text-center">
                   <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} className="mb-6 flex size-20 items-center justify-center rounded-full border border-hairline-strong bg-white/60 text-3xl font-light">+</motion.div>
                   <div className="font-serif text-[30px] leading-8">Drop a campaign reference</div>
-                  <div className="mt-2 text-[14px] text-grey-1">A moodboard, tear sheet or past campaign. Up to three images.</div>
+                  <div className="mt-2 text-[14px] text-grey-1">A moodboard, tear sheets or past campaigns. Up to six images.</div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -188,7 +187,7 @@ export default function NewBrief() {
             ) : (
               <motion.div key="brief" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.7, ease }} className="glass p-8">
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-3">{d.refImages[0] && <img src={d.refImages[0]} alt="Reference" className="h-14 w-11 rounded-lg object-cover" />}<span className="text-[13px] text-grey-1">{d.briefVia === 'ai' || d.briefVia === 'cache' ? 'Read from your reference' : 'Example brief'}</span></span>
+                  <span className="flex items-center gap-3"><span className="flex -space-x-3">{d.refImages.slice(0, 6).map((src, i) => <img key={i} src={src} alt="Reference" className="h-14 w-11 rounded-lg object-cover ring-2 ring-white" />)}</span><span className="text-[13px] text-grey-1">{d.briefVia === 'ai' || d.briefVia === 'cache' ? 'Read from your reference' : 'Example brief'}</span></span>
                   <button onClick={() => setEditing(true)} className="text-[12px] text-grey-1 underline underline-offset-4 hover:text-ink">Change reference</button>
                 </div>
                 <motion.p initial={{ opacity: 0, filter: 'blur(8px)' }} animate={{ opacity: 1, filter: 'blur(0px)' }} transition={{ duration: 0.9, delay: 0.15 }} className="mt-4 font-serif text-[30px] leading-[1.15] tracking-[-0.01em]">
@@ -212,6 +211,16 @@ export default function NewBrief() {
                     <span key={c} className="inline-flex items-center gap-1.5 text-[13px] text-neutral-700"><span className="size-2.5 rounded-full ring-1 ring-black/10" style={{ background: b.paletteHex?.[i] ?? '#444' }} />{c.charAt(0).toUpperCase() + c.slice(1).toLowerCase()}</span>
                   ))}
                 </div>
+                {b.needs && (
+                  <div className="mt-6 grid gap-2 sm:grid-cols-3">
+                    {([['Model', b.needs.model], ['Photographer', b.needs.photographer], ['Location', b.needs.location]] as const).map(([k, v]) => (
+                      <div key={k} className="rounded-2xl bg-white/80 p-3 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">
+                        <div className="text-[12px] text-neutral-500">{k} we&rsquo;ll look for</div>
+                        <div className="mt-1 text-[14px] leading-5 text-neutral-900">{v}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <button onClick={() => router.push('/plan')} className="g-btn mt-7 w-full">See the plans →</button>
                 <Tabs defaultValue="shots" className="mt-7">
                   <TabsList className="w-full">

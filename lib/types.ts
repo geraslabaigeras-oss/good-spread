@@ -49,6 +49,8 @@ export type CreativeBrief = {
   aesthetic: string[]; palette: string[]; paletteHex?: string[]; lighting: string;
   setting: 'studio' | 'outdoor' | 'urban' | 'interior' | 'mixed'; settingNote: string;
   styling: string; casting: string; shotList: string[];
+  /** what to look for, read from the moodboard */
+  needs?: { model: string; photographer: string; location: string };
   source: 'ai' | 'demo' | 'cache';
 };
 

@@ -51,6 +51,8 @@ export function toCatalog(r: RosterPerson): CatalogPerson {
     bio: r.notes ?? '', tags: [], photo: r.photo ?? undefined,
     motion: r.role === 'photographer' ? true : undefined,
     travelTo: travelFor(r),
+    lookWords: r.look ? [r.look.look, r.look.hair, ...r.look.vibe, ...r.look.features, ...r.look.bookShows].join(' ').toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 2) : (r.notes ?? '').toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 2),
+    availability: r.availability ?? null,
   };
 }
 

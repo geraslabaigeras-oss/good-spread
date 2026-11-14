@@ -22,10 +22,15 @@ const BriefSchema = z.object({
   styling: z.string(),
   casting: z.string().describe('who to cast, e.g. "Two models, editorial, natural movement"'),
   shotList: z.array(z.string()).describe('4 to 6 shots, include one motion shot'),
+  needs: z.object({
+    model: z.string().describe('the model look to cast, as short search words: e.g. "androgynous, short hair, editorial, film look"'),
+    photographer: z.string().describe('the photographer style to look for: e.g. "35mm film, natural light, street"'),
+    location: z.string().describe('the kind of location: e.g. "raw concrete, open sky, industrial"'),
+  }),
 });
 
 const SYSTEM =
-  'You are a fashion production assistant. Read the campaign reference image(s) and describe the visual direction as a creative brief. ' +
+  'You are a fashion production assistant. Read the campaign moodboard (one or more images) as a whole and describe the shared visual direction as a creative brief, including what model look, photographer style and location to look for. ' +
   'Describe only what is visible or clearly implied: garment, palette, light, setting, styling, casting. Do not identify real people or brands. ' +
   'Keep every field short and concrete, in the voice of a producer writing a call sheet.';
 
@@ -35,7 +40,7 @@ export type BriefResult = { brief: CreativeBrief; via: 'ai' | 'cache' | 'demo'; 
 export async function readBrief(input: BriefInput): Promise<BriefResult> {
   const started = Date.now();
   const h = createHash('sha256');
-  h.update('brief:v1');
+  h.update('brief:v2');
   input.images.forEach((i) => h.update(i.bytes));
   h.update(input.notes ?? '');
   const sha = h.digest('hex');

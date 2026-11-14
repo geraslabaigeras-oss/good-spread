@@ -14,6 +14,7 @@ export const DEMO_BRIEF: CreativeBrief = {
   settingNote: 'Neutral backdrop or raw concrete; nothing that competes with the jacket',
   styling: 'Jacket over knit and wide trousers; boots; no logos',
   casting: 'Two models, editorial, natural movement',
+  needs: { model: 'Editorial, strong walk, natural texture, 20s', photographer: 'Outerwear and natural light, stills and motion', location: 'Raw concrete or old stone, open sky' },
   shotList: ['Full-length walking', 'Three-quarter, collar up', 'Detail: pockets and hardware', 'Back view, hood down', 'Motion: 6 s walk-through'],
   source: 'demo',
 };

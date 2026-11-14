@@ -17,13 +17,18 @@ export function HeroDrop() {
   const input = useRef<HTMLInputElement>(null);
   const [drag, setDrag] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [picked, setPicked] = useState<string[]>([]);
 
-  async function go(file: Blob) {
+  async function go(files: Blob[]) {
+    if (!files.length) return;
     setBusy(true);
-    const img = await thumb(new File([file], 'reference.jpg', { type: file.type || 'image/jpeg' }), 1200);
+    const imgs = await Promise.all(files.slice(0, 6).map((f) => thumb(new File([f], 'reference.jpg', { type: f.type || 'image/jpeg' }), 900)));
     const d = loadDraft();
-    saveDraft({ ...d, refImages: [img], brief: null, place: null });
+    saveDraft({ ...d, refImages: imgs, brief: null, place: null });
     router.push('/new?auto=1');
+  }
+  async function readPicked() {
+    go(await Promise.all(picked.map((id) => fetch(ref(id, 900)).then((r) => r.blob()))));
   }
 
   return (
@@ -31,25 +36,31 @@ export function HeroDrop() {
       <div
         onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
         onDragLeave={() => setDrag(false)}
-        onDrop={(e) => { e.preventDefault(); setDrag(false); const f = e.dataTransfer.files[0]; if (f?.type.startsWith('image/')) go(f); }}
+        onDrop={(e) => { e.preventDefault(); setDrag(false); go(Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith('image/'))); }}
         onClick={() => input.current?.click()}
         className={`relative flex h-[300px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[36px] transition-transform duration-300 ${drag ? 'scale-[1.01]' : ''}`}
       >
         <div className="absolute inset-0"><Grainient colors={['#f4f7fb', '#d6e2f0', '#aec3dc', '#eef3f9']} grainAnimated grainAmount={0.12} speed={0.22} flow={1.1} softness={0.9} dpr={1} /></div>
         <div className="relative flex flex-col items-center text-center text-white">
           <span className="flex size-16 items-center justify-center rounded-full bg-white/20 ring-1 ring-white/40 backdrop-blur-sm"><ImagePlus className="size-7" strokeWidth={1.5} /></span>
-          <p className="mt-4 font-[family-name:var(--font-inter)] text-[28px] font-light tracking-[-0.02em]">{busy ? 'Opening…' : 'Drop a campaign reference'}</p>
-          <p className="mt-1 text-[14px] text-white/80">A moodboard, a tear sheet or a past campaign. Or pick one below.</p>
+          <p className="mt-4 font-[family-name:var(--font-inter)] text-[28px] font-light tracking-[-0.02em]">{busy ? 'Opening…' : 'Drop your moodboard'}</p>
+          <p className="mt-1 text-[14px] text-white/80">Up to six references: campaigns, tear sheets, film stills. Or pick some below.</p>
         </div>
-        <input ref={input} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) go(f); }} />
+        <input ref={input} type="file" accept="image/*" multiple className="hidden" onChange={(e) => e.target.files && go(Array.from(e.target.files))} />
       </div>
       <Marquee pauseOnHover className="mt-4 [--duration:45s] [--gap:0.75rem]">
         {REFS.map((id) => (
-          <button key={id} disabled={busy} onClick={async () => go(await fetch(ref(id, 1200)).then((r) => r.blob()))} className="group h-28 w-[88px] overflow-hidden rounded-[14px] transition-transform hover:-translate-y-1">
+          <button key={id} disabled={busy} onClick={() => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id].slice(0, 6)))} className={`group relative h-28 w-[88px] overflow-hidden rounded-[14px] transition-transform hover:-translate-y-1 ${picked.includes(id) ? 'ring-[3px] ring-neutral-950' : ''}`}>
             <img src={ref(id, 240)} alt="Example reference" className="size-full object-cover transition-transform duration-500 group-hover:scale-105" />
+            {picked.includes(id) && <span className="absolute right-1.5 top-1.5 flex size-5 items-center justify-center rounded-full bg-neutral-950 text-[11px] text-white">{picked.indexOf(id) + 1}</span>}
           </button>
         ))}
       </Marquee>
+      {picked.length > 0 && (
+        <div className="mt-4 flex justify-center">
+          <button onClick={readPicked} disabled={busy} className="rounded-full bg-neutral-950 px-6 py-3 text-[15px] text-white">{busy ? 'Opening…' : `Read ${picked.length} reference${picked.length > 1 ? 's' : ''}`}</button>
+        </div>
+      )}
     </div>
   );
 }
