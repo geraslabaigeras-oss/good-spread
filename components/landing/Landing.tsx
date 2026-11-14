@@ -17,7 +17,7 @@ type Props = {
 };
 
 // Free Unsplash-licensed photography (unsplash.com/license). Credits in the footer.
-const u = (id: string, w = 2000) => `https://images.unsplash.com/${id}?fm=jpg&q=70&w=${w}&auto=format&fit=crop`;
+const u = (id: string, w = 1600) => `https://images.unsplash.com/${id}?fm=jpg&q=60&w=${w}&auto=format&fit=crop`;
 const PHOTOS = {
   brownCoat: { src: u('photo-1550872199-63f4382fe925'), by: 'chantelle taylor' },
   beigeStairs: { src: u('photo-1762605135012-56a59a059e60'), by: 'Mina Rad' },
@@ -66,7 +66,7 @@ export function Landing({ cap, routes, best, moment }: Props) {
       </header>
 
       {/* Aceternity Images Slider */}
-      <ImagesSlider className="h-[100svh]" images={[PHOTOS.brownCoat.src, PHOTOS.beigeStairs.src, PHOTOS.silhouette.src, PHOTOS.runway.src, PHOTOS.snow.src]}>
+      <ImagesSlider className="h-[100svh] bg-neutral-950" images={[PHOTOS.brownCoat.src, PHOTOS.beigeStairs.src, PHOTOS.silhouette.src, PHOTOS.runway.src, PHOTOS.snow.src]}>
         <motion.div initial={{ opacity: 0, y: -80 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="z-50 flex flex-col items-center justify-center px-6">
           <motion.p className="text-center text-sm uppercase tracking-[0.3em] text-neutral-200">Production planning for fashion shoots</motion.p>
           <motion.p className="bg-gradient-to-b from-neutral-50 to-neutral-400 bg-clip-text py-4 text-center text-5xl font-bold text-transparent md:text-8xl">

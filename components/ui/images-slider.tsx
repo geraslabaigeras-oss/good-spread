@@ -1,7 +1,7 @@
 "use client";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "motion/react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 export const ImagesSlider = ({
   images,
@@ -23,16 +23,18 @@ export const ImagesSlider = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadedImages, setLoadedImages] = useState<string[]>([]);
+  const countRef = useRef(0);
+  countRef.current = loadedImages.length;
 
   const handleNext = () => {
     setCurrentIndex((prevIndex) =>
-      prevIndex + 1 === images.length ? 0 : prevIndex + 1
+      prevIndex + 1 >= countRef.current ? 0 : prevIndex + 1
     );
   };
 
   const handlePrevious = () => {
     setCurrentIndex((prevIndex) =>
-      prevIndex - 1 < 0 ? images.length - 1 : prevIndex - 1
+      prevIndex - 1 < 0 ? Math.max(countRef.current - 1, 0) : prevIndex - 1
     );
   };
 
@@ -51,12 +53,11 @@ export const ImagesSlider = ({
       });
     });
 
-    Promise.all(loadPromises)
-      .then((loadedImages) => {
-        setLoadedImages(loadedImages as string[]);
-        setLoading(false);
-      })
-      .catch((error) => console.error("Failed to load images", error));
+    // Show each photo as soon as it arrives; skip any that fail.
+    loadPromises.forEach((p) =>
+      p.then((img) => setLoadedImages((prev) => (prev.includes(img as string) ? prev : [...prev, img as string]))).catch(() => {}),
+    );
+    Promise.allSettled(loadPromises).then(() => setLoading(false));
   };
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -126,8 +127,8 @@ export const ImagesSlider = ({
         perspective: "1000px",
       }}
     >
-      {areImagesLoaded && children}
-      {areImagesLoaded && overlay && (
+      {children}
+      {overlay && (
         <div
           className={cn("absolute inset-0 bg-black/60 z-40", overlayClassName)}
         />

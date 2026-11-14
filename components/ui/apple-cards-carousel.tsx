@@ -272,6 +272,8 @@ export const BlurImage = ({
   src,
   className,
   alt,
+  // next/image-only props must not reach a plain <img>
+  fill: _fill,
   ...rest
 }: ImageProps) => {
   const [isLoading, setLoading] = useState(true);
@@ -288,9 +290,8 @@ export const BlurImage = ({
       height={height}
       loading="lazy"
       decoding="async"
-      blurDataURL={typeof src === "string" ? src : undefined}
       alt={alt ? alt : "Background of a beautiful view"}
-      {...rest}
+      {...(rest as React.ImgHTMLAttributes<HTMLImageElement>)}
     />
   );
 };
