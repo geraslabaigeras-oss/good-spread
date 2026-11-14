@@ -11,6 +11,8 @@ import { Safari } from '@/components/ui/safari';
 import { Iphone } from '@/components/ui/iphone';
 import { MessagesScreen } from '@/components/messages-screen';
 import { BrandLogo } from '@/components/brand-logo';
+import { HeroDrop } from '@/components/hero-drop';
+import { flagUrl } from '@/lib/agencies';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { NumberTicker } from '@/components/ui/number-ticker';
 import { BorderBeam } from '@/components/ui/border-beam';
@@ -76,6 +78,17 @@ function Chip({ children, className }: { children: React.ReactNode; className?: 
   );
 }
 
+/** A card floating out of the hero stage with a little 3D depth. */
+function Pop({ children, className, depth, delay = 0 }: { children: React.ReactNode; className?: string; depth?: { rotateX?: number; rotateY?: number; rotateZ?: number }; delay?: number }) {
+  return (
+    <motion.div className={`absolute z-10 ${className ?? ''}`} style={{ transformPerspective: 1000, ...depth }}
+      initial={{ opacity: 0, y: 30, scale: 0.92 }} animate={{ opacity: 1, y: [0, -8, 0], scale: 1 }}
+      transition={{ opacity: { duration: 0.8, delay }, scale: { duration: 0.8, delay }, y: { duration: 5 + delay, repeat: Infinity, ease: 'easeInOut', delay: delay + 0.8 } }}>
+      {children}
+    </motion.div>
+  );
+}
+
 function Feature({ title, tag, date, light, children }: { title: string; tag: string; date: string; light?: boolean; children: React.ReactNode }) {
   return (
     <div>
@@ -114,10 +127,9 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
 
   return (
     <div className="bg-[#fafafa] font-sans text-neutral-900">
-      {/* Hero: editorial serif + floating real photos in shapes with live chips (after the team's own good-spread hero) */}
-      <section className="relative h-[100svh] min-h-[720px] w-full overflow-hidden bg-[#fafafa]">
-        <div className="pointer-events-none absolute inset-0 opacity-90"><Grainient colors={['#f6f7f8', '#dbe5f1', '#b4c4d8', '#f1e4d8']} lightMode grainAnimated grainAmount={0.1} speed={0.18} flow={1} softness={0.95} dpr={1} /></div>
-        <header className="absolute inset-x-0 top-0 z-30 mx-auto flex h-20 max-w-7xl items-center justify-between px-6 text-[14px] text-neutral-700">
+      {/* Hero: headline, then one living stage (Grainient, our fog palette) with the product's moments floating out in 3D */}
+      <section className="relative overflow-hidden bg-[#fafafa] pb-24">
+        <header className="relative z-30 mx-auto flex h-20 max-w-7xl items-center justify-between px-6 text-[14px] text-neutral-700">
           <span className="font-medium text-neutral-900">good spread</span>
           <nav className="flex items-center gap-8">
             <a href="#how" className="hidden hover:text-neutral-950 md:inline">How it works</a>
@@ -126,39 +138,22 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
           </nav>
         </header>
 
-        {/* floating photos: circle, arch, ticket, rounded */}
-        <Float className="left-[8%] top-[24%] hidden md:block" delay={0.1}>
-          <img src={u('photo-1590972381381-c863cbbf9dd2', 500)} alt="" className="size-40 rounded-full object-cover object-top shadow-[0_20px_50px_rgba(0,0,0,.12)]" />
-          <Chip className="-bottom-5 left-[-30px]">Brief read · {stills} stills · {eur(cap)}</Chip>
-        </Float>
-        <Float className="left-[44%] top-[8%] hidden md:block" delay={0.25}>
-          <img src={u('photo-1613915617430-8ab0fd7c6baf', 400)} alt="" className="h-40 w-32 rounded-[22px] object-cover object-top shadow-[0_20px_50px_rgba(0,0,0,.12)]" />
-        </Float>
-        <Float className="right-[9%] top-[20%] hidden md:block" delay={0.4}>
-          <img src="/photos/loc/loc-court2.jpg" alt="" className="h-52 w-44 rounded-t-full object-cover shadow-[0_20px_50px_rgba(0,0,0,.12)]" />
-          <Chip className="-bottom-4 right-[-10px]">Pilies courtyard · scouted</Chip>
-        </Float>
-        <Float className="bottom-[9%] left-[11%] hidden md:block" delay={0.55}>
-          <div className="relative h-32 w-48 overflow-hidden rounded-[18px] shadow-[0_20px_50px_rgba(0,0,0,.12)] [mask-image:radial-gradient(circle_at_0_50%,transparent_12px,black_13px),radial-gradient(circle_at_100%_50%,transparent_12px,black_13px)] [mask-composite:intersect]">
-            <img src={u('photo-1692180142575-c31fcd106b5b', 500)} alt="" className="size-full object-cover" />
-          </div>
-        </Float>
-        <Float className="bottom-[8%] right-[13%] hidden md:block" delay={0.7}>
-          <img src={u('photo-1550872199-63f4382fe925', 500)} alt="" className="h-40 w-36 rounded-[44px] object-cover object-top shadow-[0_20px_50px_rgba(0,0,0,.12)]" />
-          <Chip className="-top-4 left-[-40px]">Call moved {moment.call} → {moment.newCall}</Chip>
-        </Float>
-
-        <div className="relative z-20 flex h-full flex-col items-center justify-center px-6 text-center">
-          <TextAnimate animation="blurInUp" by="word" as="h1" className="max-w-4xl text-5xl font-medium leading-[1.02] tracking-[-0.04em] text-neutral-950 md:text-[76px]">
+        <div className="relative z-20 mx-auto max-w-4xl px-6 pt-14 text-center">
+          <TextAnimate animation="blurInUp" by="word" as="h1" className="font-[family-name:var(--font-inter)] text-5xl font-light leading-[1.04] tracking-[-0.035em] text-neutral-950 md:text-[76px]">
             Your shoot, produced by an agent that makes the calls.
           </TextAnimate>
-          <TextAnimate animation="blurIn" by="word" delay={0.5} as="p" className="mt-6 max-w-xl text-[17px] leading-7 text-neutral-700">
+          <TextAnimate animation="blurIn" by="word" delay={0.5} as="p" className="mx-auto mt-6 max-w-xl text-[17px] leading-7 text-neutral-600">
             Stay creative. We organise the rest: real locations, your people, agency calls, the budget, and every change on the day.
           </TextAnimate>
-          <div className="mt-9 flex items-center gap-3 text-[15px]">
+          <div className="mt-9 flex items-center justify-center gap-3 text-[15px]">
             <Link href="/new" className="rounded-full bg-neutral-950 px-7 py-3.5 text-white">Start a shoot</Link>
-            <Link href="/people" className="rounded-full bg-white/70 px-7 py-3.5 text-neutral-900 shadow-[inset_0_0_0_1px_rgba(0,0,0,.12)]">Add your people</Link>
+            <Link href="/people" className="rounded-full bg-white px-7 py-3.5 text-neutral-900 shadow-[inset_0_0_0_1px_rgba(0,0,0,.1)]">Add your people</Link>
           </div>
+        </div>
+
+        {/* the stage is the reference drop: drop or pick, and the analysis starts */}
+        <div className="relative mx-auto mt-14 max-w-5xl px-6">
+          <HeroDrop />
         </div>
       </section>
 
@@ -167,17 +162,13 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
         <Grain />
         <div className="relative z-[2] mx-auto max-w-6xl">
           <div className="grid items-end gap-6 md:grid-cols-2">
-            <h2 className="text-4xl font-medium leading-[1.05] tracking-[-0.035em] md:text-[56px]">A flight lands late.<br /><span className="text-neutral-400">Everyone knows in seconds.</span></h2>
-            <p className="max-w-md text-[16px] leading-7 text-neutral-600 md:justify-self-end">You see the clash and three priced fixes on your board. Approve one, and each person gets a text and their new call time on their phone.</p>
+            <h2 className="font-[family-name:var(--font-inter)] text-4xl font-light leading-[1.05] tracking-[-0.035em] md:text-[56px]">A flight lands late.<br /><span className="text-neutral-400">Everyone knows in seconds.</span></h2>
+            <p className="max-w-md text-[16px] leading-7 text-neutral-600 md:justify-self-end">You approve one of three priced fixes, and each person gets a text with their new call time.</p>
           </div>
 
           <div className="relative mt-14">
-            <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.9 }} className="md:mr-[22%]">
-              <Safari url="good-spread.app/board" imageSrc="/screens/board.jpg" className="w-full drop-shadow-[0_30px_60px_rgba(0,0,0,.18)]" />
-              <p className="mt-3 text-[13px] text-neutral-500">Your board: the clash in red, three fixes with their exact cost.</p>
-            </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 60 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.9, delay: 0.25 }} className="relative mx-auto mt-10 w-[260px] md:absolute md:-bottom-10 md:right-0 md:mt-0 md:w-[300px]">
+            <motion.div initial={{ opacity: 0, y: 60 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.9, delay: 0.25 }} className="relative mx-auto mt-6 w-[280px] md:w-[320px]">
               <div className="relative">
                 <Iphone className="drop-shadow-[0_30px_60px_rgba(0,0,0,.25)]" />
                 <div className="absolute overflow-hidden" style={{ left: `${(21.25 / 433) * 100}%`, top: `${(19.25 / 882) * 100}%`, width: `${(389.5 / 433) * 100}%`, height: `${(843.5 / 882) * 100}%`, borderRadius: `${(55.75 / 389.5) * 100}% / ${(55.75 / 843.5) * 100}%` }}>
@@ -201,20 +192,20 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
       <section id="agent" className="bg-[#fafafa]">
         <div className="mx-auto max-w-6xl border-x border-neutral-200/80 px-6 py-24 md:px-10">
           <div className="flex flex-wrap items-end justify-between gap-6">
-            <h2 className="text-4xl tracking-[-0.02em] text-neutral-950 md:text-5xl">What the agent does for you</h2>
+            <h2 className="font-[family-name:var(--font-inter)] text-4xl font-light tracking-[-0.035em] text-neutral-950 md:text-5xl">What the agent does for you</h2>
             <Link href="/new" className="rounded-full border border-neutral-200 bg-white px-5 py-2.5 text-[15px] shadow-[0_1px_2px_rgba(0,0,0,.04)]">Try it</Link>
           </div>
 
           <div className="mt-12 grid gap-4 md:grid-cols-3">
             <Feature title="Scouts real places for the look" tag="Claude · Wikipedia" date="Brief">
-              <div className="relative h-full bg-[radial-gradient(120%_90%_at_10%_10%,#f2c48d_0%,#d98a45_40%,#9c5a2b_75%,#5b3420_100%)]">
+              <div className="relative h-full bg-[radial-gradient(120%_90%_at_10%_10%,#efe5d8_0%,#cdb79c_40%,#8f7863_75%,#4d4038_100%)]">
                 <Grain />
                 <div className="absolute left-6 top-6 text-[34px] leading-none tracking-[-0.03em] text-white">Locations</div>
                 <div className="absolute bottom-6 right-6 text-[34px] leading-none tracking-[-0.03em] text-white/95">Vilnius · Riga</div>
               </div>
             </Feature>
             <Feature title="Calls agencies in their language" tag="ElevenLabs" date="Team">
-              <div className="relative flex h-full items-center justify-center bg-[radial-gradient(90%_70%_at_75%_15%,#f06b4f_0%,transparent_60%),radial-gradient(80%_80%_at_20%_85%,#1f6b45_0%,transparent_65%),linear-gradient(135deg,#e7a07a,#2d5a3f)]">
+              <div className="relative flex h-full items-center justify-center bg-[radial-gradient(90%_70%_at_75%_15%,#dbe5f1_0%,transparent_60%),radial-gradient(80%_80%_at_20%_85%,#3a4a63_0%,transparent_65%),linear-gradient(135deg,#b9c8da,#55667f)]">
                 <Grain />
                 <div className="relative flex items-center gap-3 text-[40px] tracking-[-0.03em] text-white">Calls <span className="rounded-full border-2 border-white px-3 py-0.5 text-[24px]">FR · IT · SE</span></div>
               </div>
@@ -238,7 +229,7 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
 
           <div className="mt-4 grid gap-4 md:grid-cols-[1.4fr_1fr]">
             <div className="relative min-h-[460px] rounded-[28px] p-8">
-              <div className="absolute inset-0 overflow-hidden rounded-[28px] bg-[radial-gradient(120%_100%_at_20%_0%,#a9bccb_0%,#5b6f8f_35%,#232c4a_70%,#0d0f1a_100%)]"><Grain /></div>
+              <div className="absolute inset-0 overflow-hidden rounded-[28px] bg-[radial-gradient(120%_100%_at_20%_0%,#d7dfe8_0%,#8a9bb1_35%,#3c4656_70%,#1d2129_100%)]"><Grain /></div>
               <div className="relative mx-auto flex max-w-[420px] flex-col gap-3 pt-6 [perspective:900px]">
                 <motion.span animate={{ y: [0, -6, 0] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} style={{ rotateY: -12, rotateX: 6 }} className="-mr-6 self-end rounded-full border border-white/50 bg-white/10 px-4 py-2 text-[14px] text-white shadow-[0_20px_40px_rgba(0,0,0,.25)] backdrop-blur md:-mr-24">Bonjour, je suis l&rsquo;assistant de la production. Votre mannequin est-elle disponible le 21 ?</motion.span>
                 <motion.span animate={{ y: [0, 6, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }} style={{ rotateY: 10, rotateX: 4 }} className="-ml-4 self-start rounded-2xl bg-white px-4 py-2.5 text-[14px] text-neutral-900 shadow-[0_30px_60px_rgba(0,0,0,.35)] md:-ml-20">Oui, elle est disponible. Tarif journalier 600 €, usage web 12 mois.</motion.span>

@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, LayoutGroup, motion } from 'motion/react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { CreativeBrief } from '@/lib/types';
 import { defaultDna, defaultLooks } from '@/lib/engine';
@@ -41,6 +41,18 @@ export default function NewBrief() {
   const [editing, setEditing] = useState(false);
   const [stage, setStage] = useState<{ image: string; brief: CreativeBrief | null } | null>(null);
   const input = useRef<HTMLInputElement>(null);
+
+  // Arriving from the hero drop (?auto=1): read the stored reference straight away.
+  useEffect(() => {
+    if (!draft || draft.brief || !draft.refImages[0] || typeof window === 'undefined' || !window.location.search.includes('auto=1')) return;
+    window.history.replaceState(null, '', '/new');
+    fetch(draft.refImages[0]).then((r) => r.blob()).then((blob) => {
+      const f = new File([blob], 'reference.jpg', { type: blob.type || 'image/jpeg' });
+      setFiles([f]);
+      read([f], draft.refImages);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft]);
 
   if (!draft) return <Stage><div /></Stage>;
   const d = draft;

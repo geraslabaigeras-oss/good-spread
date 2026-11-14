@@ -3,8 +3,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
-import { Ripple } from '@/components/ui/ripple';
-import { Marquee } from '@/components/ui/marquee';
 import type { CreativeBrief } from '@/lib/types';
 
 const SHOOTS = ['photo-1550872199-63f4382fe925', 'photo-1613915617430-8ab0fd7c6baf', 'photo-1692180142575-c31fcd106b5b', 'photo-1508964801641-4b2410705b73', 'photo-1590972381381-c863cbbf9dd2', 'photo-1635262090780-2ed9e994fff4', 'photo-1603189343302-e603f7add05a', 'photo-1733322980454-62a1d5727460', 'photo-1739808914849-01ba195c4f93', 'photo-1645561305502-63a9ba09ab09'];
@@ -36,66 +34,63 @@ export async function extractPalette(src: string, n = 6): Promise<string[]> {
 
 const STEPS = ['Light', 'Palette', 'Texture', 'Garment', 'Setting'] as const;
 
-/** Full-screen reading of the reference: depth waves, real colours, analysis chips, other shoots drifting by. */
-export function AnalysisStage({ image, brief, onDone }: { image: string; brief: CreativeBrief | null; onDone: () => void }) {
-  const [palette, setPalette] = useState<string[]>([]);
-  const [step, setStep] = useState(0);
-
-  useEffect(() => { extractPalette(image).then(setPalette).catch(() => {}); }, [image]);
+/** Pseudo-3D carousel: positions from an angle, no 3D CSS (works everywhere). */
+function Ring() {
+  const [a, setA] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setStep((s) => Math.min(s + 1, STEPS.length)), 900);
+    let raf = 0; const t0 = performance.now();
+    const tick = (t: number) => { setA(((t - t0) / 40000) * Math.PI * 2); raf = requestAnimationFrame(tick); };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return (
+    <div className="pointer-events-none absolute inset-0">
+      {SHOOTS.map((id, i) => {
+        const ang = a + (i / SHOOTS.length) * Math.PI * 2;
+        const depth = (Math.cos(ang) + 1) / 2; // 0 back .. 1 front
+        return (
+          <img key={id} src={shot(id)} alt="" className="absolute left-1/2 top-1/2 h-40 w-28 rounded-2xl object-cover shadow-[0_20px_40px_rgba(20,40,90,.18)]"
+            style={{ transform: `translate(-50%, -50%) translateX(${Math.sin(ang) * 460}px) translateY(${(depth - 0.5) * 30}px) scale(${0.6 + depth * 0.4})`, opacity: 0.25 + depth * 0.6, zIndex: Math.round(depth * 10) }} />
+        );
+      })}
+    </div>
+  );
+}
+
+const LINES = ['Reading the light and the mood', 'Looking at the garment and styling', 'Comparing with similar campaigns', 'Writing your brief'];
+
+/** Calm full-screen reading: the reference in the centre, a slow 3D ring of similar looks spinning around it. */
+export function AnalysisStage({ image, brief, onDone }: { image: string; brief: CreativeBrief | null; onDone: () => void }) {
+  const [line, setLine] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setLine((l) => Math.min(l + 1, LINES.length - 1)), 1600);
     return () => clearInterval(t);
   }, []);
   useEffect(() => {
-    if (brief && step >= STEPS.length) { const t = setTimeout(onDone, 1600); return () => clearTimeout(t); }
-  }, [brief, step, onDone]);
+    if (brief) { const t = setTimeout(onDone, 1800); return () => clearTimeout(t); }
+  }, [brief, onDone]);
 
-  const value = (k: (typeof STEPS)[number]) => {
-    if (!brief) return null;
-    return k === 'Light' ? brief.lighting : k === 'Palette' ? brief.palette.slice(0, 3).join(', ') : k === 'Texture' ? brief.aesthetic.slice(0, 2).join(', ') : k === 'Garment' ? brief.garment : brief.setting;
-  };
-
+  const n = SHOOTS.length;
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.5 } }}
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.6 } }}
       className="fixed inset-0 z-[80] flex flex-col items-center justify-center overflow-hidden bg-[#f6f7f8]">
-      {/* other shoots drifting behind */}
-      <div className="pointer-events-none absolute inset-x-0 top-[3%] opacity-30 [mask-image:linear-gradient(to_right,transparent,black_20%,black_80%,transparent)]">
-        <Marquee className="[--duration:28s] [--gap:1rem]">{SHOOTS.map((id) => <img key={id} src={shot(id)} alt="" className="h-28 w-20 rounded-xl object-cover grayscale" />)}</Marquee>
-      </div>
-      <div className="pointer-events-none absolute inset-x-0 bottom-[1.5%] opacity-30 [mask-image:linear-gradient(to_right,transparent,black_20%,black_80%,transparent)]">
-        <Marquee reverse className="[--duration:34s] [--gap:1rem]">{[...SHOOTS].reverse().map((id) => <img key={id} src={shot(id)} alt="" className="h-28 w-20 rounded-xl object-cover grayscale" />)}</Marquee>
-      </div>
-
-      {/* the reference with depth waves */}
-      <div className="relative flex size-[520px] items-center justify-center">
-        <Ripple mainCircleSize={300} numCircles={7} />
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.8 }} className="relative z-10 h-[300px] w-[240px] overflow-hidden rounded-[24px] shadow-[0_30px_80px_rgba(0,0,0,.25)]">
-          <img src={image} alt="Reference" className="size-full object-cover" />
-          {!brief && <motion.div className="absolute inset-x-0 h-0.5 bg-white shadow-[0_0_24px_6px_rgba(255,255,255,.8)]" animate={{ top: ['4%', '96%', '4%'] }} transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }} />}
+      {/* 3D ring of similar looks */}
+      <div className="relative flex h-[440px] w-full items-center justify-center [perspective:1400px]">
+        <Ring />
+        <motion.div initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.9 }}
+          className="relative z-30 h-[300px] w-[230px] overflow-hidden rounded-[26px] shadow-[0_40px_90px_rgba(20,40,90,.3)] ring-1 ring-white/60">
+          <img src={image} alt="Your reference" className="size-full object-cover" />
         </motion.div>
-        {/* colours flying out */}
-        {palette.map((c, i) => {
-          const a = (i / palette.length) * Math.PI * 2 - Math.PI / 2;
-          return (
-            <motion.span key={c + i} initial={{ x: 0, y: 0, scale: 0, opacity: 0 }} animate={{ x: Math.cos(a) * 215, y: Math.sin(a) * 215, scale: 1, opacity: 1 }} transition={{ delay: 0.6 + i * 0.15, type: 'spring', stiffness: 120, damping: 14 }}
-              className="absolute z-20 size-12 rounded-full shadow-[0_8px_24px_rgba(0,0,0,.18)] ring-4 ring-white" style={{ background: c }} title={c} />
-          );
-        })}
       </div>
-
-      {/* analysis chips */}
-      <div className="relative z-10 mt-2 flex flex-wrap justify-center gap-2">
-        {STEPS.map((k, i) => (
-          <motion.div key={k} initial={{ opacity: 0.25 }} animate={{ opacity: i < step ? 1 : 0.25 }} className={`rounded-full px-4 py-2 text-[14px] ${i < step ? 'bg-neutral-950 text-white' : 'bg-white text-neutral-500 shadow-[inset_0_0_0_1px_rgba(0,0,0,.08)]'}`}>
-            {k}{value(k) && i < step ? <span className="ml-2 text-white/70">{value(k)}</span> : null}
-          </motion.div>
-        ))}
+      <div className="relative z-10 mt-6 h-14 text-center">
+        <AnimatePresence mode="wait">
+          <motion.p key={brief ? 'done' : line} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.4 }}
+            className="font-[family-name:var(--font-inter)] text-[22px] font-light tracking-[-0.02em] text-neutral-800">
+            {brief ? `${brief.garment}. ${brief.aesthetic.slice(0, 3).join(', ')}.` : LINES[line]}
+          </motion.p>
+        </AnimatePresence>
+        <p className="mt-1 text-[13px] text-neutral-400">{brief ? 'Your brief is ready' : 'Claude is reading your reference'}</p>
       </div>
-      <AnimatePresence mode="wait">
-        <motion.p key={brief ? 'done' : 'reading'} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="relative z-10 mt-6 text-[15px] text-neutral-500">
-          {brief ? 'Got it. Building your brief…' : 'Reading the reference and comparing it with other shoots…'}
-        </motion.p>
-      </AnimatePresence>
     </motion.div>
   );
 }
