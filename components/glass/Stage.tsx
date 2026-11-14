@@ -1,19 +1,23 @@
 'use client';
 
 import Link from 'next/link';
+import Grainient from '@/components/Grainient';
+import { VoiceOrb } from '@/components/voice-orb';
 import { animate, motion, useMotionValue, useTransform } from 'motion/react';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 
 const noop = () => () => {};
 const lastSlug = () => { try { return localStorage.getItem('gs-last-slug') ?? 'jacket-campaign'; } catch { return 'jacket-campaign'; } };
 
-export function Stage({ children, backdrop }: { children: React.ReactNode; backdrop?: string | null }) {
+export function Stage({ children, backdrop, voice = true }: { children: React.ReactNode; backdrop?: string | null; voice?: boolean }) {
   return (
     <div className="stage">
-      <div className="aurora"><span /><span /><span /></div>
+      {/* living background: one slow grainy colour field (React Bits Grainient), 1x pixel ratio, no blur on top */}
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-90"><Grainient colors={['#f6f7f8', '#dbe5f1', '#b4c4d8', '#f1e4d8']} lightMode grainAnimated grainAmount={0.1} speed={0.18} flow={1} softness={0.95} dpr={1} /></div>
       {backdrop && <div className="backdrop-img" style={{ backgroundImage: `url(${backdrop})` }} />}
       <div className="grain" />
       <div className="content">{children}</div>
+      {voice && <VoiceOrb />}
     </div>
   );
 }

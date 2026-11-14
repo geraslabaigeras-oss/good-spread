@@ -3,6 +3,8 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
 import { motion } from 'motion/react';
+import Grainient from '@/components/Grainient';
+import { VoiceOrb } from '@/components/voice-orb';
 import { TextAnimate } from '@/components/ui/text-animate';
 import { Card, Carousel } from '@/components/ui/apple-cards-carousel';
 import { Safari } from '@/components/ui/safari';
@@ -114,7 +116,7 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
     <div className="bg-[#fafafa] font-sans text-neutral-900">
       {/* Hero: editorial serif + floating real photos in shapes with live chips (after the team's own good-spread hero) */}
       <section className="relative h-[100svh] min-h-[720px] w-full overflow-hidden bg-[#fafafa]">
-        <Grain />
+        <div className="pointer-events-none absolute inset-0 opacity-90"><Grainient colors={['#f6f7f8', '#dbe5f1', '#b4c4d8', '#f1e4d8']} lightMode grainAnimated grainAmount={0.1} speed={0.18} flow={1} softness={0.95} dpr={1} /></div>
         <header className="absolute inset-x-0 top-0 z-30 mx-auto flex h-20 max-w-7xl items-center justify-between px-6 text-[14px] text-neutral-700">
           <span className="font-medium text-neutral-900">good spread</span>
           <nav className="flex items-center gap-8">
@@ -147,7 +149,7 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
         </Float>
 
         <div className="relative z-20 flex h-full flex-col items-center justify-center px-6 text-center">
-          <TextAnimate animation="blurInUp" by="word" as="h1" className="max-w-4xl font-[family-name:var(--font-instrument)] text-5xl leading-[1.02] tracking-[-0.02em] text-neutral-950 md:text-[84px]">
+          <TextAnimate animation="blurInUp" by="word" as="h1" className="max-w-4xl text-5xl font-medium leading-[1.02] tracking-[-0.04em] text-neutral-950 md:text-[76px]">
             Your shoot, produced by an agent that makes the calls.
           </TextAnimate>
           <TextAnimate animation="blurIn" by="word" delay={0.5} as="p" className="mt-6 max-w-xl text-[17px] leading-7 text-neutral-700">
@@ -165,7 +167,7 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
         <Grain />
         <div className="relative z-[2] mx-auto max-w-6xl">
           <div className="grid items-end gap-6 md:grid-cols-2">
-            <h2 className="font-[family-name:var(--font-instrument)] text-5xl leading-[1] tracking-[-0.02em] md:text-6xl">A flight lands late.<br /><span className="italic text-neutral-500">Everyone knows in seconds.</span></h2>
+            <h2 className="text-4xl font-medium leading-[1.05] tracking-[-0.035em] md:text-[56px]">A flight lands late.<br /><span className="text-neutral-400">Everyone knows in seconds.</span></h2>
             <p className="max-w-md text-[16px] leading-7 text-neutral-600 md:justify-self-end">You see the clash and three priced fixes on your board. Approve one, and each person gets a text and their new call time on their phone.</p>
           </div>
 
@@ -182,8 +184,10 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
                   <MessagesScreen name="Model" before={moment.call} after={moment.newCall} place="Pilies courtyard, Vilnius" url="good-spread.app/p/k3f9" />
                 </div>
               </div>
-              <motion.div initial={{ opacity: 0, y: -20, scale: 0.9 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 1.1, type: 'spring' }}
-                className="absolute -left-10 top-16 w-[280px] rounded-2xl bg-white/90 p-3 shadow-[0_18px_40px_rgba(0,0,0,.18)] backdrop-blur-xl md:-left-24">
+              <motion.div initial={{ opacity: 0, y: -20, scale: 0.9, rotateX: 18, rotateY: -22 }} whileInView={{ opacity: 1, y: [0, -8, 0], scale: 1.06, rotateX: 10, rotateY: -16 }} viewport={{ once: true }}
+                transition={{ opacity: { duration: 0.6, delay: 1.1 }, scale: { duration: 0.6, delay: 1.1 }, y: { duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1.7 } }}
+                style={{ transformPerspective: 900 }}
+                className="absolute -left-16 top-24 z-20 w-[300px] rounded-2xl bg-white p-3.5 shadow-[0_40px_80px_rgba(20,40,90,.28),0_10px_20px_rgba(0,0,0,.08)] md:-left-44">
                 <div className="flex items-center gap-2 text-[11px] text-neutral-500"><BrandLogo name="imessage" size={14} /> Messages · now</div>
                 <p className="mt-1 text-[13px] leading-[18px] text-neutral-900"><b>good spread:</b> Your call moved {moment.call} → {moment.newCall}. Tap to confirm.</p>
               </motion.div>
@@ -219,9 +223,13 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
               <div className="flex h-full flex-col items-center justify-center bg-white px-6 text-center">
                 <div className="text-[13px] font-semibold">good spread</div>
                 <div className="text-[28px] tracking-[-0.02em]">Three fixes, priced</div>
-                <div className="mt-4 grid w-full grid-cols-3 gap-2 rounded-2xl bg-neutral-900 p-4 text-white">
+                <div className="mt-5 grid w-full grid-cols-3 divide-x divide-white/15 rounded-2xl bg-neutral-900 py-4 text-white">
                   {moment.fixes.map((f) => (
-                    <div key={f.label} className="text-center"><div className="text-[22px] font-light tabular-nums">{delta(f.cost)}</div><div className="mt-1 text-[10px] text-white/60">{f.label}</div></div>
+                    <div key={f.label} className="flex flex-col items-center gap-1.5 px-2">
+                      <span className="text-[11px] leading-tight text-white/60">{f.label}</span>
+                      <span className="text-[22px] font-light leading-none tabular-nums">{delta(f.cost)}</span>
+                      {f.best && <span className="rounded-full bg-white px-2 py-0.5 text-[9px] font-medium text-neutral-900">Best</span>}
+                    </div>
                   ))}
                 </div>
               </div>
@@ -229,13 +237,13 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
           </div>
 
           <div className="mt-4 grid gap-4 md:grid-cols-[1.4fr_1fr]">
-            <div className="relative min-h-[460px] overflow-hidden rounded-[28px] bg-[radial-gradient(120%_100%_at_20%_0%,#a9bccb_0%,#5b6f8f_35%,#232c4a_70%,#0d0f1a_100%)] p-8">
-              <Grain />
-              <div className="relative mx-auto flex max-w-[380px] flex-col gap-3 pt-6">
-                <span className="self-end rounded-full border border-white/50 px-4 py-2 text-[14px] text-white">Bonjour, je suis l&rsquo;assistant de la production. Votre mannequin est-elle disponible le 21 ?</span>
-                <span className="self-start rounded-2xl bg-white px-4 py-2.5 text-[14px] text-neutral-900">Oui, elle est disponible. Tarif journalier 600 €, usage web 12 mois.</span>
+            <div className="relative min-h-[460px] rounded-[28px] p-8">
+              <div className="absolute inset-0 overflow-hidden rounded-[28px] bg-[radial-gradient(120%_100%_at_20%_0%,#a9bccb_0%,#5b6f8f_35%,#232c4a_70%,#0d0f1a_100%)]"><Grain /></div>
+              <div className="relative mx-auto flex max-w-[420px] flex-col gap-3 pt-6 [perspective:900px]">
+                <motion.span animate={{ y: [0, -6, 0] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} style={{ rotateY: -12, rotateX: 6 }} className="-mr-6 self-end rounded-full border border-white/50 bg-white/10 px-4 py-2 text-[14px] text-white shadow-[0_20px_40px_rgba(0,0,0,.25)] backdrop-blur md:-mr-24">Bonjour, je suis l&rsquo;assistant de la production. Votre mannequin est-elle disponible le 21 ?</motion.span>
+                <motion.span animate={{ y: [0, 6, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }} style={{ rotateY: 10, rotateX: 4 }} className="-ml-4 self-start rounded-2xl bg-white px-4 py-2.5 text-[14px] text-neutral-900 shadow-[0_30px_60px_rgba(0,0,0,.35)] md:-ml-20">Oui, elle est disponible. Tarif journalier 600 €, usage web 12 mois.</motion.span>
                 <span className="self-end rounded-full border border-white/50 px-4 py-2 text-[14px] text-white">Parfait, je vous envoie le brief.</span>
-                <span className="inline-flex items-center gap-2 self-start rounded-full bg-white px-4 py-2 text-[14px] text-neutral-900"><span className="size-2 rounded-full bg-emerald-500" /> Available · €600 · added to the plan</span>
+                <motion.span animate={{ y: [0, -5, 0] }} transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }} style={{ rotateY: 14, rotateZ: -2 }} className="-ml-2 inline-flex items-center gap-2 self-start rounded-full bg-white px-4 py-2 text-[14px] text-neutral-900 shadow-[0_24px_50px_rgba(0,0,0,.35)] md:-ml-28"><span className="size-2 rounded-full bg-emerald-500" /> Available · €600 · added to the plan</motion.span>
               </div>
               <div className="absolute bottom-7 left-8 right-8 text-white">
                 <div className="text-[15px] text-white/70">Agency calls</div>
@@ -260,11 +268,7 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
         </div>
       </section>
 
-      {/* floating voice pill (ElevenLabs) */}
-      <Link href="/new" className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-3 rounded-full bg-white py-2 pl-2 pr-5 text-[15px] shadow-[0_10px_30px_rgba(0,0,0,.12),inset_0_0_0_1px_rgba(0,0,0,.05)]">
-        <span className="size-9 rounded-full bg-[radial-gradient(circle_at_30%_30%,#bfe3ff,#3c8dde_45%,#2f6b3a_80%)]" />
-        Voice brief
-      </Link>
+      <VoiceOrb />
 
       {/* Aceternity Apple Cards Carousel with real photography */}
       <section className="py-20">

@@ -23,7 +23,7 @@ const fetcher = async (url: string) => {
 
 export function MyDay({ token }: { token: string }) {
   return (
-    <Stage>
+    <Stage voice={false}>
       <div className="board-dark">
         <ToastProvider position="bottom-center">
           <MyDayInner token={token} />

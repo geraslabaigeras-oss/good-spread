@@ -88,7 +88,7 @@ export default function Strategies() {
       <TopBar step={2} right={<span className="text-[13px] text-grey-1">Cap {fmtEur(draft.cap)}</span>} />
       <div className="mx-auto max-w-[1280px] px-8 pb-16">
         <div className="flex flex-wrap items-end justify-between gap-6 pt-6">
-          <h1 className="font-[family-name:var(--font-instrument)] text-[56px] leading-[0.95] tracking-[-0.02em]">Three ways to make it.</h1>
+          <h1 className="text-[56px] leading-[0.95] tracking-[-0.02em]">Three ways to make it.</h1>
           {/* Ask the producer assistant */}
           <form onSubmit={(e) => { e.preventDefault(); ask(); }} className="flex w-full max-w-[460px] items-center gap-2 rounded-full bg-white/80 p-1.5 pl-5 shadow-[inset_0_0_0_1px_rgba(0,0,0,.08),0_10px_30px_rgba(0,0,0,.06)]">
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ask: what about London? somewhere warmer?" className="flex-1 bg-transparent text-[15px] outline-none placeholder:text-neutral-400" />
@@ -131,7 +131,7 @@ export default function Strategies() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/0 to-black/0" />
                   <div className="absolute bottom-4 left-5 text-white">
                     <div className="text-[13px] opacity-80">{s.city}{loc && !loc.id.startsWith('open-') ? ` · ${loc.name.split(',')[0]}` : ''}</div>
-                    <div className="font-[family-name:var(--font-instrument)] text-[40px] leading-none">{s.name}</div>
+                    <div className="text-[40px] leading-none">{s.name}</div>
                   </div>
                   {isRec && <span className="absolute right-4 top-4 rounded-full bg-white px-3 py-1 text-[12px] font-medium">Recommended</span>}
                 </div>

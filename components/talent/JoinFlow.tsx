@@ -57,7 +57,7 @@ export function JoinFlow({ slug, people }: { slug: string; title: string; dateIS
   }
 
   return (
-    <Stage><div className="board-dark mx-auto min-h-dvh max-w-[420px] p-5">
+    <Stage voice={false}><div className="board-dark mx-auto min-h-dvh max-w-[420px] p-5">
       <motion.div variants={parent} initial="hidden" animate="shown">
         <motion.div variants={item} className="flex h-10 items-center">
           <Wordmark demo />
