@@ -8,6 +8,7 @@ export const DEMO_BRIEF: CreativeBrief = {
   summary: 'Quiet, utilitarian outerwear shot like a documentary still: one garment, four colourways, real movement.',
   aesthetic: ['Editorial', 'Utilitarian', 'Documentary'],
   palette: ['Olive', 'Sand', 'Black', 'Navy', 'Concrete grey'],
+  paletteHex: ['#5b5a3c', '#c9b99a', '#141414', '#1f2a3d', '#9a9893'],
   lighting: 'Soft directional key, hard rim; overcast feel',
   setting: 'studio',
   settingNote: 'Neutral backdrop or raw concrete; nothing that competes with the jacket',

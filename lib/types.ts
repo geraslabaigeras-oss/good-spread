@@ -45,7 +45,7 @@ export type Deliverables = { stills: number; motion: number; usageMonths: number
 export type CreativeBrief = {
   title: string; brand: string; garment: string;
   summary: string;
-  aesthetic: string[]; palette: string[]; lighting: string;
+  aesthetic: string[]; palette: string[]; paletteHex?: string[]; lighting: string;
   setting: 'studio' | 'outdoor' | 'urban' | 'interior' | 'mixed'; settingNote: string;
   styling: string; casting: string; shotList: string[];
   source: 'ai' | 'demo' | 'cache';

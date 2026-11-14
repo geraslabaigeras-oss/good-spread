@@ -145,8 +145,9 @@ export async function cacheExtraction(sha: string, result: unknown) {
 }
 
 /** Restore the seed; clear events/revisions/acks/pending. `full` also deletes viewers (and their phone numbers). */
-export async function resetProduction(slug: string, full: boolean): Promise<string> {
-  const seed = makeSeed();
+export async function resetProduction(slug: string, full: boolean, data?: Production): Promise<string> {
+  const seed = data ? structuredClone(data) : makeSeed();
+  seed.slug = slug;
   if (isLocal()) {
     const id = tx((t) => {
       let r = t.productions.find((x) => x.slug === slug);

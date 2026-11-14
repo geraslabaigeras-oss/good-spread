@@ -59,7 +59,7 @@ describe('budget cut', () => {
     expect(detectConflicts(a.plan)).toEqual([]);
     expect(a.levers!.length).toBeGreaterThan(0);
     const sum = a.levers!.reduce((s, l) => s + l.amount, 0);
-    expect(Math.round(sum * 100) / 100).toBe(Math.round((computeBudget(a.plan).total - computeBudget(p).total) * 100) / 100);
+    expect(Math.round(sum * 100) / 100).toBe(a.costDelta);
     const r = receipt(pending, a, '2026-11-21T08:00:05.000Z');
     expect(r.saved).toBeGreaterThan(0);
   });

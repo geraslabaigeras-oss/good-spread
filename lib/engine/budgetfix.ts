@@ -210,7 +210,7 @@ export function proposeBudgetFixes(p: Production): Fix[] {
     let cur: Production = clone(p);
     for (const l of c.set) {
       const next = l.apply(cur)!;
-      items.push({ label: l.short, amount: round2(computeBudget(next).total - computeBudget(cur).total) });
+      items.push({ label: l.short, amount: round2(spend(next) - spend(cur)) });
       cur = next;
     }
     const dna = evaluateDna(p, c.plan);

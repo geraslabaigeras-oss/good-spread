@@ -109,7 +109,7 @@ function FixCard({
   const rect = ref.current?.getBoundingClientRect();
   const diag = rect ? Math.hypot(rect.width, rect.height) : 600;
   const fromOvertime = f.kind === 'SHIFT_FROM' && f.costDelta > 0;
-  const firstChange = f.detail ?? f.changes[0]?.text ?? '';
+  const firstChange = f.levers?.length ? f.levers.map((l) => `${l.label} ${fmtDelta(l.amount)}`).join(' · ') : f.detail ?? f.changes[0]?.text ?? '';
 
   return (
     <motion.div
@@ -177,7 +177,11 @@ function ReceiptView({ applied, countUp }: { applied: Applied; countUp: boolean 
       <div className="grid min-h-0 grid-cols-4 gap-3" style={{ height: 'min(140px, 100%)' }}>
         <Metric label="People updated" value={r.peopleUpdated} i={0} countUp={countUp} k={applied.version} />
         <Metric label="Messages typed" value={0} i={1} countUp={false} k={applied.version} />
-        <Metric label="Overtime avoided" value={r.overtimeAvoided} i={2} countUp={countUp} k={applied.version} euro />
+        {r.saved != null ? (
+          <Metric label="Budget saved" value={r.saved} i={2} countUp={countUp} k={applied.version} euro />
+        ) : (
+          <Metric label="Overtime avoided" value={r.overtimeAvoided} i={2} countUp={countUp} k={applied.version} euro />
+        )}
         <Metric label="Fixed in" value={r.fixedInSeconds} i={3} countUp={countUp} k={applied.version} suffix=" s" />
       </div>
     </>
