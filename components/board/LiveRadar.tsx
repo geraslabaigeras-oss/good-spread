@@ -91,7 +91,7 @@ export function LiveRadar({ airport, watch = [] }: { airport: string; watch?: { 
           </div>
           <div className="text-[12px] text-neutral-500">{error ? 'Radar is not answering right now' : data ? `${flying.length} planes in the air nearby · updates every 10 s` : 'Connecting…'}</div>
         </div>
-        <span className="text-[11px] text-neutral-400">OpenSky Network</span>
+        <span className="text-[11px] text-neutral-400">{data?.source ?? ''}</span>
       </div>
       <div ref={box} className="mt-3 h-[260px] w-full bg-[#eef2f6]" />
       <div className="space-y-1.5 px-5 py-4">

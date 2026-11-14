@@ -31,6 +31,32 @@ export async function GET(req: Request) {
     if (!ap) return fail(400, 'unknown_airport');
     const hit = cache.get(code);
     if (hit && Date.now() - hit.at < 10_000) return ok({ airport: { code, ...ap }, planes: hit.planes, source: 'OpenSky Network', at: hit.at });
+    // 1) adsb.lol (open ADS-B community feed, works from cloud servers)
+    try {
+      const r = await fetch(`https://api.adsb.lol/v2/point/${ap.lat}/${ap.lon}/80`, { signal: AbortSignal.timeout(6000), cache: 'no-store' });
+      if (r.ok) {
+        const j = (await r.json()) as { ac?: Record<string, unknown>[] };
+        const planes: Plane[] = (j.ac ?? [])
+          .filter((a) => typeof a.lat === 'number' && typeof a.lon === 'number')
+          .map((a) => {
+            const pos = { lat: a.lat as number, lon: a.lon as number };
+            const ground = a.alt_baro === 'ground';
+            return {
+              id: String(a.hex), callsign: String(a.flight ?? '').trim(), country: String(a.t ?? ''), ...pos,
+              altM: ground ? 0 : typeof a.alt_baro === 'number' ? Math.round(a.alt_baro * 0.3048) : null,
+              speedKmh: typeof a.gs === 'number' ? Math.round(a.gs * 1.852) : null,
+              heading: typeof a.track === 'number' ? a.track : (typeof a.true_heading === 'number' ? a.true_heading : null),
+              climb: typeof a.baro_rate === 'number' ? a.baro_rate * 0.00508 : null, onGround: ground, distKm: Math.round(km(ap, pos)),
+            };
+          })
+          .sort((x, y) => x.distKm - y.distKm)
+          .slice(0, 60);
+        cache.set(code, { at: Date.now(), planes });
+        return ok({ airport: { code, ...ap }, planes, source: 'adsb.lol', at: Date.now() });
+      }
+    } catch { /* fall through to OpenSky */ }
+
+    // 2) OpenSky Network
     const box = `lamin=${ap.lat - 1.2}&lomin=${ap.lon - 2}&lamax=${ap.lat + 1.2}&lomax=${ap.lon + 2}`;
     const ctl = new AbortController();
     const t = setTimeout(() => ctl.abort(), 8000);
