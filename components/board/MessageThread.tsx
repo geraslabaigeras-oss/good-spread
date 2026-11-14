@@ -61,7 +61,7 @@ export function MessageThread({ messages, title, autoKey }: { messages: Msg[]; t
           const st = status(i);
           return (
             <div key={m.id} className="flex items-start gap-3 py-3">
-              {m.photo ? <img src={m.photo} alt="" className="size-9 shrink-0 rounded-full object-cover object-top" /> : <span className="gs-talent-ph size-9 shrink-0 rounded-full" />}
+              {m.photo ? <img src={m.photo} alt="" className="size-9 shrink-0 rounded-full object-cover object-top" /> : <span className="relative size-9 shrink-0 overflow-hidden rounded-full"><span className="gs-talent-ph absolute inset-0" /></span>}
               <div className="min-w-0 flex-1">
                 <div className="text-[13px] text-neutral-500"><span className="font-medium text-neutral-900">{m.name}</span> · {m.role}</div>
                 <p className="mt-0.5 text-[14px] leading-5 text-neutral-800">{m.text}</p>

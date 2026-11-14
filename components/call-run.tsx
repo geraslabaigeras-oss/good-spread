@@ -60,7 +60,7 @@ function CallCard({ t, mode, delay, onDone }: { t: CallTarget; mode: Mode; delay
   return (
     <motion.div layout initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex min-h-[300px] flex-col rounded-[22px] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,.04),0_14px_34px_rgba(0,0,0,.06)]">
       <div className="flex items-center gap-3">
-        {t.photo ? <img src={t.photo} alt="" className="size-11 rounded-full object-cover object-top" /> : <span className="gs-talent-ph size-11 rounded-full" />}
+        {t.photo ? <img src={t.photo} alt="" className="size-11 rounded-full object-cover object-top" /> : <span className="relative size-11 shrink-0 overflow-hidden rounded-full"><span className="gs-talent-ph absolute inset-0" /></span>}
         <div className="min-w-0 flex-1">
           <div className="truncate text-[15px] font-medium">{t.name}</div>
           <div className="truncate text-[12px] text-neutral-500">{mode.kind === 'update' ? `Calling ${t.name.split(' ')[0]}` : `Calling ${t.agency ?? t.name}`}</div>
