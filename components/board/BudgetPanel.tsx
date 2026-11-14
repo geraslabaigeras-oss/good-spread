@@ -17,7 +17,7 @@ export function BudgetPanel({ budget: b }: { budget: BudgetSummary }) {
     <section className="section flex h-full flex-col">
       <SectionHead label="Budget" meta={`${b.lines.length + 1} lines`} />
       <div className="flex shrink-0 items-center gap-4">
-        <BudgetRing cap={b.cap} size={92} stroke={9} segments={[...ORDER.map((c) => ({ value: b.byCategory[c] - (c === 'crew' || c === 'talent' || c === 'studio' ? otBy(c) : 0), color: CAT_COLOR[c] })), { value: b.overtime, color: '#ffb38a' }]}>
+        <BudgetRing cap={b.cap} size={92} stroke={9} segments={[...ORDER.map((c) => ({ value: b.byCategory[c] - (c === 'crew' || c === 'talent' || c === 'studio' ? otBy(c) : 0), color: CAT_COLOR[c] })), { value: b.overtime, color: '#c08a3e' }]}>
           <AnimatedNumber value={b.total} format={(n) => fmtEur(Math.round(n))} className={cn('font-serif text-[17px] leading-none num', over && 'text-conflict')} />
         </BudgetRing>
         <div className="min-w-0 flex-1">

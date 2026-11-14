@@ -25,7 +25,7 @@ export function pinsFor(p: Production): { pins: GlobePin[]; arcs: GlobeArc[] } {
     if (x.role === 'producer') continue;
     const c = catalogPerson(x.id);
     const from = c?.city ?? city;
-    pins.push({ id: x.id, city: from, label: x.name, sub: x.role, kind: x.role === 'model' ? 'model' : x.role === 'photographer' ? 'photographer' : 'crew', selected: true });
+    pins.push({ id: x.id, city: from, label: x.name, sub: x.role, photo: c?.photo, kind: x.role === 'model' ? 'model' : x.role === 'photographer' ? 'photographer' : 'crew', selected: true });
     if (from !== city) arcs.push({ from, to: city, label: x.name });
   }
   const loc = p.picks ? catalogLocation(p.picks.location) : undefined;

@@ -57,7 +57,7 @@ export default function Assemble() {
   // Globe: every candidate, chosen ones lit; flights for chosen travellers
   const chosen = pinsFor(p);
   const pins: GlobePin[] = [
-    ...models.map((c) => ({ id: c.id, city: c.city, label: c.name, sub: 'model', kind: 'model' as const, selected: picks.models.includes(c.id), dim: !picks.models.includes(c.id) })),
+    ...models.map((c) => ({ id: c.id, city: c.city, label: c.name, sub: 'model', kind: 'model' as const, photo: c.photo, selected: picks.models.includes(c.id), dim: !picks.models.includes(c.id) })),
     ...photos.map((c) => ({ id: c.id, city: c.city, label: c.name, sub: 'photographer', kind: 'photographer' as const, selected: picks.photographer === c.id, dim: picks.photographer !== c.id })),
     ...chosen.pins.filter((x) => x.kind === 'crew'),
     ...locs.map((l) => ({ id: l.id, city: l.city, label: l.name.split(',')[0].replace(' (demo)', ''), sub: 'location', kind: 'location' as const, selected: picks.location === l.id, dim: picks.location !== l.id })),
@@ -91,29 +91,29 @@ export default function Assemble() {
 
   return (
     <Stage backdrop={draft.refImages[0]}>
-      <TopBar step={3} right={<button onClick={() => router.push('/plan')} className="text-[12px] text-white/50 underline underline-offset-4 hover:text-white">Change strategy</button>} />
+      <TopBar step={3} right={<button onClick={() => router.push('/plan')} className="text-[12px] text-grey-1 underline underline-offset-4 hover:text-ink">Change strategy</button>} />
       <div className="mx-auto grid max-w-[1480px] grid-cols-1 gap-6 px-8 pb-10 pt-4 xl:grid-cols-[minmax(0,1fr)_560px]">
         {/* Globe + live plan */}
         <div className="relative">
           <div className="pointer-events-none absolute left-0 top-2 z-10">
             <div className="g-label">{def.name} · shoot in {def.city}</div>
             <h1 className="mt-1 font-serif text-[52px] leading-[0.95] tracking-[-0.03em]">Build the team</h1>
-            <p className="mt-2 max-w-[380px] text-[14px] text-white/55">Tap anyone on the globe or in the list. Every pick re-costs the shoot and re-checks the day.</p>
+            <p className="mt-2 max-w-[380px] text-[14px] text-grey-1">Pick on the globe or in the list. Cost and call times update with each pick.</p>
           </div>
           <Globe pins={pins} arcs={chosen.arcs} focus={def.city} hub={def.city} onPin={onPin} height="64vh" altitude={0.62} />
 
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }} className="glass -mt-16 grid grid-cols-1 items-center gap-6 p-6 md:grid-cols-[auto_1fr_auto]">
             <BudgetRing cap={budget.cap} size={150} stroke={12} segments={CATS.map((c) => ({ value: budget.byCategory[c], color: CAT_COLOR[c] }))}>
               <AnimatedNumber value={budget.total} format={(n) => fmtEur(Math.round(n))} className={`font-serif text-[28px] leading-none num ${sum.overCap ? 'text-[var(--g-bad)]' : ''}`} />
-              <span className="mt-1 font-mono text-[10px] text-white/45">{sum.overCap ? `${fmtEur(budget.total - budget.cap)} over` : `${fmtEur(budget.remaining)} left`}</span>
+              <span className="mt-1 font-mono text-[10px] text-grey-2">{sum.overCap ? `${fmtEur(budget.total - budget.cap)} over` : `${fmtEur(budget.remaining)} left`}</span>
             </BudgetRing>
             <div>
               <div className="g-label">Call times · {fmtDate(sum.shootISO)} · {p.studio.name.split(',')[0]}</div>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 <AnimatePresence mode="popLayout">
                   {sum.callTimes.map((x) => (
-                    <motion.span layout key={x.name} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[12px]">
-                      {x.name} <span className="font-mono text-white/60">{x.call != null ? fmt(x.call) : '—'}</span>
+                    <motion.span layout key={x.name} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className="rounded-full border border-hairline-strong bg-white/60 px-3 py-1 text-[12px]">
+                      {x.name} <span className="font-mono text-grey-1">{x.call != null ? fmt(x.call) : '—'}</span>
                     </motion.span>
                   ))}
                 </AnimatePresence>
@@ -134,11 +134,11 @@ export default function Assemble() {
 
         {/* Talent / photographer / location */}
         <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, ease }} className="glass flex max-h-[calc(100dvh-110px)] flex-col p-4">
-          <div className="relative flex gap-1 rounded-full bg-white/5 p-1">
+          <div className="relative flex gap-1 rounded-full bg-ink/[0.05] p-1">
             {([['models', `Models ${picks.models.length}/${def.modelSlots}`], ['photographer', 'Photographer'], ['location', def.locationKinds.includes('location') ? 'Location' : 'Studio']] as [Tab, string][]).map(([k, label]) => (
               <button key={k} onClick={() => setTab(k)} className="relative flex-1 rounded-full py-2 text-[13px]">
-                {tab === k && <motion.span layoutId="tab-pill" className="absolute inset-0 rounded-full bg-white" transition={{ type: 'spring', stiffness: 400, damping: 34 }} />}
-                <span className={`relative ${tab === k ? 'text-[#06070b]' : 'text-white/60'}`}>{label}</span>
+                {tab === k && <motion.span layoutId="tab-pill" className="absolute inset-0 rounded-full bg-white shadow-[0_2px_10px_rgb(80_60_40/0.1)]" transition={{ type: 'spring', stiffness: 400, damping: 34 }} />}
+                <span className={`relative ${tab === k ? 'text-ink' : 'text-grey-1'}`}>{label}</span>
               </button>
             ))}
           </div>
@@ -149,12 +149,12 @@ export default function Assemble() {
                 {tab === 'photographer' && photos.map((c) => <CompCard key={c.id} c={c} selected={picks.photographer === c.id} onClick={() => setPicks({ ...picks, photographer: c.id })} travel={travel(c)} />)}
                 {tab === 'location' && locs.map((l) => (
                   <Tilt key={l.id} onClick={() => setPicks({ ...picks, location: l.id })} selected={picks.location === l.id} className="glass-soft cursor-pointer overflow-hidden">
-                    <div className="relative h-32 overflow-hidden" style={{ background: l.photo ? `url(${l.photo}) center/cover` : `linear-gradient(135deg, ${l.natural ? '#c9b99a, #5b5a3c' : '#1f2a3d, #8fa8ff'})` }}>
-                      <span className="absolute bottom-2 left-3 font-mono text-[10px] uppercase tracking-wider text-white/90">{l.tags.join(' · ')}</span>
+                    <div className="relative h-32 overflow-hidden" style={{ background: l.photo ? `url(${l.photo}) center 20%/cover` : (l.natural ? '#d8c8b4' : '#e4e1dc') }}>
+                      <span className="absolute bottom-2 left-3 font-mono text-[10px] uppercase tracking-wider text-ink/70">{l.tags.join(' · ')}</span>
                     </div>
                     <div className="p-3">
                       <div className="font-serif text-[20px] leading-6">{l.name.split(',')[0]}</div>
-                      <div className="mt-1 text-[12px] text-white/55">{l.note}</div>
+                      <div className="mt-1 text-[12px] text-grey-1">{l.note}</div>
                       <div className="mt-2 font-mono text-[12px]">{l.kind === 'location' ? `Permit ${fmtEur(l.permit ?? 0)} · fixer ${fmtEur(l.fixer ?? 0)}` : `${fmtEur(l.hourlyRate)}/h`}</div>
                     </div>
                   </Tilt>
@@ -169,28 +169,27 @@ export default function Assemble() {
 }
 
 function CompCard({ c, selected, onClick, travel }: { c: CatalogPerson; selected: boolean; onClick: () => void; travel: string }) {
-  const hue = (c.name.charCodeAt(0) * 37) % 360;
   return (
     <Tilt onClick={onClick} selected={selected} className="glass-soft relative cursor-pointer overflow-hidden">
-      <div className="relative h-40 overflow-hidden" style={{ background: c.photo ? `url(${c.photo}) center/cover` : `radial-gradient(120% 90% at 30% 20%, hsl(${hue} 60% 62% / .55), transparent 60%), linear-gradient(160deg, #1a1d2b, #0b0d14)` }}>
-        {!c.photo && <span className="absolute bottom-0 right-3 font-serif text-[110px] leading-[0.8] text-white/15">{c.name[0]}</span>}
-        {selected && <motion.span layoutId={undefined} initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute right-2 top-2 rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-[#06070b]">Booked</motion.span>}
-        <span className="absolute left-3 top-2 font-mono text-[10px] uppercase tracking-wider text-white/70">{c.agency?.replace(' (demo)', '') ?? 'Freelance'}</span>
+      <div className="relative h-40 overflow-hidden" style={{ background: c.photo ? `url(${c.photo}) center 20%/cover` : '#e4e1dc' }}>
+        {!c.photo && <span className="absolute bottom-0 right-3 font-serif text-[110px] leading-[0.8] text-ink/10">{c.name[0]}</span>}
+        {selected && <motion.span layoutId={undefined} initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute right-2 top-2 rounded-full bg-ink px-2 py-0.5 text-[11px] font-medium text-white">Booked</motion.span>}
+        <span className="absolute left-2 top-2 rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-medium text-ink">{c.agency?.replace(' (demo)', '') ?? 'Freelance'}</span>
       </div>
       <div className="p-3">
         <div className="flex items-baseline justify-between">
           <span className="font-serif text-[22px] leading-7">{c.name}</span>
-          <span className="font-mono text-[12px] text-white/80">{fmtEur(c.dayRate)}</span>
+          <span className="font-mono text-[12px] text-ink">{fmtEur(c.dayRate)}</span>
         </div>
         {c.stats ? (
-          <div className="mt-1 font-mono text-[10px] uppercase tracking-wide text-white/55">
+          <div className="mt-1 font-mono text-[10px] uppercase tracking-wide text-grey-1">
             {c.stats.height} · {c.stats.bust}/{c.stats.waist}/{c.stats.hips} · shoe {c.stats.shoe}
             <br />{c.stats.hair} · {c.stats.eyes} eyes
           </div>
         ) : (
-          <div className="mt-1 text-[12px] text-white/60">{c.known ?? c.bio}{c.motion === false ? ' · stills only' : c.role === 'photographer' ? ' · stills + motion' : ''}</div>
+          <div className="mt-1 text-[12px] text-grey-1">{c.known ?? c.bio}{c.motion === false ? ' · stills only' : c.role === 'photographer' ? ' · stills + motion' : ''}</div>
         )}
-        <div className="mt-2 text-[11px] text-white/45">{travel}</div>
+        <div className="mt-2 text-[11px] text-grey-2">{travel}</div>
       </div>
     </Tilt>
   );

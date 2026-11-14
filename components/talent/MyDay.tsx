@@ -228,7 +228,7 @@ function MyDayInner({ token }: { token: string }) {
 
       {/* Fixed action bar (§3.3) */}
       {!data.released || !data.acked ? (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-black/40 px-5 pt-3 backdrop-blur-xl" style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}>
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-white/60 px-5 pt-3 backdrop-blur-xl" style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}>
           <div className="mx-auto max-w-[420px]">
             <GotIt acked={data.acked} seenAt={seenAt} busy={busy} onClick={gotIt} />
             {!data.released && (
@@ -252,7 +252,7 @@ function MyDayInner({ token }: { token: string }) {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="fixed inset-x-0 bottom-0 z-50 rounded-t-[20px] border-t border-white/15 bg-[#11131c]/90 px-5 pt-5 backdrop-blur-2xl"
+              className="fixed inset-x-0 bottom-0 z-50 rounded-t-[20px] border-t border-hairline bg-white/85 px-5 pt-5 backdrop-blur-2xl"
               style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}
             >
               <div className="absolute left-[calc(50%-18px)] top-2 h-1 w-9 rounded-[2px] bg-grey-3" />

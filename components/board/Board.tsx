@@ -100,7 +100,7 @@ function BoardInner({ slug }: { slug: string }) {
 
   if (!data) {
     return (
-      <div className="flex h-dvh items-center justify-center text-white/60">
+      <div className="flex h-dvh items-center justify-center text-grey-1">
         {error ? `Could not load the board: ${String(error.message)}` : 'Loading production…'}
       </div>
     );

@@ -16,7 +16,7 @@ export const CITY: Record<string, { lat: number; lng: number }> = {
 export type GlobePin = {
   id: string; city: string; label: string; sub: string;
   kind: 'model' | 'photographer' | 'crew' | 'location';
-  selected?: boolean; dim?: boolean;
+  selected?: boolean; dim?: boolean; photo?: string;
 };
 export type GlobeArc = { from: string; to: string; label?: string };
 
@@ -30,7 +30,7 @@ type Props = {
   altitude?: number;
 };
 
-const KIND_COLOR: Record<GlobePin['kind'], string> = { model: '#8fa8ff', photographer: '#b59bff', crew: '#7ee2d0', location: '#ffb38a' };
+const KIND_COLOR: Record<GlobePin['kind'], string> = { model: '#0d0d0d', photographer: '#6e6a69', crew: '#8fa1ad', location: '#c4ae92' };
 
 /** Spread pins that share a city on a small ring so they don't overlap. */
 function place(pins: GlobePin[]) {
@@ -75,7 +75,7 @@ export function Globe({ pins, arcs, focus, hub, onPin, height = 560, altitude = 
   }, [focus, w, altitude]);
 
   const material = useMemo(
-    () => new THREE.MeshPhongMaterial({ color: '#0b1020', emissive: '#0a1238', emissiveIntensity: 0.55, shininess: 12, transparent: true, opacity: 0.96 }),
+    () => new THREE.MeshPhongMaterial({ color: '#e4e2de', emissive: '#d9d6d1', emissiveIntensity: 0.6, shininess: 4 }),
     [],
   );
 
@@ -97,22 +97,22 @@ export function Globe({ pins, arcs, focus, hub, onPin, height = 560, altitude = 
         backgroundColor="rgba(0,0,0,0)"
         globeMaterial={material}
         showAtmosphere
-        atmosphereColor="#7d96ff"
-        atmosphereAltitude={0.2}
+        atmosphereColor="#ffffff"
+        atmosphereAltitude={0.14}
         hexPolygonsData={countries}
         hexPolygonResolution={3}
         hexPolygonMargin={0.62}
         hexPolygonUseDots
-        hexPolygonColor={() => 'rgba(190, 205, 255, 0.55)'}
+        hexPolygonColor={() => 'rgba(13, 13, 13, 0.42)'}
         arcsData={arcData}
-        arcColor={() => ['rgba(255,179,138,0.15)', '#ffb38a', '#8fa8ff']}
-        arcStroke={0.7}
+        arcColor={() => ['rgba(13,13,13,0.12)', '#0d0d0d', '#0d0d0d']}
+        arcStroke={0.55}
         arcAltitudeAutoScale={0.45}
         arcDashLength={0.45}
         arcDashGap={0.25}
         arcDashAnimateTime={1800}
         ringsData={rings}
-        ringColor={() => (t: number) => `rgba(143,168,255,${1 - t})`}
+        ringColor={() => (t: number) => `rgba(13,13,13,${0.6 * (1 - t)})`}
         ringMaxRadius={5}
         ringPropagationSpeed={2.2}
         ringRepeatPeriod={1100}
@@ -127,12 +127,12 @@ export function Globe({ pins, arcs, focus, hub, onPin, height = 560, altitude = 
           const c = KIND_COLOR[p.kind];
           el.innerHTML = `
             <div style="display:flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:999px;
-              background:${p.selected ? 'rgba(255,255,255,0.92)' : 'rgba(12,14,24,0.55)'};
-              color:${p.selected ? '#06070b' : '#f4f2ee'};border:1px solid ${p.selected ? '#fff' : 'rgba(255,255,255,0.18)'};
+              background:${p.selected ? '#0d0d0d' : 'rgba(255,255,255,0.72)'};
+              color:${p.selected ? '#fff' : '#0d0d0d'};border:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.7),0 6px 18px rgba(80,60,40,0.12);
               backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font:500 11px/1 var(--font-schibsted),sans-serif;white-space:nowrap;
-              opacity:${p.dim ? 0.45 : 1};box-shadow:${p.selected ? `0 0 24px ${c}` : 'none'};transition:all .25s">
-              <span style="width:18px;height:18px;border-radius:999px;background:${c};display:inline-flex;align-items:center;justify-content:center;
-                color:#06070b;font:600 10px/1 var(--font-plex-mono),monospace">${p.label.slice(0, 1)}</span>${p.label}
+              opacity:${p.dim ? 0.5 : 1};transition:all .25s">
+              <span style="width:${p.photo ? 22 : 18}px;height:${p.photo ? 22 : 18}px;border-radius:999px;background:${p.photo ? `url(${p.photo}) center 20%/cover` : p.selected ? '#fff' : c};display:inline-flex;align-items:center;justify-content:center;
+                color:${p.selected ? '#0d0d0d' : '#fff'};font:600 10px/1 var(--font-plex-mono),monospace">${p.photo ? '' : p.label.slice(0, 1)}</span>${p.label}
             </div>`;
           el.onclick = () => onPin?.(p.id);
           return el;

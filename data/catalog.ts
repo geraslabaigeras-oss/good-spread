@@ -41,27 +41,27 @@ const VNO_TO_LIS: TravelTemplate = { number: 'DA 210', from: 'VNO', to: 'LIS', d
 
 export const MODELS: CatalogPerson[] = [
   {
-    id: 'ieva', name: 'Ieva', stats: { height: 178, bust: 81, waist: 60, hips: 88, shoe: 39, hair: 'Dark blonde', eyes: 'Grey' }, role: 'model', agency: 'Milan agency (demo)', commissionPct: 20, dayRate: 600, otRatePerHour: 75, local: false,
+    id: 'ieva', photo: '/catalog/ieva.jpg', name: 'Ieva', stats: { height: 178, bust: 81, waist: 60, hips: 88, shoe: 39, hair: 'Dark blonde', eyes: 'Grey' }, role: 'model', agency: 'Milan agency (demo)', commissionPct: 20, dayRate: 600, otRatePerHour: 75, local: false,
     city: 'Milan', bio: 'Editorial and outerwear. Strong in movement.', tags: ['editorial', 'outerwear', 'motion'], travelTo: IEVA_TRAVEL,
   },
   {
-    id: 'marta', name: 'Marta', stats: { height: 176, bust: 83, waist: 62, hips: 90, shoe: 40, hair: 'Brown', eyes: 'Green' }, role: 'model', dayRate: 450, otRatePerHour: 55, local: true,
+    id: 'marta', photo: '/catalog/marta.jpg', name: 'Marta', stats: { height: 176, bust: 83, waist: 62, hips: 90, shoe: 40, hair: 'Brown', eyes: 'Green' }, role: 'model', dayRate: 450, otRatePerHour: 55, local: true,
     city: 'Vilnius', bio: 'Freelance. Commercial and editorial.', tags: ['commercial', 'editorial'], travelTo: { Lisbon: VNO_TO_LIS },
   },
   {
-    id: 'austeja', name: 'Austėja', stats: { height: 179, bust: 80, waist: 59, hips: 87, shoe: 40, hair: 'Black, short', eyes: 'Brown' }, role: 'model', dayRate: 500, otRatePerHour: 60, local: true,
+    id: 'austeja', photo: '/catalog/austeja.jpg', name: 'Austėja', stats: { height: 179, bust: 80, waist: 59, hips: 87, shoe: 40, hair: 'Brown, long', eyes: 'Brown' }, role: 'model', dayRate: 500, otRatePerHour: 60, local: true,
     city: 'Vilnius', bio: 'Editorial. Short dark hair.', tags: ['editorial'], travelTo: { Lisbon: VNO_TO_LIS },
   },
   {
-    id: 'lina', name: 'Lina', stats: { height: 175, bust: 82, waist: 61, hips: 89, shoe: 39, hair: 'Light brown', eyes: 'Blue' }, role: 'model', agency: 'Vilnius models (demo)', commissionPct: 15, dayRate: 380, otRatePerHour: 45, local: true,
+    id: 'lina', photo: '/catalog/lina.jpg', name: 'Lina', stats: { height: 175, bust: 82, waist: 61, hips: 89, shoe: 39, hair: 'Light brown', eyes: 'Blue' }, role: 'model', agency: 'Vilnius models (demo)', commissionPct: 15, dayRate: 380, otRatePerHour: 45, local: true,
     city: 'Vilnius', bio: 'New face. Clean, natural look.', tags: ['new face', 'commercial'], travelTo: { Lisbon: VNO_TO_LIS },
   },
   {
-    id: 'ines', name: 'Inês', stats: { height: 177, bust: 82, waist: 60, hips: 88, shoe: 39, hair: 'Dark brown', eyes: 'Brown' }, role: 'model', agency: 'Lisbon agency (demo)', commissionPct: 20, dayRate: 550, otRatePerHour: 65, local: true,
+    id: 'ines', photo: '/catalog/ines.jpg', name: 'Inês', stats: { height: 177, bust: 82, waist: 60, hips: 88, shoe: 39, hair: 'Dark brown', eyes: 'Brown' }, role: 'model', agency: 'Lisbon agency (demo)', commissionPct: 20, dayRate: 550, otRatePerHour: 65, local: true,
     city: 'Lisbon', bio: 'Editorial. Outdoor light, movement.', tags: ['editorial', 'outdoor'],
   },
   {
-    id: 'sofia', name: 'Sofia', stats: { height: 174, bust: 84, waist: 63, hips: 91, shoe: 38, hair: 'Black', eyes: 'Hazel' }, role: 'model', dayRate: 480, otRatePerHour: 55, local: true,
+    id: 'sofia', photo: '/catalog/sofia.jpg', name: 'Sofia', stats: { height: 174, bust: 84, waist: 63, hips: 91, shoe: 38, hair: 'Blonde', eyes: 'Hazel' }, role: 'model', dayRate: 480, otRatePerHour: 55, local: true,
     city: 'Lisbon', bio: 'Freelance. Commercial and sport.', tags: ['commercial', 'sport'],
   },
 ];

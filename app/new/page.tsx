@@ -66,16 +66,16 @@ export default function NewBrief() {
         {/* Reference */}
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }}>
           <h1 className="font-serif text-[64px] leading-[0.95] tracking-[-0.03em]">
-            One reference.
+            Start with
             <br />
-            <span className="text-white/45">Three ways to make it real.</span>
+            <span className="text-grey-2">a reference.</span>
           </h1>
           <div
             onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
             onDragLeave={() => setDrag(false)}
             onDrop={(e) => { e.preventDefault(); setDrag(false); addFiles(e.dataTransfer.files); }}
             onClick={() => input.current?.click()}
-            className={`glass relative mt-8 aspect-[4/5] max-h-[68vh] cursor-pointer overflow-hidden transition-all duration-300 ${drag ? 'scale-[1.01] ring-2 ring-[var(--g-accent)]' : ''}`}
+            className={`glass relative mt-8 aspect-[4/5] max-h-[68vh] cursor-pointer overflow-hidden transition-all duration-300 ${drag ? 'scale-[1.01] ring-2 ring-ink' : ''}`}
           >
             <AnimatePresence mode="popLayout">
               {d.refImages.length ? (
@@ -87,9 +87,9 @@ export default function NewBrief() {
                 </motion.div>
               ) : (
                 <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex h-full flex-col items-center justify-center p-10 text-center">
-                  <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} className="mb-6 flex size-20 items-center justify-center rounded-full border border-white/20 bg-white/5 text-3xl font-light">+</motion.div>
+                  <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} className="mb-6 flex size-20 items-center justify-center rounded-full border border-hairline-strong bg-white/60 text-3xl font-light">+</motion.div>
                   <div className="font-serif text-[30px] leading-8">Drop a campaign reference</div>
-                  <div className="mt-2 text-[14px] text-white/50">Moodboard, tear sheet, a past campaign. Up to three images.</div>
+                  <div className="mt-2 text-[14px] text-grey-1">A moodboard, tear sheet or past campaign. Up to three images.</div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -129,15 +129,15 @@ export default function NewBrief() {
               <motion.div key="brief" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.7, ease }} className="glass p-8">
                 <div className="flex items-center justify-between">
                   <span className="g-label">Creative brief · {d.briefVia === 'ai' ? 'read by AI' : d.briefVia === 'cache' ? 'read by AI · cached' : 'demo'}</span>
-                  <button onClick={() => setEditing(true)} className="text-[12px] text-white/50 underline underline-offset-4 hover:text-white">Edit the job</button>
+                  <button onClick={() => setEditing(true)} className="text-[12px] text-grey-1 underline underline-offset-4 hover:text-ink">Edit the job</button>
                 </div>
                 <motion.p initial={{ opacity: 0, filter: 'blur(8px)' }} animate={{ opacity: 1, filter: 'blur(0px)' }} transition={{ duration: 0.9, delay: 0.15 }} className="mt-4 font-serif text-[30px] leading-[1.15] tracking-[-0.01em]">
                   {b.summary}
                 </motion.p>
-                <div className="mt-5 flex flex-wrap gap-x-3 gap-y-1 font-serif text-[22px] text-white/70">
+                <div className="mt-5 flex flex-wrap gap-x-3 gap-y-1 font-serif text-[22px] text-grey-1">
                   {b.aesthetic.map((a, i) => (
                     <motion.span key={a} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.08 }}>
-                      {a}{i < b.aesthetic.length - 1 && <span className="ml-3 text-white/25">/</span>}
+                      {a}{i < b.aesthetic.length - 1 && <span className="ml-3 text-ink/20">/</span>}
                     </motion.span>
                   ))}
                 </div>
@@ -160,19 +160,19 @@ export default function NewBrief() {
                   <ol className="mt-2 grid grid-cols-1 gap-1 md:grid-cols-2">
                     {b.shotList.map((s, i) => (
                       <motion.li key={s} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 + i * 0.06 }} className="flex gap-3 text-[14px]">
-                        <span className="font-mono text-white/35">{String(i + 1).padStart(2, '0')}</span>{s}
+                        <span className="font-mono text-grey-2">{String(i + 1).padStart(2, '0')}</span>{s}
                       </motion.li>
                     ))}
                   </ol>
                 </div>
 
-                <div className="mt-7 border-t border-white/10 pt-6">
+                <div className="mt-7 border-t border-hairline pt-6">
                   <div className="g-label">Production DNA · tap to move</div>
                   <LayoutGroup>
                     <div className="mt-3 grid grid-cols-2 gap-4">
                       {[true, false].map((col) => (
-                        <div key={String(col)} className={`rounded-2xl p-3 ${col ? 'bg-white/[0.06]' : 'border border-dashed border-white/15'}`}>
-                          <div className="mb-2 text-[12px] font-medium text-white/60">{col ? 'Must keep' : 'Can change'}</div>
+                        <div key={String(col)} className={`rounded-2xl p-3 ${col ? 'bg-white/70 shadow-[inset_0_0_0_1px_rgb(13_13_13/0.06)]' : 'border border-dashed border-hairline-strong'}`}>
+                          <div className="mb-2 text-[12px] font-medium text-grey-1">{col ? 'Must keep' : 'Can change'}</div>
                           <div className="flex flex-wrap gap-1.5">
                             {dna.filter((x) => keep(x.id, x.preserve) === col).map((x) => (
                               <motion.button
@@ -181,7 +181,7 @@ export default function NewBrief() {
                                 key={x.id}
                                 transition={{ type: 'spring', stiffness: 500, damping: 36 }}
                                 onClick={() => setDraft({ ...d, dnaPreserve: { ...d.dnaPreserve, [x.id]: !col } })}
-                                className={`rounded-full px-3 py-1.5 text-[12px] ${col ? 'bg-white text-[#06070b]' : 'border border-white/20 text-white/80 hover:bg-white/10'}`}
+                                className={`rounded-full px-3 py-1.5 text-[12px] ${col ? 'bg-ink text-white' : 'border border-hairline-strong text-ink hover:bg-white/70'}`}
                               >
                                 {x.label}
                               </motion.button>
@@ -215,7 +215,7 @@ function Info({ k, v, span }: { k: string; v: string; span?: boolean }) {
   return (
     <div className={span ? 'col-span-2' : ''}>
       <div className="g-label">{k}</div>
-      <div className="mt-0.5 text-white/85">{v}</div>
+      <div className="mt-0.5 text-ink">{v}</div>
     </div>
   );
 }
