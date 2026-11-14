@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import useSWR from 'swr';
 import { Cloud, CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun, Sun } from 'lucide-react';
 
@@ -26,7 +26,7 @@ function mkBolt(w: number, h: number) {
 }
 
 /** Storm sky that eases between calm and storm. Rain and lightning only when it storms. */
-export function StormSky({ storm }: { storm: boolean }) {
+export function StormSky({ storm, lite = false }: { storm: boolean; lite?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const target = useRef(storm ? 1 : 0);
   target.current = storm ? 1 : 0;
@@ -38,13 +38,14 @@ export function StormSky({ storm }: { storm: boolean }) {
     const size = () => { const d = Math.min(2, devicePixelRatio || 1); w = cv.clientWidth; h = cv.clientHeight; cv.width = w * d; cv.height = h * d; ctx.setTransform(d, 0, 0, d, 0, 0); };
     size();
     const ro = new ResizeObserver(size); ro.observe(cv);
-    const clouds = Array.from({ length: 9 }, () => ({ x: Math.random() * w, y: 20 + Math.random() * h * 0.45, r: 120 + Math.random() * 160, v: 6 + Math.random() * 10, a: 0.6 + Math.random() * 0.4, c: 110 + Math.round(Math.random() * 40) }));
-    const drops = Array.from({ length: 170 }, () => ({ x: Math.random() * w, y: Math.random() * h, v: 620 + Math.random() * 380, l: 9 + Math.random() * 12, w: 0.6 + Math.random() * 0.7, a: 0.35 + Math.random() * 0.45, k: Math.random() }));
+    const clouds = Array.from({ length: lite ? 4 : 9 }, () => ({ x: Math.random() * w, y: 20 + Math.random() * h * 0.45, r: 120 + Math.random() * 160, v: 6 + Math.random() * 10, a: 0.6 + Math.random() * 0.4, c: 110 + Math.round(Math.random() * 40) }));
+    const drops = Array.from({ length: lite ? 70 : 170 }, () => ({ x: Math.random() * w, y: Math.random() * h, v: 620 + Math.random() * 380, l: 9 + Math.random() * 12, w: 0.6 + Math.random() * 0.7, a: 0.35 + Math.random() * 0.45, k: Math.random() }));
     let level = target.current, last = performance.now(), raf = 0, flashAt = -1e9, bolt: number[][][] | null = null, nextFlash = performance.now() + 2500;
     let visible = true; let idle: ReturnType<typeof setTimeout> | undefined;
     const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: 0.2 });
     io.observe(cv);
     const frame = (now: number) => {
+      if (lite && now - last < 33) { raf = requestAnimationFrame(frame); return; } // ~30 fps is plenty for rain
       const dt = Math.min(50, now - last); last = now;
       level += (target.current - level) * Math.min(1, dt / 900);
       const storm = level, rain = Math.max(0, (level - 0.3) / 0.7);
@@ -91,7 +92,7 @@ const icon = (code: number) => (code >= 95 ? CloudLightning : code >= 71 && code
 const fetcher = (u: string) => fetch(u).then((r) => (r.ok ? r.json() : null));
 
 /** Real forecast for the shoot day and place (Open-Meteo). When rain hits shoot hours, the sky turns to storm. */
-export function WeatherCard({ lat, lng, dateISO, place, exteriorAt, compact }: { lat: number; lng: number; dateISO: string; place: string; exteriorAt?: string; compact?: boolean }) {
+export const WeatherCard = memo(function WeatherCard({ lat, lng, dateISO, place, exteriorAt, compact }: { lat: number; lng: number; dateISO: string; place: string; exteriorAt?: string; compact?: boolean }) {
   const { data } = useSWR<Forecast | null>(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,precipitation_probability,weathercode&start_date=${dateISO}&end_date=${dateISO}&timezone=auto`, fetcher);
   const [demoRain, setDemoRain] = useState(false);
   const hours = [9, 10, 11, 12, 13, 14, 15, 16].map((h) => {
@@ -104,7 +105,7 @@ export function WeatherCard({ lat, lng, dateISO, place, exteriorAt, compact }: {
   const storm = !!wet;
   return (
     <div className={`relative overflow-hidden rounded-[28px] shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)] ${compact ? '' : 'mt-5'}`} style={{ minHeight: compact ? 260 : 300 }}>
-      <StormSky storm={storm} />
+      <StormSky storm={storm} lite />
       <div className={`relative flex h-full flex-col justify-between gap-5 p-6 ${compact ? 'min-h-[260px]' : 'min-h-[300px] md:flex-row md:items-end'}`}>
         <div className="max-w-[460px]">
           <div className={`text-[13px] ${storm ? 'text-white/80' : 'text-neutral-500'}`}>Weather · {place} · {new Date(`${dateISO}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })}</div>
@@ -125,4 +126,4 @@ export function WeatherCard({ lat, lng, dateISO, place, exteriorAt, compact }: {
       </div>
     </div>
   );
-}
+});

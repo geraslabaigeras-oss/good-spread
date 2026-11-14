@@ -90,6 +90,7 @@ export function RouteGlobe({ legs, height = 460, progress = 0.6, demoLive = fals
   }).filter((x): x is NonNullable<typeof x> => !!x), [legs]);
 
   const [ready, setReady] = useState(false);
+  const routesKey = routes.map((r) => `${r.l.id}:${r.l.from}-${r.l.to}`).join('|');
   useEffect(() => {
     const r = routes[0];
     if (!ready || !ref.current || !r) return;
@@ -106,7 +107,7 @@ export function RouteGlobe({ legs, height = 460, progress = 0.6, demoLive = fals
     g.resumeAnimation?.();
     const id = setTimeout(() => g.pauseAnimation?.(), 1800);
     return () => clearTimeout(id);
-  }, [ready, radar, routes]);
+  }, [ready, radar?.planes?.length, routesKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const live = radar?.planes ?? [];
   // demo: borrow a real plane in the air near the destination and treat it as the first traveller's flight

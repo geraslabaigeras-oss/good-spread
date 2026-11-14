@@ -1,7 +1,7 @@
 'use client';
 
 /* eslint-disable @next/next/no-img-element */
-import { useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { Radio } from 'lucide-react';
 import type { Production } from '@/lib/types';
 import { fmt } from '@/lib/format';
@@ -12,7 +12,7 @@ import { callsignFor } from './LiveRadar';
 type Phase = { key: string; label: string };
 
 /** Travel at the top of the board: globe + who's moving, for the day before, each shoot day, and after. */
-export function TravelBand({ p }: { p: Production }) {
+function TravelBandInner({ p }: { p: Production }) {
   const days = p.shootDays ?? 1;
   const phases: Phase[] = [{ key: 'before', label: 'Day before' }, ...Array.from({ length: days }, (_, i) => ({ key: `d${i}`, label: days > 1 ? `Day ${i + 1}` : 'Shoot day' })), { key: 'after', label: 'After' }];
   const [phase, setPhase] = useState('d0');
@@ -23,8 +23,9 @@ export function TravelBand({ p }: { p: Production }) {
   const firstDay = phase === 'd0';
   const midDay = phase.startsWith('d') && !firstDay;
 
-  const out = p.travel.map((t) => ({ id: t.personId, from: t.from, to: t.to, label: nameOf(t.personId), callsign: callsignFor(t.number), departMin: t.departMin, arriveMin: t.arriveMin, dateISO: p.dateISO }));
-  const back = p.travel.map((t) => ({ id: t.personId, from: t.to, to: t.from, label: nameOf(t.personId), callsign: null, departMin: wrap + 120, arriveMin: wrap + 120 + Math.max(60, t.arriveMin - t.departMin), dateISO: p.dateISO }));
+  const tkey = JSON.stringify(p.travel);
+  const out = useMemo(() => p.travel.map((t) => ({ id: t.personId, from: t.from, to: t.to, label: nameOf(t.personId), callsign: callsignFor(t.number), departMin: t.departMin, arriveMin: t.arriveMin, dateISO: p.dateISO })), [tkey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const back = useMemo(() => p.travel.map((t) => ({ id: t.personId, from: t.to, to: t.from, label: nameOf(t.personId), callsign: null, departMin: wrap + 120, arriveMin: wrap + 120 + Math.max(60, t.arriveMin - t.departMin), dateISO: p.dateISO })), [tkey, wrap]); // eslint-disable-line react-hooks/exhaustive-deps
   const legs = phase === 'after' ? back : out;
   const progress = phase === 'before' ? 0.03 : phase === 'after' ? 0.35 : midDay ? 0.97 : 0.6;
   const note = phase === 'before' ? `${p.travel.length} ${p.travel.length === 1 ? 'person flies' : 'people fly'} in tomorrow morning. Check-in opens 24 h before.`
@@ -83,3 +84,6 @@ export function TravelBand({ p }: { p: Production }) {
     </div>
   );
 }
+
+/** Only re-render when the travel or schedule actually changes (the board polls every 2 s). */
+export const TravelBand = memo(TravelBandInner, (a, b) => a.p.version === b.p.version && JSON.stringify(a.p.travel) === JSON.stringify(b.p.travel) && a.p.dateISO === b.p.dateISO);
