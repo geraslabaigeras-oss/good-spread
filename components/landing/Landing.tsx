@@ -12,7 +12,6 @@ import { DevicePhone } from '@/components/device-phone';
 import { MessagesScreen } from '@/components/messages-screen';
 import { BrandLogo } from '@/components/brand-logo';
 import { HeroDrop } from '@/components/hero-drop';
-import { BeforeAfter } from './BeforeAfter';
 import { PlansChange } from './PlansChange';
 import { flagUrl } from '@/lib/agencies';
 import { AnimatedList } from '@/components/ui/animated-list';
@@ -134,7 +133,7 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
         <header className="relative z-30 mx-auto flex h-20 max-w-7xl items-center justify-between px-6 text-[14px] text-neutral-700">
           <Wordmark className="h-[24px]" />
           <nav className="flex items-center gap-8">
-            <a href="#how" className="hidden hover:text-neutral-950 md:inline">How it works</a>
+            <a href="#agent" className="hidden hover:text-neutral-950 md:inline">How it works</a><a href="#changes" className="hidden hover:text-neutral-950 md:inline">When things change</a>
             <Link href="/people" className="hidden hover:text-neutral-950 md:inline">Your people</Link>
             <Link href="/new" className="rounded-full bg-neutral-950 px-5 py-2.5 text-white">Start a shoot</Link>
           </nav>
@@ -159,79 +158,33 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
         </div>
       </section>
 
-      <BeforeAfter />
-      <PlansChange />
-
-      {/* How it works, shown: the real board on a laptop and the real crew page on a phone (Magic UI Safari + iPhone frames) */}
-      <section id="how" className="relative overflow-hidden bg-[linear-gradient(180deg,#f7f7f7_0%,#f0f0f0_55%,#e4e4e4_100%)] px-4 py-24 md:px-10">
-        <Grain />
-        <div className="relative z-[2] mx-auto max-w-6xl">
-          <div className="grid items-end gap-6 md:grid-cols-2">
-            <h2 className="font-[family-name:var(--font-inter)] text-4xl font-light leading-[1.05] tracking-[-0.035em] md:text-[56px]">A flight lands late.<br /><span className="text-neutral-400">Everyone knows in seconds.</span></h2>
-            <p className="max-w-md text-[16px] leading-7 text-neutral-600 md:justify-self-end">You approve one of three priced fixes, and each person gets a text with their new call time.</p>
-          </div>
-
-          <div className="relative mt-14">
-
-            <motion.div initial={{ opacity: 0, y: 60 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.9, delay: 0.25 }} className="relative mx-auto mt-6 w-[280px] md:w-[320px]">
-              <DevicePhone width={320} className="mx-auto drop-shadow-[0_40px_60px_rgba(20,40,90,.25)]">
-                <MessagesScreen name="Model" before={moment.call} after={moment.newCall} place="Pilies courtyard, Vilnius" url="good-spread.app/p/k3f9" />
-              </DevicePhone>
-              <motion.div initial={{ opacity: 0, y: -20, scale: 0.9, rotateX: 18, rotateY: -22 }} whileInView={{ opacity: 1, y: [0, -8, 0], scale: 1.06, rotateX: 10, rotateY: -16 }} viewport={{ once: true }}
-                transition={{ opacity: { duration: 0.6, delay: 1.1 }, scale: { duration: 0.6, delay: 1.1 }, y: { duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1.7 } }}
-                style={{ transformPerspective: 900 }}
-                className="absolute -left-16 top-24 z-20 w-[300px] rounded-2xl bg-white p-3.5 shadow-[0_40px_80px_rgba(20,40,90,.28),0_10px_20px_rgba(0,0,0,.08)] md:-left-44">
-                <div className="flex items-center gap-2 text-[11px] text-neutral-500"><BrandLogo name="imessage" size={14} /> Messages · now</div>
-                <p className="mt-1 text-[13px] leading-[18px] text-neutral-900"><b>good spread:</b> Your call moved {moment.call} → {moment.newCall}. Tap to confirm.</p>
-              </motion.div>
-              <p className="mt-3 text-center text-[13px] text-neutral-500">The text each person gets, sent by Twilio. One tap opens their day.</p>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
       {/* ElevenLabs-style: framed column, grainy gradient cards, the agency call as bubbles */}
       <section id="agent" className="bg-[#fafafa]">
         <div className="mx-auto max-w-6xl border-x border-neutral-200/80 px-6 py-24 md:px-10">
           <div className="flex flex-wrap items-end justify-between gap-6">
-            <h2 className="font-[family-name:var(--font-inter)] text-4xl font-light tracking-[-0.035em] text-neutral-950 md:text-5xl">What the agent does for you</h2>
+            <h2 className="font-[family-name:var(--font-inter)] text-4xl font-light tracking-[-0.035em] text-neutral-950 md:text-5xl">Before the shoot. <span className="text-neutral-400">The agent does the legwork.</span></h2>
             <Link href="/new" className="rounded-full border border-neutral-200 bg-white px-5 py-2.5 text-[15px] shadow-[0_1px_2px_rgba(0,0,0,.04)]">Try it</Link>
           </div>
 
-          <div className="mt-12 grid gap-4 md:grid-cols-3">
+          <div className="mt-12 grid gap-4 md:grid-cols-2">
             <Feature title="Scouts real places for the look" tag="Location scout" date="Brief">
-              <div className="relative h-full bg-[radial-gradient(120%_90%_at_10%_10%,#ffffff_0%,#ececec_40%,#cfd0d1_75%,#b0b1b2_100%)]">
+              <div className="relative h-full bg-[radial-gradient(120%_90%_at_10%_10%,#ffffff_0%,#e3ebf5_40%,#b9cbe0_75%,#8ea8c6_100%)]">
                 <Grain />
                 <div className="absolute left-6 top-6 text-[34px] leading-none tracking-[-0.03em] text-neutral-900">Locations</div>
                 <div className="absolute bottom-6 right-6 text-[34px] leading-none tracking-[-0.03em] text-neutral-800">Vilnius · Riga</div>
               </div>
             </Feature>
             <Feature title="Calls agencies in their language" tag="Voice" date="Team">
-              <div className="relative flex h-full items-center justify-center bg-[radial-gradient(90%_70%_at_75%_15%,#ffffff_0%,transparent_60%),radial-gradient(80%_80%_at_20%_85%,#bdbebf_0%,transparent_65%),linear-gradient(135deg,#e9e9e9,#c6c7c8)]">
+              <div className="relative flex h-full items-center justify-center bg-[radial-gradient(90%_70%_at_75%_15%,#ffffff_0%,transparent_60%),radial-gradient(80%_80%_at_20%_85%,#9fb8d8_0%,transparent_65%),linear-gradient(135deg,#dfe8f4,#a9bfdb)]">
                 <Grain />
                 <div className="relative flex items-center gap-3 text-[40px] tracking-[-0.03em] text-neutral-900">Calls <span className="rounded-full border-2 border-neutral-900 px-3 py-0.5 text-[24px]">FR · IT · SE</span></div>
-              </div>
-            </Feature>
-            <Feature title="Re-plans the minute a flight slips" tag="Engine" date="Shoot day" light>
-              <div className="flex h-full flex-col items-center justify-center bg-white px-6 text-center">
-                <div className="text-[13px] font-semibold leading-5">good spread</div>
-                <div className="mt-1 text-[28px] leading-9 tracking-[-0.02em]">Three fixes, priced</div>
-                <div className="mt-5 grid w-full grid-cols-3 divide-x divide-white/15 rounded-2xl bg-neutral-900 py-4 text-white">
-                  {moment.fixes.map((f) => (
-                    <div key={f.label} className="flex flex-col items-center gap-1.5 px-2">
-                      <span className="text-[11px] leading-tight text-white/60">{f.label}</span>
-                      <span className="text-[22px] font-light leading-none tabular-nums">{delta(f.cost)}</span>
-                      {f.best && <span className="rounded-full bg-white px-2 py-0.5 text-[9px] font-medium text-neutral-900">Best</span>}
-                    </div>
-                  ))}
-                </div>
               </div>
             </Feature>
           </div>
 
           <div className="mt-4 grid gap-4 md:grid-cols-[1.4fr_1fr]">
             <div className="relative min-h-[460px] rounded-[28px] p-8">
-              <div className="absolute inset-0 overflow-hidden rounded-[28px] bg-[radial-gradient(120%_100%_at_20%_0%,#ffffff_0%,#efefef_35%,#d6d7d8_70%,#bbbcbd_100%)]"><Grain /></div>
+              <div className="absolute inset-0 overflow-hidden rounded-[28px] bg-[radial-gradient(120%_100%_at_20%_0%,#ffffff_0%,#e6eef8_35%,#c4d4e8_70%,#9db5d3_100%)]"><Grain /></div>
               <div className="relative mx-auto flex max-w-[420px] flex-col gap-3 pt-6 [perspective:900px]">
                 <motion.span animate={{ y: [0, -6, 0] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} style={{ rotateY: -12, rotateX: 6 }} className="-mr-6 self-end rounded-full border border-neutral-900/15 bg-white/70 px-4 py-2 text-[14px] text-neutral-900 shadow-[0_20px_40px_rgba(0,0,0,.25)] backdrop-blur md:-mr-24">Bonjour, je suis l&rsquo;assistant de la production. Votre mannequin est-elle disponible le 21 ?</motion.span>
                 <motion.span animate={{ y: [0, 6, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }} style={{ rotateY: 10, rotateX: 4 }} className="-ml-4 self-start rounded-2xl bg-white px-4 py-2.5 text-[14px] text-neutral-900 shadow-[0_30px_60px_rgba(0,0,0,.35)] md:-ml-20">Oui, elle est disponible. Tarif journalier 600 €, usage web 12 mois.</motion.span>
@@ -262,21 +215,7 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
       </section>
 
 
-      {/* Aceternity Apple Cards Carousel with real photography */}
-      <section className="py-20">
-        <Carousel
-          items={[
-            { c: 'Brief', t: 'Drop a reference. Get the brief.' },
-            { c: 'Casting', t: 'Pick models and crew. The AI calls their agents.' },
-            { c: 'Team', t: 'Book the people you actually work with.' },
-            { c: 'Shoot day', t: 'A flight lands late. Three fixes, priced.' },
-            { c: 'On set', t: 'Everyone has their day on their phone.' },
-            { c: 'Wrap', t: 'Statements per person.' },
-          ].map((x, i) => (
-            <Card key={x.t} index={i} card={{ src: u(PHOTOS[i].id), category: x.c, title: x.t, content: <p className="text-base text-neutral-600 md:text-xl">{steps[Math.min(i, steps.length - 1)].t}</p> }} />
-          ))}
-        />
-      </section>
+      <PlansChange />
 
       {/* Close: light, the drop is the call to action */}
       <section className="relative bg-[#f7f7f7] px-6 py-28">

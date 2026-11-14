@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Grainient from '@/components/Grainient';
 import { Wordmark } from '@/components/kit';
 import { VoiceOrb } from '@/components/voice-orb';
 import { animate, motion, useMotionValue, useTransform } from 'motion/react';
@@ -13,7 +14,7 @@ export function Stage({ children, backdrop, voice = false }: { children: React.R
   return (
     <div className="stage">
       {/* living background: one slow grainy colour field (React Bits Grainient), 1x pixel ratio, no blur on top */}
-      <div className="pointer-events-none fixed inset-0 z-0 bg-[#f7f7f7]"><div className="gs-grain" /><div className="gs-grain-fine" /></div>
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-90"><Grainient colors={['#f4f7fb', '#dce7f3', '#bccfe5', '#eef3f9']} lightMode grainAnimated grainAmount={0.1} speed={0.18} flow={1} softness={0.95} dpr={1} /></div>
       {backdrop && <div className="backdrop-img" style={{ backgroundImage: `url(${backdrop})` }} />}
       <div className="grain" />
       <div className="content">{children}</div>

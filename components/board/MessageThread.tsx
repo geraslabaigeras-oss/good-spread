@@ -56,21 +56,25 @@ export function MessageThread({ messages, title, autoKey }: { messages: Msg[]; t
           {!sentAt && <button onClick={() => setSentAt(Date.now())} className="h-10 rounded-full bg-neutral-950 px-5 text-[14px] font-medium text-white">Send to everyone</button>}
         </div>
       </div>
-      <div className="divide-y divide-black/[0.05]">
+      <div className="grid grid-cols-1 gap-x-8 gap-y-5 pt-5 md:grid-cols-2">
         {messages.map((m, i) => {
           const st = status(i);
+          const bubble = channel === 'imessage' ? 'bg-[#0a84ff] text-white rounded-[20px] rounded-br-[6px]' : channel === 'whatsapp' ? 'bg-[#d9fdd3] text-neutral-900 rounded-[14px] rounded-tr-[4px]' : 'bg-white text-neutral-900 rounded-[14px] shadow-[0_0_0_0.5px_rgba(0,0,0,.12)]';
           return (
-            <div key={m.id} className="flex items-start gap-3 py-3">
-              {m.photo ? <img src={m.photo} alt="" className="size-9 shrink-0 rounded-full object-cover object-top" /> : <span className="relative size-9 shrink-0 overflow-hidden rounded-full"><span className="gs-talent-ph absolute inset-0" /></span>}
+            <div key={m.id} className="flex items-end gap-3">
+              <span className="relative size-9 shrink-0 overflow-hidden rounded-full bg-neutral-200">{m.photo ? <img src={m.photo} alt="" className="size-full object-cover object-top" /> : <span className="gs-talent-ph absolute inset-0" />}</span>
               <div className="min-w-0 flex-1">
-                <div className="text-[13px] text-neutral-500"><span className="font-medium text-neutral-900">{m.name}</span> · {m.role}</div>
-                <p className="mt-0.5 text-[14px] leading-5 text-neutral-800">{m.text}</p>
+                <div className="mb-1 text-[12px] text-neutral-500">To <span className="text-neutral-900">{m.name}</span> · {m.role}</div>
+                <div className={`px-3.5 py-2 text-[14px] leading-5 ${bubble}`}>
+                  {channel === 'gmail' && <div className="mb-1 text-[12px] font-medium">Call sheet · {m.name.split(' ')[0]}</div>}
+                  {m.text}
+                </div>
+                <div className="mt-1 h-4 text-right text-[11px]">
+                  {st === 'sending' && <span className="text-neutral-400">Sending…</span>}
+                  {st === 'delivered' && <span className="inline-flex items-center gap-1 text-neutral-500"><Check className="size-3" /> Delivered</span>}
+                  {st === 'seen' && <span className="inline-flex items-center gap-1 text-[#0a84ff]"><CheckCheck className="size-3" /> Seen</span>}
+                </div>
               </div>
-              <span className="mt-0.5 inline-flex shrink-0 items-center gap-1 text-[12px]">
-                {st === 'sending' && <span className="text-neutral-400">Sending…</span>}
-                {st === 'delivered' && <span className="inline-flex items-center gap-1 text-neutral-500"><Check className="size-3.5" /> Delivered</span>}
-                {st === 'seen' && <span className="inline-flex items-center gap-1 text-[#0a84ff]"><CheckCheck className="size-3.5" /> Seen</span>}
-              </span>
             </div>
           );
         })}

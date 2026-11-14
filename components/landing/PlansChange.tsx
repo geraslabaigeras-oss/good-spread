@@ -7,6 +7,12 @@ import { StormSky } from '@/components/board/WeatherCard';
 import { BrandLogo } from '@/components/brand-logo';
 
 type Scenario = 'none' | 'delay' | 'rain' | 'budget' | 'talent';
+/* Licensed Unsplash fashion photography (credited in the footer), standing in for the cast. */
+const CAST: Record<string, string> = {
+  'Talent 01': 'photo-1613915617430-8ab0fd7c6baf', 'Talent 02': 'photo-1692180142575-c31fcd106b5b', 'Talent 03': 'photo-1508964801641-4b2410705b73',
+  'Talent 04': 'photo-1590972381381-c863cbbf9dd2', 'Talent 05': 'photo-1635262090780-2ed9e994fff4',
+};
+const img = (id: string) => `https://images.unsplash.com/${id}?fm=jpg&q=60&w=240&auto=format&fit=crop`;
 const ease = [0.2, 0.7, 0.2, 1] as const;
 
 /** Mockup data, labelled as such. Tap a change; every tile that depends on it updates. */
@@ -137,7 +143,11 @@ export function PlansChange() {
             <div className="mt-6 grid grid-cols-4 gap-2">
               {(talent ? ['Talent 01', 'Talent 05', 'Talent 03', 'Talent 04'] : ['Talent 01', 'Talent 02', 'Talent 03', 'Talent 04']).map((n, i) => (
                 <motion.div layout key={n} transition={{ duration: 0.6, ease }}>
-                  <div className="gs-talent-ph relative aspect-[3/4] rounded-lg">{i === 0 || (talent && i === 1) ? <span className="absolute right-1 top-1 flex size-4 items-center justify-center rounded-full bg-neutral-950 text-white"><Check className="size-2.5" /></span> : null}</div>
+                  <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-neutral-200">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={img(CAST[n])} alt="" className="size-full object-cover object-top" />
+                    {i === 0 || (talent && i === 1) ? <span className="absolute right-1 top-1 flex size-4 items-center justify-center rounded-full bg-neutral-950 text-white"><Check className="size-2.5" /></span> : null}
+                  </div>
                   <div className="mt-1 text-[11px]">{n}</div><div className="text-[10px] text-neutral-500">{i === 0 ? 'Lead' : talent && i === 1 ? 'Replaced' : 'Option'}</div>
                 </motion.div>
               ))}
