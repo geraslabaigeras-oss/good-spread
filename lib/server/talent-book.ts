@@ -119,8 +119,11 @@ export function sampleCast(): RosterPerson[] {
       availability: state[id]?.availability ?? null, availabilityNote: null,
     } as RosterPerson;
   };
-  const models = SAMPLE_PHOTOS.slice(0, 8).map((p, i) => mk(i, 'model', `Talent ${String(i + 1).padStart(2, '0')}`, sp(p), i % 3 === 0 ? 'top' : 'mid'));
-  const photogs = SAMPLE_PHOTOS.slice(8).map((p, i) => mk(i, 'photographer', `Photographer ${String(i + 1).padStart(2, '0')}`, sp(p), i === 0 ? 'top' : 'mid'));
-  const crew = [0, 1].flatMap((i) => [mk(i, 'stylist', `Stylist ${String(i + 1).padStart(2, '0')}`, null, i === 0 ? 'top' : 'mid'), mk(i, 'mua', `Make-up ${String(i + 1).padStart(2, '0')}`, null, i === 0 ? 'top' : 'mid')]);
+  const n2 = (i: number) => String(i + 1).padStart(2, '0');
+  const pic = (i: number) => sp(SAMPLE_PHOTOS[i % SAMPLE_PHOTOS.length]);
+  const models = SAMPLE_PHOTOS.map((p, i) => mk(i, 'model', `Talent ${n2(i)}`, sp(p), i % 3 === 0 ? 'top' : 'mid'));
+  // crew show a picture of their work (same licensed set, different frames)
+  const photogs = [0, 1, 2, 3].map((i) => mk(i, 'photographer', `Photographer ${n2(i)}`, pic(i + 5), i % 2 === 0 ? 'top' : 'mid'));
+  const crew = [0, 1, 2, 3].flatMap((i) => [mk(i, 'stylist', `Stylist ${n2(i)}`, pic(i + 2), i === 0 ? 'top' : 'mid'), mk(i, 'mua', `Make-up ${n2(i)}`, pic(i + 7), i === 1 ? 'top' : 'mid')]);
   return [...models, ...photogs, ...crew];
 }
