@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     if (!already) {
       await ack(v.id, row.version);
       const name = person(row.data, v.person_id)?.name ?? v.person_id;
-      await logEvent(row.id, 'ack', { text: `${name} got it (v${row.version})`, personId: v.person_id });
+      await logEvent(row.id, 'ack', { text: `${name} saw v${row.version}`, personId: v.person_id });
     }
     return ok({ acked: true, version: row.version });
   });

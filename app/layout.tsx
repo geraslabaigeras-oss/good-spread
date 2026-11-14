@@ -1,25 +1,25 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Instrument_Serif } from 'next/font/google';
+import { Newsreader, Schibsted_Grotesk, IBM_Plex_Mono } from 'next/font/google';
+import { Providers } from '@/components/providers';
 import './globals.css';
 
-const inter = Inter({ variable: '--font-inter', subsets: ['latin', 'latin-ext'] });
-const instrument = Instrument_Serif({ variable: '--font-instrument', subsets: ['latin', 'latin-ext'], weight: '400' });
+const serif = Newsreader({ subsets: ['latin', 'latin-ext'], axes: ['opsz'], variable: '--font-newsreader', display: 'swap' });
+const sans = Schibsted_Grotesk({ subsets: ['latin', 'latin-ext'], variable: '--font-schibsted', display: 'swap' });
+const mono = IBM_Plex_Mono({ subsets: ['latin', 'latin-ext'], weight: ['400', '500'], variable: '--font-plex-mono', display: 'swap' });
 
 export const metadata: Metadata = {
-  title: 'GOOD SPREAD',
+  title: 'Good Spread',
   description: 'Producers plan it. Talent lives it. One change updates everyone.',
 };
 
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  themeColor: '#FAFAF7',
-};
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover', themeColor: '#f7f5f3' };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="en" className={`${inter.variable} ${instrument.variable} h-full antialiased`}>
-      <body className="min-h-full">{children}</body>
+    <html lang="en" className={`${serif.variable} ${sans.variable} ${mono.variable}`}>
+      <body className="bg-paper text-ink font-sans antialiased">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

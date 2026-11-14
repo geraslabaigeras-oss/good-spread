@@ -161,7 +161,7 @@ export async function resetProduction(slug: string, full: boolean): Promise<stri
       if (full) t.viewers = t.viewers.filter((v) => v.production_id !== id);
       return id;
     });
-    await logEvent(id, 'reset', { full, text: full ? 'Full reset: seed restored, devices removed' : 'Reset: seed restored' });
+    await logEvent(id, 'reset', { full, text: full ? 'Full reset' : 'Reset' });
     return id;
   }
 
@@ -182,6 +182,6 @@ export async function resetProduction(slug: string, full: boolean): Promise<stri
   const vs = await viewersFor(id);
   if (vs.length) must(await db().from('acks').delete().in('viewer_id', vs.map((v) => v.id)));
   if (full) must(await db().from('viewers').delete().eq('production_id', id));
-  await logEvent(id, 'reset', { full, text: full ? 'Full reset: seed restored, devices removed' : 'Reset: seed restored' });
+  await logEvent(id, 'reset', { full, text: full ? 'Full reset' : 'Reset' });
   return id;
 }

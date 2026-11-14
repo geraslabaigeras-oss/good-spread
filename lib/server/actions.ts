@@ -1,8 +1,18 @@
 import 'server-only';
-import type { Production } from '@/lib/types';
+import type { Conflict, Production } from '@/lib/types';
 import { applyUpdate, buildPending, detectConflicts, fmt, person, receipt, type Update } from '@/lib/engine';
 import { getProduction, insertRevision, logEvent, saveProduction, viewersFor, type ProdRow } from './db';
 import { sendSms, smsText } from './sms';
+
+/** "Conflict: Ieva lands 10:45" */
+export function conflictShort(p: Production, c: Conflict): string {
+  const who = c.personId ? person(p, c.personId)?.name ?? c.personId : '';
+  const t = c.personId ? p.travel.find((x) => x.personId === c.personId) : undefined;
+  if (c.code === 'ARRIVAL' && t) return `Conflict: ${who} lands ${fmt(t.arriveMin)}`;
+  if (c.code === 'LATE') return `Conflict: ${who} running late +${c.deltaMin} min`;
+  if (c.code === 'UNAVAILABLE') return `Conflict: ${who} can’t make it`;
+  return `Conflict: ${c.message}`;
+}
 
 /** Apply a fact (travel/late) to the plan, then detect conflicts and save a pending decision. */
 export async function applyFact(row: ProdRow, u: Update, opts: { inboxId: string; source: string }) {
@@ -13,7 +23,7 @@ export async function applyFact(row: ProdRow, u: Update, opts: { inboxId: string
   await saveProduction(row.id, p);
   if (pending) {
     await logEvent(row.id, 'conflict', {
-      text: pending.conflicts.map((c) => c.message).join('; '),
+      text: pending.conflicts.map((c) => conflictShort(p, c)).join(' · '),
       fixes: pending.fixes.map((f) => f.label),
     });
   }
@@ -51,7 +61,7 @@ export async function approveFix(slug: string, fixId: string) {
 
   await saveProduction(row.id, next);
   await insertRevision(row.id, next.version, fix.kind, fix.changes, { ...rcpt, label: fix.label });
-  await logEvent(row.id, 'approved', { text: `Approved "${fix.label}" → v${next.version}, ${fix.changes.length} people updated`, fixKind: fix.kind, receipt: rcpt });
+  await logEvent(row.id, 'approved', { text: `Approved: ${fix.label}`, fixKind: fix.kind, receipt: rcpt });
 
   return { row, next, fix, receipt: rcpt };
 }
@@ -76,8 +86,8 @@ export async function notifyAffected(rowId: string, p: Production, changes: { pe
         }
       }),
     );
-    if (sent) await logEvent(rowId, 'sms_sent', { text: `SMS sent to ${sent} phone${sent === 1 ? '' : 's'}` });
-    if (skipped) await logEvent(rowId, 'sms_skipped', { text: `SMS skipped for ${skipped} (${reason})` });
+    if (sent) await logEvent(rowId, 'sms_sent', { text: `Text sent to ${sent} ${sent === 1 ? 'person' : 'people'}` });
+    if (skipped) await logEvent(rowId, 'sms_skipped', { text: `Text skipped for ${skipped} (${reason})` });
   } catch (e) {
     console.error('notify failed', e);
   }

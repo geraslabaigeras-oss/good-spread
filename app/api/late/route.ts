@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     if (!row.data.people.some((x) => x.id === v.person_id)) return fail(409, 'not_on_shoot');
     const name = person(row.data, v.person_id)?.name ?? v.person_id;
     const m = parsed.data.minutes;
-    await logEvent(row.id, 'late', { text: m === 'unavailable' ? `${name}: can't make it` : `${name}: running late +${m}`, personId: v.person_id });
+    await logEvent(row.id, 'late', { text: m === 'unavailable' ? `${name} can’t make it` : `${name} running late +${m}`, personId: v.person_id });
     const u = lateUpdate(row.data, v.person_id, m);
     const r = await applyFact(row, u, { inboxId: `late-${Date.now()}`, source: `${name} (my day page)` });
     return ok({ conflicts: r.conflicts.length, pending: !!r.pending });

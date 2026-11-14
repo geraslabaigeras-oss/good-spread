@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     }
     const token = randomBytes(6).toString('base64url');
     await createViewer(row.id, personId, token, normalized);
-    await logEvent(row.id, 'join', { text: `A device joined as ${person(row.data, personId)?.name}${normalized ? ' (SMS on)' : ''}` });
+    await logEvent(row.id, 'join', { text: `${person(row.data, personId)?.name} joined${normalized ? ' · texts on' : ''}` });
     return ok({ token });
   });
 }

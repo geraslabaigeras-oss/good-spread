@@ -15,7 +15,7 @@ const Body = z.object({
   slug: slugSchema,
   inboxId: z.string().max(80),
   source: z.string().max(200),
-  update: UpdateSchema.optional(),
+  update: UpdateSchema.nullish(),
   manual: z.object({ personId: z.string().max(40), time: z.string().max(5) }).optional(),
 });
 
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     const row = await getProduction(slug);
     if (!row) return fail(404, 'not_found');
 
-    let u: Update | undefined = parsed.data.update;
+    let u: Update | undefined = parsed.data.update ?? undefined;
     if (manual) {
       const t = parseHHMM(manual.time);
       if (t == null) return fail(400, 'invalid_time');

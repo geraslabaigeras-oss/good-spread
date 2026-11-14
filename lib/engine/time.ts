@@ -28,7 +28,7 @@ export function money(n: number): string {
   const s = Number.isInteger(r)
     ? r.toLocaleString('en-US')
     : r.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return `€${s}`;
+  return `${n < 0 && r !== 0 ? '−' : ''}€${s.replace('-', '')}`;
 }
 
 export const UNAVAILABLE_MIN = 99999;

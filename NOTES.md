@@ -10,3 +10,7 @@
 - **Local store:** when SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are missing (local dev only), `lib/server/db.ts` uses a JSON file at `.data/local-db.json`. On Vercel a missing Supabase config is a hard error.
 - **AI extraction:** claude-sonnet-5-5 rejects forced `tool_choice`, so the `record_update` schema is enforced via structured outputs (`output_config.format`). Pasted text also has a plain-code regex fallback ("read by rule") if AI/cache fail.
 - **Demo-doc buttons** under the inbox send the same PDFs through the same path as drag-and-drop (reliability backup).
+- **Design (DESIGN.md):** fix cards show `fix.detail` ("Marta goes first, Ieva from 11:30") instead of the first change.text, which is written in second person for talent and reads wrong on the producer board.
+- **Timeline:** hour labels under the "BOOKED UNTIL 15:00" label (15, 16) are omitted so they don't collide.
+- **Reset:** click = plan reset (devices stay); shift-click = full reset (devices + phone numbers deleted). Both behind a confirm.
+- **Inbox:** small "Demo files: flight · agency · studio" links inside the idle drop zone send the bundled PDFs through the normal read path (demo reliability).

@@ -1,8 +1,15 @@
 'use client';
 
 import useSWR from 'swr';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
+import { ArrowUpRight, Check } from 'lucide-react';
 import type { MeState } from '@/lib/server/views';
+import { clock } from '@/lib/format';
+import {
+  badgePop, CALL_CHANGE, highlight, highlightReduced, oldTimeSmall, scrim, sheet, strikeLine, timeIn, timeOut, tPress, useReveal,
+} from '@/lib/motion';
+import { Button, ToastProvider, useToast, Wordmark } from '@/components/kit';
 import { cn } from '@/lib/utils';
 
 const fetcher = async (url: string) => {
@@ -13,192 +20,305 @@ const fetcher = async (url: string) => {
 };
 
 export function MyDay({ token }: { token: string }) {
-  const { data, mutate, error } = useSWR<MeState | null>(`/api/me/${token}`, fetcher, { refreshInterval: 2000 });
-  const [flash, setFlash] = useState(0);
-  const [lateOpen, setLateOpen] = useState(false);
-  const [sent, setSent] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const seenVersion = useRef<number | null>(null);
+  return (
+    <ToastProvider position="bottom-center">
+      <MyDayInner token={token} />
+    </ToastProvider>
+  );
+}
 
+type Phase = { version: number; kind: 'striking' | 'settled'; oldBig: string } | null;
+
+function MyDayInner({ token }: { token: string }) {
+  const { data, mutate, error } = useSWR<MeState | null>(`/api/me/${token}`, fetcher, { refreshInterval: 2000 });
+  const toast = useToast();
+  const reduce = useReducedMotion();
+  const { parent, item } = useReveal();
+  const [flashVersion, setFlashVersion] = useState<number | null>(null);
+  const [phase, setPhase] = useState<Phase>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [seenAt, setSeenAt] = useState<string | null>(null);
+  const prevVersion = useRef<number | null>(null);
+
+  // §5.10: version change → vibrate, highlight, strike + roll when the call moved.
   useEffect(() => {
     if (!data) return;
-    if (seenVersion.current != null && data.version !== seenVersion.current) {
-      if (data.changedNow) {
-        setFlash(data.version);
-        try {
-          navigator.vibrate?.(200);
-        } catch {}
-      }
-      setSent(null);
+    const pv = prevVersion.current;
+    prevVersion.current = data.version;
+    if (pv == null || data.version <= pv) {
+      if (pv != null && data.version < pv) { setPhase(null); setSeenAt(null); }
+      return;
     }
-    seenVersion.current = data.version;
-  }, [data]);
+    setSeenAt(null);
+    if (!data.changedNow) return;
+    try { navigator.vibrate?.(CALL_CHANGE.vibrateMs); } catch {}
+    setFlashVersion(data.version);
+    const c = data.lastChange;
+    if (c?.kind === 'call_time' && c.before && !reduce) {
+      setPhase({ version: data.version, kind: 'striking', oldBig: c.before });
+      const t = setTimeout(() => setPhase((ph) => (ph ? { ...ph, kind: 'settled' } : ph)), CALL_CHANGE.strikeMs);
+      return () => clearTimeout(t);
+    }
+    setPhase(null);
+  }, [data, reduce]);
 
   if (data === null) {
     return (
-      <Wrap>
-        <p className="mt-10 text-lg">This link is no longer active.</p>
-        <p className="mt-2 text-sm text-muted-foreground">The producer reset the demo. Scan the QR code again to rejoin.</p>
-      </Wrap>
+      <Shell>
+        <TopBar />
+        <p className="mt-10 font-serif text-[32px] leading-9">This link has expired.</p>
+        <p className="mt-2 text-[16px] leading-6 text-grey-1">The demo was reset. Scan the QR code again to rejoin.</p>
+      </Shell>
     );
   }
-  if (!data) return <Wrap><p className="mt-10 text-muted-foreground">{error ? 'Reconnecting…' : 'Loading your day…'}</p></Wrap>;
+  if (!data) return <Shell><TopBar /><p className="mt-10 text-[16px] text-grey-1">{error ? 'Reconnecting…' : 'Loading your day…'}</p></Shell>;
 
   async function post(url: string, body: object) {
     setBusy(true);
     try {
-      await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       await mutate();
+      return r.ok;
     } finally {
       setBusy(false);
     }
   }
 
-  const gotIt = () => post('/api/ack', { token });
+  const gotIt = async () => {
+    if (await post('/api/ack', { token })) setSeenAt(clock(new Date().toISOString()));
+  };
   const late = async (m: 15 | 30 | 60 | 'unavailable') => {
-    if (m === 'unavailable' && !confirm("Tell the producer you can't make it today?")) return;
-    await post('/api/late', { token, minutes: m });
-    setLateOpen(false);
-    setSent(m === 'unavailable' ? "Producer told you can't make it." : `Producer told you're running ${m} min late.`);
+    setSheetOpen(false);
+    if (await post('/api/late', { token, minutes: m })) {
+      toast(m === 'unavailable' ? 'Sent to producer: can’t make it' : `Sent to producer: running ${m} min late`, { check: true });
+    }
+  };
+  const cantMake = () => {
+    if (confirm('Tell the producer you can’t make it today?')) late('unavailable');
   };
 
-  if (data.released) {
-    return (
-      <Wrap>
-        <Head d={data} />
-        <div key={flash} className={cn('mt-8 border-l-2 border-conflict bg-conflict-soft px-4 py-4', flash && 'flash')}>
-          <div className="text-lg font-medium">{data.lastChange?.text ?? 'You are no longer on this shoot.'}</div>
-        </div>
-        {!data.acked && (
-          <button onClick={gotIt} disabled={busy} className="mt-6 h-14 w-full rounded-sm bg-action text-lg font-medium text-white">Got it</button>
-        )}
-      </Wrap>
-    );
-  }
+  // The first render with a new version must already show the old time (no flicker before the effect runs).
+  const lc = data.lastChange;
+  const freshStrike =
+    prevVersion.current != null && data.version > prevVersion.current && data.changedNow && lc?.kind === 'call_time' && !!lc.before && !reduce;
+  const striking = freshStrike || (phase && phase.version === data.version && phase.kind === 'striking');
+  const bigTime = striking ? (freshStrike ? lc!.before! : phase!.oldBig) : data.call ?? '—';
+  const showSmallOld = !striking && !!data.oldCall;
+  const animateIn = phase && phase.version === data.version && phase.kind === 'settled';
 
   return (
-    <Wrap>
-      <Head d={data} />
+    <Shell>
+      <motion.div variants={parent} initial="hidden" animate="shown">
+        <motion.div variants={item}>
+          <TopBar badge={data.updatedBadge} />
+        </motion.div>
 
-      {/* What changed */}
-      {data.changedNow && data.lastChange && (
-        <div key={`c-${flash}`} className={cn('mt-5 border-l-2 px-4 py-3', data.acked ? 'border-seen bg-seen-soft' : 'border-action bg-action-soft', flash === data.version && 'flash')}>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{data.acked ? 'Seen' : 'What changed'}</div>
-          <div className="mt-0.5 text-[17px] font-medium leading-snug">{data.lastChange.text}</div>
-        </div>
-      )}
-
-      {/* Call time */}
-      <div key={`t-${flash}`} className={cn('mt-6', flash === data.version && 'flash')}>
-        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Your call</div>
-        <div className="flex items-baseline gap-4">
-          <span className="font-display text-[88px] leading-[0.95] tnum">{data.call ?? '—'}</span>
-          {data.oldCall && <span className="font-display text-[34px] text-muted-foreground line-through tnum">{data.oldCall}</span>}
-        </div>
-        <div className="mt-1 text-[15px]">
-          {data.travel ? (
-            <>You land <b className="tnum">{data.travel.lands}</b> · car to studio {data.travel.transferMin} min</>
-          ) : data.leaveBy ? (
-            <>Leave by <b className="tnum">{data.leaveBy}</b></>
-          ) : null}
-          {data.finish && <span className="text-muted-foreground"> · finish {data.finish}</span>}
-        </div>
-        {data.lateReported && (
-          <div className="mt-1 text-sm text-conflict">
-            {data.lateReported === 'unavailable' ? "You told the producer you can't make it." : `You reported ready at ${data.lateReported}.`}
-          </div>
-        )}
-      </div>
-
-      {/* Actions */}
-      <div className="mt-6 grid gap-2">
-        <button
-          onClick={gotIt}
-          disabled={busy || data.acked}
-          className={cn('h-14 w-full rounded-sm text-lg font-medium', data.acked ? 'bg-seen-soft text-seen' : 'bg-action text-white')}
-        >
-          {data.acked ? 'Seen' : 'Got it'}
-        </button>
-        {!lateOpen ? (
-          <button onClick={() => setLateOpen(true)} className="h-12 w-full rounded-sm border border-input bg-card text-[15px] font-medium">Running late</button>
+        {data.released ? (
+          <motion.div variants={item} className="mt-6">
+            <div className="font-serif text-[32px] leading-9 tracking-[-0.01em]">{data.person?.name}</div>
+            <div className="label mt-1">{data.person?.roleLabel}</div>
+            <p className="mt-8 text-[16px] leading-6">{data.lastChange?.text ?? 'You are no longer on this shoot.'}</p>
+          </motion.div>
         ) : (
-          <div className="grid grid-cols-3 gap-2">
-            {([15, 30, 60] as const).map((m) => (
-              <button key={m} onClick={() => late(m)} disabled={busy} className="h-12 rounded-sm border border-foreground bg-card text-[17px] font-medium tnum">+{m}</button>
-            ))}
-          </div>
+          <>
+            <motion.div variants={item} className="mt-6">
+              <div className="font-serif text-[32px] leading-9 tracking-[-0.01em]">{data.person?.name}</div>
+              <div className="label mt-1">{data.person?.roleLabel} · {data.title}</div>
+            </motion.div>
+
+            {/* Call time block (§3.3, §5.10) */}
+            <motion.div variants={item} className="relative isolate mt-8 -mx-2 rounded-[10px] px-2 pb-2">
+              {flashVersion === data.version && (
+                <motion.div
+                  key={`hl-${data.version}`}
+                  variants={reduce ? highlightReduced : highlight}
+                  initial="initial"
+                  animate="animate"
+                  className="pointer-events-none absolute inset-0 -z-10 rounded-[inherit] bg-action-tint"
+                />
+              )}
+              <div className="label pt-2">Call time</div>
+              <div className="h-8">
+                <AnimatePresence initial={false}>
+                  {showSmallOld && (
+                    <motion.span
+                      key={`old-${data.oldCall}`}
+                      variants={oldTimeSmall}
+                      initial={animateIn ? 'initial' : false}
+                      animate="animate"
+                      className="relative inline-block font-serif text-[28px] leading-8 tracking-[-0.01em] text-grey-1 num"
+                    >
+                      {data.oldCall}
+                      <span className="absolute inset-x-0 top-[calc(50%-1px)] h-0.5 bg-ink" />
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </div>
+              <div className="relative overflow-hidden" style={{ fontSize: 'clamp(56px, 24vw, 104px)', lineHeight: 0.9, height: '0.95em' }}>
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.div
+                    key={bigTime}
+                    variants={{ ...timeIn, ...timeOut }}
+                    initial={animateIn ? 'initial' : false}
+                    animate="animate"
+                    exit="exit"
+                    className="relative inline-block font-serif tracking-[-0.03em] num"
+                    style={{ minWidth: '5ch' }}
+                  >
+                    {bigTime}
+                    {striking && (
+                      <motion.span
+                        variants={strikeLine}
+                        initial="initial"
+                        animate="animate"
+                        className="absolute inset-x-0 top-[calc(50%-1.5px)] h-[3px] bg-ink"
+                      />
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+              <div className="mt-6 font-mono text-[15px] leading-[22px] num">
+                {data.travel ? (
+                  <>You land {data.travel.lands} · car to studio {data.travel.transferMin} min</>
+                ) : data.leaveBy ? (
+                  <>Leave by {data.leaveBy}</>
+                ) : null}
+              </div>
+              {data.changedNow && data.lastChange && (
+                <p className="mt-2 text-[16px] leading-6">{data.lastChange.text}</p>
+              )}
+              {data.lateReported && (
+                <p className="mt-2 text-[16px] leading-6 text-grey-1">
+                  {data.lateReported === 'unavailable' ? 'You told the producer you can’t make it.' : `You told the producer you’re ready at ${data.lateReported}.`}
+                  {data.pendingDecision ? ' Waiting for their decision.' : ''}
+                </p>
+              )}
+            </motion.div>
+
+            <motion.div variants={item}>
+              <Section label="Where">
+                <p className="text-[16px] leading-6">{data.studio.name}</p>
+                <p className="text-[16px] leading-6 text-grey-1">{data.studio.address}</p>
+                <a href={data.studio.mapsUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 text-[16px] font-medium leading-6 text-action">
+                  Open map <ArrowUpRight size={16} strokeWidth={1.5} />
+                </a>
+              </Section>
+              {data.looks.length > 0 && (
+                <Section label="Your looks">
+                  {data.looks.map((l) => (
+                    <div key={l.id} className="flex h-11 items-center border-b border-hairline text-[16px] leading-6 last:border-b-0">
+                      <span className="font-mono">{l.id}</span>&nbsp;· {l.garment}
+                    </div>
+                  ))}
+                </Section>
+              )}
+              <Section label="On set">
+                <p className="text-[16px] leading-6">{data.team.map((x) => x.name).join(' · ')}</p>
+              </Section>
+            </motion.div>
+          </>
         )}
-        {sent && <div className="text-center text-sm text-muted-foreground">{sent} Waiting for the producer.</div>}
-        {!sent && data.pendingDecision && <div className="text-center text-xs text-muted-foreground">The producer is deciding on a change.</div>}
-      </div>
+      </motion.div>
 
-      {/* Schedule */}
-      <Section title="Your day">
-        <ol>
-          {data.schedule.map((b) => (
-            <li key={b.id} className="flex gap-4 border-b border-hairline py-2 text-[15px] last:border-b-0">
-              <span className="w-24 shrink-0 text-muted-foreground tnum">{b.start}–{b.end}</span>
-              <span>{b.text}</span>
-            </li>
-          ))}
-        </ol>
-      </Section>
+      {/* Fixed action bar (§3.3) */}
+      {!data.released || !data.acked ? (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-paper px-5 pt-3" style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}>
+          <div className="mx-auto max-w-[420px]">
+            <GotIt acked={data.acked} seenAt={seenAt} busy={busy} onClick={gotIt} />
+            {!data.released && (
+              <div className="mt-2 flex gap-2">
+                <Button variant="secondary" className="h-12 flex-1 text-[16px] leading-6" disabled={busy} onClick={() => setSheetOpen(true)}>Running late</Button>
+                <Button variant="ghost" className="h-12 w-[132px] text-[16px] leading-6" disabled={busy} onClick={cantMake}>Can’t make it</Button>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
 
-      <Section title="Where">
-        <div className="text-[15px]">{data.studio.name}</div>
-        <div className="text-sm text-muted-foreground">{data.studio.address}</div>
-        <a href={data.studio.mapsUrl} target="_blank" rel="noreferrer" className="mt-2 inline-block text-sm font-medium text-action underline underline-offset-4">Open map</a>
-      </Section>
-
-      {data.looks.length > 0 && (
-        <Section title="Your looks">
-          <ul className="grid grid-cols-2 gap-2">
-            {data.looks.map((l) => (
-              <li key={l.id} className="border border-hairline bg-card px-3 py-2">
-                <div className="text-xs text-muted-foreground">{l.name}</div>
-                <div className="text-sm">{l.garment}</div>
-              </li>
-            ))}
-          </ul>
-        </Section>
-      )}
-
-      <Section title="On set">
-        <ul className="text-[15px]">
-          {data.team.map((x) => (
-            <li key={x.name} className="flex justify-between py-0.5"><span>{x.name}</span><span className="text-muted-foreground">{x.role}</span></li>
-          ))}
-        </ul>
-      </Section>
-
-      <button onClick={() => late('unavailable')} disabled={busy} className="mt-8 w-full py-2 text-sm text-muted-foreground underline underline-offset-4">
-        Can&apos;t make it
-      </button>
-    </Wrap>
+      {/* Running late sheet (§4.13, §5.11) */}
+      <AnimatePresence>
+        {sheetOpen && (
+          <>
+            <motion.div key="scrim" variants={scrim} initial="initial" animate="animate" exit="exit" className="fixed inset-0 z-50 bg-[rgb(13_13_13/0.24)]" onClick={() => setSheetOpen(false)} />
+            <motion.div
+              key="sheet"
+              variants={sheet}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="fixed inset-x-0 bottom-0 z-50 rounded-t-[20px] bg-surface px-5 pt-5"
+              style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}
+            >
+              <div className="absolute left-[calc(50%-18px)] top-2 h-1 w-9 rounded-[2px] bg-grey-3" />
+              <div className="mx-auto max-w-[420px]">
+                <h2 className="mt-2 font-serif text-[24px] leading-7">How late?</h2>
+                <div className="mt-4 flex gap-2">
+                  {([15, 30, 60] as const).map((m) => (
+                    <Button key={m} variant="secondary" size="lg" className="flex-1 font-mono text-[18px] num" onClick={() => late(m)}>+{m}</Button>
+                  ))}
+                </div>
+                <Button variant="ghost" className="mt-3 h-12 w-full text-[16px]" onClick={() => setSheetOpen(false)}>Cancel</Button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </Shell>
   );
 }
 
-function Wrap({ children }: { children: React.ReactNode }) {
-  return <div className="mx-auto min-h-screen max-w-md bg-background px-4 pb-12 pt-5">{children}</div>;
+function GotIt({ acked, seenAt, busy, onClick }: { acked: boolean; seenAt: string | null; busy: boolean; onClick: () => void }) {
+  return (
+    <motion.button
+      whileTap={{ scale: 0.97 }}
+      transition={tPress}
+      disabled={acked || busy}
+      onClick={onClick}
+      className={cn(
+        'flex h-14 w-full items-center justify-center gap-2 rounded-full px-6 text-[16px] font-medium leading-6 transition-colors duration-200 ease-[cubic-bezier(.4,0,.2,1)]',
+        acked ? 'bg-seen-tint text-seen' : 'bg-action text-white active:bg-action-hover',
+      )}
+    >
+      {acked ? (
+        <>
+          <motion.span initial={{ scale: 0.6 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 700, damping: 40 }} className="inline-flex">
+            <Check size={18} strokeWidth={1.5} />
+          </motion.span>
+          {seenAt ? `Seen · ${seenAt}` : 'Seen'}
+        </>
+      ) : busy ? (
+        'Sending…'
+      ) : (
+        'Got it'
+      )}
+    </motion.button>
+  );
 }
 
-function Head({ d }: { d: MeState }) {
+function Shell({ children }: { children: React.ReactNode }) {
+  return <div className="mx-auto min-h-dvh max-w-[420px] bg-paper px-5 pt-4" style={{ paddingBottom: 168 }}>{children}</div>;
+}
+
+function TopBar({ badge }: { badge?: string | null }) {
   return (
-    <div className="flex items-start justify-between">
-      <div>
-        <div className="text-[11px] font-semibold uppercase tracking-[0.22em]">Good Spread</div>
-        <div className="mt-2 font-display text-[30px] leading-none">{d.person?.name ?? ''}</div>
-        <div className="text-sm text-muted-foreground">{d.person?.roleLabel} · {d.title}</div>
-      </div>
-      {d.updatedBadge && <span className="mt-1 rounded-sm bg-action px-2 py-1 text-xs font-medium text-white tnum">Updated {d.updatedBadge}</span>}
+    <div className="flex h-10 items-center justify-between">
+      <Wordmark demo />
+      <AnimatePresence>
+        {badge && (
+          <motion.span key={badge} variants={badgePop} initial="initial" animate="animate" exit="exit" className="inline-flex h-6 items-center rounded-full bg-action px-2.5 font-mono text-[12px] font-medium leading-4 text-white num">
+            Updated {badge}
+          </motion.span>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <section className="mt-8">
-      <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{title}</h2>
+    <section className="section mt-8 pt-1">
+      <div className="section-head"><span className="label">{label}</span></div>
       {children}
     </section>
   );

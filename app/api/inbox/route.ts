@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     const description = update ? describeUpdate(p, update) : null;
 
     await logEvent(row.id, 'inbox_read', {
-      text: `Read ${input.name}: ${r.extraction.summary}${r.via === 'cache' ? ' (cached)' : ''}`,
+      text: `Read ${input.name}${r.via === 'cache' ? ' (cached)' : ''}`,
       via: r.via,
       ms: Date.now() - started,
       ...(r.error ? { error: r.error } : {}),

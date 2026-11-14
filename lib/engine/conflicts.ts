@@ -13,7 +13,7 @@ export function detectConflicts(p: Production): Conflict[] {
     const late = lateReady(p, person.id);
 
     if (late >= UNAVAILABLE_MIN) {
-      out.push({ code: 'UNAVAILABLE', personId: person.id, blockId: first.id, deltaMin: UNAVAILABLE_MIN, message: `${person.name} can't make it today` });
+      out.push({ code: 'UNAVAILABLE', personId: person.id, blockId: first.id, deltaMin: UNAVAILABLE_MIN, message: `${person.name} can’t make it today` });
       continue;
     }
     const ready = readyAt(p, person.id);
@@ -26,8 +26,8 @@ export function detectConflicts(p: Production): Conflict[] {
         blockId: first.id,
         deltaMin: delta,
         message: isLate
-          ? `${person.name} is running late: ready ${fmt(ready)}, called ${fmt(call)} ${KIND_LABEL[first.kind]} (+${delta} min)`
-          : `${person.name} can't make ${fmt(call)} ${KIND_LABEL[first.kind]}: ready ${fmt(ready)} (+${delta} min)`,
+          ? `${person.name} is running late for ${fmt(call)} ${KIND_LABEL[first.kind]}`
+          : `${person.name} can’t make ${fmt(call)} ${KIND_LABEL[first.kind]}`,
       });
     }
   }

@@ -1,15 +1,20 @@
 'use client';
 
+import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Check } from 'lucide-react';
+import { Button, Wordmark } from '@/components/kit';
+import { useReveal } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 
 type P = { id: string; name: string; role: string; isModel: boolean };
-
 const KEY = (slug: string) => `gs-token-${slug}`;
 
-export function JoinFlow({ slug, title, dateISO, people }: { slug: string; title: string; dateISO: string; people: P[] }) {
+export function JoinFlow({ slug, people }: { slug: string; title: string; dateISO: string; people: P[] }) {
   const router = useRouter();
+  const { parent, item } = useReveal();
+  const [pressed, setPressed] = useState<string | null>(null);
   const [pick, setPick] = useState<P | null>(null);
   const [phone, setPhone] = useState('');
   const [optIn, setOptIn] = useState(false);
@@ -24,21 +29,25 @@ export function JoinFlow({ slug, title, dateISO, people }: { slug: string; title
     } catch {}
   }, [slug]);
 
-  async function join() {
+  function choose(x: P) {
+    setPressed(x.id);
+    setTimeout(() => setPick(x), 120);
+  }
+
+  async function join(withPhone: boolean) {
     if (!pick) return;
     setBusy(true);
     setErr(null);
     try {
+      const usePhone = withPhone && optIn && phone.trim();
       const r = await fetch('/api/join', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug, personId: pick.id, phone: optIn ? phone : null, optIn }),
+        body: JSON.stringify({ slug, personId: pick.id, phone: usePhone ? phone : null, optIn: !!usePhone }),
       });
       const j = await r.json();
-      if (!r.ok) throw new Error(j.error === 'invalid_phone' ? 'That phone number does not look right. Use +370… format.' : j.error ?? 'Could not join');
-      try {
-        localStorage.setItem(KEY(slug), JSON.stringify({ token: j.token, name: pick.name }));
-      } catch {}
+      if (!r.ok) throw new Error(j.error === 'invalid_phone' ? 'That number doesn’t look right. Try +370 6… format.' : j.error ?? 'Could not join');
+      try { localStorage.setItem(KEY(slug), JSON.stringify({ token: j.token, name: pick.name })); } catch {}
       router.push(`/p/${j.token}`);
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Could not join');
@@ -46,65 +55,71 @@ export function JoinFlow({ slug, title, dateISO, people }: { slug: string; title
     }
   }
 
-  const date = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(`${dateISO}T00:00:00Z`));
-
   return (
-    <div className="mx-auto min-h-screen max-w-md bg-background px-4 pb-10 pt-6">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.22em]">Good Spread</div>
-      <h1 className="mt-3 font-display text-[40px] leading-[1.05]">{title}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">{date} · demo production</p>
+    <div className="mx-auto min-h-dvh max-w-[420px] bg-paper p-5">
+      <motion.div variants={parent} initial="hidden" animate="shown">
+        <motion.div variants={item} className="flex h-10 items-center">
+          <Wordmark demo />
+        </motion.div>
 
-      {resume && !pick && (
-        <a href={`/p/${resume.token}`} className="mt-5 flex items-center justify-between border border-foreground bg-card px-4 py-3 text-sm">
-          <span>Continue as <span className="font-medium">{resume.name}</span></span>
-          <span aria-hidden>→</span>
-        </a>
-      )}
+        <AnimatePresence mode="wait" initial={false}>
+          {!pick ? (
+            <motion.div key="roles" exit={{ opacity: 0, transition: { duration: 0.16 } }}>
+              <motion.h1 variants={item} className="mt-10 font-serif text-[36px] leading-10 tracking-[-0.02em]">Who are you on this shoot?</motion.h1>
+              <motion.p variants={item} className="mt-2 text-[16px] leading-6 text-grey-1">Pick one. You’ll get your own day plan.</motion.p>
+              <motion.div variants={item} className="mt-6 grid gap-2">
+                {people.map((x) => (
+                  <button
+                    key={x.id}
+                    onClick={() => choose(x)}
+                    className={cn(
+                      'flex h-[72px] items-center justify-between rounded-[20px] bg-paper px-5 text-left',
+                      pressed === x.id ? 'border-[1.5px] border-ink' : 'border border-hairline',
+                    )}
+                  >
+                    <span className="font-serif text-[24px] leading-7">{x.isModel ? x.name : x.name}</span>
+                    <span className="label">{x.role}</span>
+                  </button>
+                ))}
+              </motion.div>
+              {resume && (
+                <motion.a variants={item} href={`/p/${resume.token}`} className="mt-6 block text-center text-[16px] leading-6 text-action">
+                  Continue as {resume.name}
+                </motion.a>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div key="phone" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.2 } }}>
+              <h1 className="mt-10 font-serif text-[36px] leading-10 tracking-[-0.02em]">{pick.name}</h1>
+              <div className="label mt-1">{pick.role}</div>
 
-      {!pick ? (
-        <>
-          <h2 className="mt-8 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Who are you on this shoot?</h2>
-          <div className="mt-3 grid gap-2">
-            {people.map((x) => (
-              <button
-                key={x.id}
-                onClick={() => setPick(x)}
-                className="flex items-center justify-between border border-hairline bg-card px-5 py-5 text-left active:bg-muted"
-              >
-                <span className="font-display text-[30px] leading-none">{x.isModel ? x.name : x.role}</span>
-                <span className="text-sm text-muted-foreground">{x.isModel ? 'Model' : x.name}</span>
-              </button>
-            ))}
-          </div>
-        </>
-      ) : (
-        <div className="mt-8">
-          <button onClick={() => setPick(null)} className="text-sm text-muted-foreground">← Back</button>
-          <div className="mt-3 font-display text-[34px] leading-none">{pick.isModel ? pick.name : `${pick.role}, ${pick.name}`}</div>
-
-          <label className="mt-6 flex items-start gap-3 text-[15px]">
-            <input type="checkbox" checked={optIn} onChange={(e) => setOptIn(e.target.checked)} className="mt-1 size-5 accent-[#2B3FD6]" />
-            <span>
-              Text me updates
-              <span className="block text-xs text-muted-foreground">Optional. Only sent when the producer approves a change that affects you. Deleted on reset.</span>
-            </span>
-          </label>
-          <input
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            disabled={!optIn}
-            placeholder="+370 6xx xxxxx"
-            className={cn('mt-3 h-12 w-full border border-input bg-card px-3 text-lg tnum outline-none focus:border-foreground', !optIn && 'opacity-40')}
-          />
-          {err && <p className="mt-2 text-sm text-conflict">{err}</p>}
-          <button onClick={join} disabled={busy || (optIn && !phone.trim())} className="mt-6 h-14 w-full rounded-sm bg-action text-lg font-medium text-white disabled:opacity-40">
-            {busy ? 'Opening your day…' : 'See my day'}
-          </button>
-        </div>
-      )}
+              <input
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                value={phone}
+                onChange={(e) => { setPhone(e.target.value); if (e.target.value && !optIn) setOptIn(true); }}
+                placeholder="+370 6…"
+                className="mt-8 h-14 w-full rounded-[10px] border border-hairline-strong bg-paper px-4 font-mono text-[17px] num placeholder:text-grey-2"
+              />
+              <label className="mt-2 flex h-11 cursor-pointer items-center gap-3 text-[16px] leading-6">
+                <input type="checkbox" checked={optIn} onChange={(e) => setOptIn(e.target.checked)} className="sr-only" />
+                <span className={cn('inline-flex size-5 items-center justify-center rounded-[4px] border-[1.5px] border-ink', optIn && 'bg-ink text-paper')}>
+                  {optIn && <Check size={14} strokeWidth={2} />}
+                </span>
+                Text me updates
+              </label>
+              {err && <p className="mt-1 text-[14px] leading-5 text-conflict">{err}</p>}
+              <Button variant="primary" size="lg" className="mt-4 w-full" disabled={busy || (optIn && !phone.trim())} onClick={() => join(true)}>
+                {busy ? 'Opening…' : 'Open my day'}
+              </Button>
+              <Button variant="ghost" className="mt-2 h-12 w-full text-[16px]" disabled={busy} onClick={() => join(false)}>Skip</Button>
+              <p className="mt-4 text-[13px] leading-[18px] text-grey-1">Demo. Your number is deleted when the demo resets.</p>
+              <button onClick={() => { setPick(null); setPressed(null); }} className="mt-4 text-[13px] leading-[18px] text-grey-1 underline underline-offset-2">Pick a different role</button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 }

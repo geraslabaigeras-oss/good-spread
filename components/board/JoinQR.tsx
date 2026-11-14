@@ -1,31 +1,55 @@
 'use client';
 
+import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import { X } from 'lucide-react';
+import { qrPanel, useReveal } from '@/lib/motion';
+import { Button } from '@/components/kit';
 
 export function JoinQR({ open, onOpenChange, slug }: { open: boolean; onOpenChange: (o: boolean) => void; slug: string }) {
   const [url, setUrl] = useState('');
+  const [small, setSmall] = useState(false);
+  const { parent, item } = useReveal();
+
   useEffect(() => {
     setUrl(`${window.location.origin}/join/${slug}`);
+    const mq = window.matchMedia('(max-width: 1360px), (max-height: 860px)');
+    const on = () => setSmall(mq.matches);
+    on();
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
   }, [slug]);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onOpenChange(false);
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onOpenChange]);
-  if (!open) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95" onClick={() => onOpenChange(false)}>
-      <div className="flex flex-col items-center gap-6" onClick={(e) => e.stopPropagation()}>
-        <div className="text-[11px] font-semibold uppercase tracking-[0.22em]">Good Spread · join the shoot</div>
-        <div className="border border-hairline bg-white p-6">
-          {url && <QRCodeSVG value={url} size={420} level="M" marginSize={0} />}
-        </div>
-        <div className="font-display text-3xl">Scan, pick who you are, live the day.</div>
-        <div className="text-sm text-muted-foreground tnum">{url.replace(/^https?:\/\//, '')}</div>
-        <button onClick={() => onOpenChange(false)} className="h-9 rounded-sm border border-hairline px-4 text-sm hover:bg-muted">Close</button>
-      </div>
-    </div>
+    <AnimatePresence>
+      {open && (
+        <motion.div key="qr" variants={qrPanel} initial="initial" animate="animate" exit="exit" className="fixed inset-0 z-50 flex items-center justify-center bg-paper">
+          <Button variant="ghost" className="absolute right-6 top-6" onClick={() => onOpenChange(false)}>
+            <X strokeWidth={1.5} /> Close
+          </Button>
+          <motion.div variants={parent} initial="hidden" animate="shown" className="flex items-center gap-20">
+            <motion.div variants={item} className="rounded-[20px] border border-hairline bg-surface" style={{ padding: small ? 32 : 40 }}>
+              {url && <QRCodeSVG value={url} size={small ? 400 : 440} fgColor="#0d0d0d" bgColor="#ffffff" level="M" marginSize={0} />}
+            </motion.div>
+            <motion.div variants={item} className="max-w-[440px]">
+              <div className="label">Join the shoot</div>
+              <h2 className="mt-2 font-serif tracking-[-0.025em]" style={{ fontSize: small ? 56 : 64, lineHeight: small ? '56px' : '64px' }}>
+                Scan to get your day.
+              </h2>
+              <div className="mt-6 break-all font-mono text-[20px] leading-7 text-ink">{url.replace(/^https?:\/\//, '')}</div>
+              <p className="mt-2 text-[16px] leading-6 text-grey-1">Pick a role. Phone number optional.</p>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

@@ -1,116 +1,149 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import "tw-animate-css"; /* keep only if shadcn installed it */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
-  --font-serif: var(--font-instrument);
-  --font-heading: var(--font-instrument);
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-hairline: var(--hairline);
-  --color-destructive: var(--destructive);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-conflict: var(--conflict);
-  --color-conflict-soft: var(--conflict-soft);
-  --color-seen: var(--seen);
-  --color-seen-soft: var(--seen-soft);
-  --color-ot: var(--ot);
-  --color-ot-soft: var(--ot-soft);
-  --color-action: var(--action);
-  --color-action-soft: var(--action-soft);
-  --radius-sm: 2px;
-  --radius-md: 3px;
-  --radius-lg: 4px;
-  --radius-xl: 6px;
-  --radius-2xl: 8px;
+/* 1. Delete Tailwind's default palette and shadows so slop can't compile. */
+@theme {
+  --color-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
 }
 
 :root {
-  --background: #FAFAF7;
-  --foreground: #141412;
-  --card: #FFFFFF;
-  --card-foreground: #141412;
-  --popover: #FFFFFF;
-  --popover-foreground: #141412;
-  --primary: #141412;
-  --primary-foreground: #FAFAF7;
-  --secondary: #F1F0EA;
-  --secondary-foreground: #141412;
-  --muted: #F1F0EA;
-  --muted-foreground: #6B6A63;
-  --accent: #F1F0EA;
-  --accent-foreground: #141412;
-  --destructive: #C4321F;
-  --border: #E2E0D8;
-  --hairline: #E2E0D8;
-  --input: #D6D4CB;
-  --ring: #2B3FD6;
-  --radius: 4px;
+  --paper: #f7f5f3;
+  --surface: #ffffff;
+  --ink: #0d0d0d;
+  --grey-1: #6e6a69;
+  --grey-2: #9a9796;
+  --grey-3: #e9e7e5;
+  --hairline: rgb(13 13 13 / 0.12);
+  --hairline-strong: rgb(13 13 13 / 0.24);
+  --ink-10: #e0dedc;
+  --ink-24: #bfbdbc;
+  --after-hours: #efedeb;
+  --action: #1747c8;
+  --action-hover: #123ba8;
+  --action-tint: #e5e7f0;
+  --conflict: #b02e1b;
+  --conflict-tint: #f1e5e2;
+  --seen: #1a6b3e;
+  --seen-tint: #e3e9e3;
+  --overtime: #8a5000;
+  --overtime-tint: #ece4db;
 
-  --action: #2B3FD6;        /* the one accent: actions */
-  --action-soft: #ECEEFC;
-  --conflict: #C4321F;      /* red: conflicts only */
-  --conflict-soft: #FBECE9;
-  --seen: #1F7A4A;          /* green: seen / applied only */
-  --seen-soft: #E7F3EC;
-  --ot: #B26B00;            /* amber: overtime */
-  --ot-soft: #FBF1E0;
+  /* shadcn semantic mapping (shadcn's --accent = hover surface, NOT our action) */
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--paper);
+  --card-foreground: var(--ink);
+  --popover: var(--surface);
+  --popover-foreground: var(--ink);
+  --primary: var(--action);
+  --primary-foreground: #ffffff;
+  --secondary: transparent;
+  --secondary-foreground: var(--ink);
+  --muted: var(--grey-3);
+  --muted-foreground: var(--grey-1);
+  --accent: var(--grey-3);
+  --accent-foreground: var(--ink);
+  --destructive: var(--conflict);
+  --border: var(--hairline);
+  --input: var(--hairline-strong);
+  --ring: var(--action);
+  --radius: 10px;
+}
+
+/* 2. Utilities: bg-paper, text-ink, border-hairline, bg-action, text-conflict, font-serif ... */
+@theme inline {
+  --color-white: #ffffff;
+  --color-black: #0d0d0d;
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-grey-1: var(--grey-1);
+  --color-grey-2: var(--grey-2);
+  --color-grey-3: var(--grey-3);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-ink-10: var(--ink-10);
+  --color-ink-24: var(--ink-24);
+  --color-after-hours: var(--after-hours);
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
+  --color-action-tint: var(--action-tint);
+  --color-conflict: var(--conflict);
+  --color-conflict-tint: var(--conflict-tint);
+  --color-seen: var(--seen);
+  --color-seen-tint: var(--seen-tint);
+  --color-overtime: var(--overtime);
+  --color-overtime-tint: var(--overtime-tint);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: 4px;
+  --radius-md: 10px;
+  --radius-lg: 10px;
+  --radius-xl: 20px;
+  --radius-block: 20px;
+
+  --font-serif: var(--font-newsreader), Georgia, serif;
+  --font-sans: var(--font-schibsted), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  html {
-    background: var(--background);
-  }
-  body {
-    @apply bg-background text-foreground font-sans;
-    font-feature-settings: "tnum" 1, "cv11" 1;
-  }
+  * { border-color: var(--hairline); }
+  html, body { background: var(--paper); color: var(--ink); }
+  body { font-family: var(--font-sans); font-size: 14px; line-height: 20px; -webkit-font-smoothing: antialiased; }
+  ::selection { background: var(--action-tint); color: var(--ink); }
+  :focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
 }
 
-.font-display {
-  font-family: var(--font-instrument), Georgia, serif;
-  font-weight: 400;
-  letter-spacing: -0.01em;
+@layer utilities {
+  .num { font-variant-numeric: tabular-nums lining-nums; }
+  .label { font-family: var(--font-mono); font-size: 11px; line-height: 16px; letter-spacing: 0.08em; font-weight: 500; text-transform: uppercase; color: var(--grey-1); }
+  .section { border-top: 1px solid var(--hairline); }
+  .section-head { height: 28px; display: flex; align-items: center; justify-content: space-between; }
+  .scroll-thin { scrollbar-width: thin; scrollbar-color: var(--hairline-strong) transparent; }
 }
 
-.tnum {
-  font-variant-numeric: tabular-nums;
-}
-
-/* Motion only where it carries meaning: 1.5 s highlight on anything that just changed. */
-@keyframes gs-flash {
-  0% { background-color: #FFF1B8; }
-  100% { background-color: transparent; }
-}
-.flash {
-  animation: gs-flash 1.5s ease-out 1;
-}
-@keyframes gs-flash-bar {
-  0% { box-shadow: 0 0 0 3px #F5C518; }
-  100% { box-shadow: 0 0 0 0 transparent; }
-}
-.flash-bar {
-  animation: gs-flash-bar 1.5s ease-out 1;
-}
 @media (prefers-reduced-motion: reduce) {
-  .flash, .flash-bar { animation: none; }
+  *, *::before, *::after { transition-duration: 1ms !important; animation-duration: 1ms !important; animation-iteration-count: 1 !important; }
+}
+
+/* Board grid (DESIGN §3.1 / §3.2) */
+.board-root {
+  height: 100dvh; overflow: hidden; display: grid; padding: 16px 24px;
+  grid-template-columns: minmax(0, 1fr) 376px; grid-template-rows: 56px 72px minmax(0, 1fr);
+  column-gap: 24px; row-gap: 16px;
+  grid-template-areas: "header header" "people people" "main side";
+  --row-h: 40px; --bar-h: 28px; --label-w: 120px;
+}
+.board-main { grid-area: main; display: grid; grid-template-rows: 300px 16px minmax(0, 1fr); min-height: 0; min-width: 0; }
+.board-side { grid-area: side; display: grid; grid-template-rows: 248px 16px 252px 16px minmax(0, 1fr); min-height: 0; min-width: 0; }
+.fix-delta { font-size: 44px; line-height: 44px; }
+.metric-num { font-size: 48px; line-height: 48px; }
+@media (max-width: 1360px), (max-height: 860px) {
+  .board-root { padding: 12px 16px; grid-template-columns: minmax(0, 1fr) 336px; grid-template-rows: 52px 64px minmax(0, 1fr); column-gap: 16px; row-gap: 12px; --row-h: 32px; --bar-h: 22px; --label-w: 104px; }
+  .board-main { grid-template-rows: 252px 12px minmax(0, 1fr); }
+  .board-side { grid-template-rows: 236px 12px 228px 12px minmax(0, 1fr); }
+  .fix-delta { font-size: 40px; line-height: 40px; }
+  .metric-num { font-size: 44px; line-height: 44px; }
 }
