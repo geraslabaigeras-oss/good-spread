@@ -4,9 +4,9 @@ import type { Person, Role, StrategyId } from '@/lib/types';
  * People pool. In the app this is YOUR roster (people you added on /people, see setRoster).
  * The SAMPLE_* lists are fictional and only used by the engine tests and the old sample shoot.
  */
-export const CITIES = ['Vilnius', 'Lisbon', 'Milan', 'Riga', 'Warsaw', 'Berlin', 'Paris', 'London', 'Stockholm', 'Copenhagen', 'Amsterdam'] as const;
+export const CITIES = ['Vilnius', 'Lisbon', 'Milan', 'Riga', 'Warsaw', 'Berlin', 'Paris', 'London', 'Stockholm', 'Copenhagen', 'Amsterdam', 'Barcelona', 'Tallinn', 'Reykjavik', 'Athens'] as const;
 export type City = (typeof CITIES)[number];
-export const IATA: Record<City, string> = { Vilnius: 'VNO', Lisbon: 'LIS', Milan: 'MXP', Riga: 'RIX', Warsaw: 'WAW', Berlin: 'BER', Paris: 'CDG', London: 'LHR', Stockholm: 'ARN', Copenhagen: 'CPH', Amsterdam: 'AMS' };
+export const IATA: Record<City, string> = { Vilnius: 'VNO', Lisbon: 'LIS', Milan: 'MXP', Riga: 'RIX', Warsaw: 'WAW', Berlin: 'BER', Paris: 'CDG', London: 'LHR', Stockholm: 'ARN', Copenhagen: 'CPH', Amsterdam: 'AMS', Barcelona: 'BCN', Tallinn: 'TLL', Reykjavik: 'KEF', Athens: 'ATH' };
 
 export type TravelTemplate = {
   // same-day flight (arrives on the shoot day) or day-before flight + hotel

@@ -11,6 +11,7 @@ import { lookMatch } from '@/lib/match';
 import { useRoster } from '@/lib/use-roster';
 import { QuickAdd } from '@/components/quick-add';
 import { AgencyCall } from '@/components/agency-call';
+import { backupStudios, baseCity, LOCATIONS, rankLocations, type EuLocation } from '@/lib/europe';
 import { Plus } from 'lucide-react';
 import type { City } from '@/data/catalog';
 import type { PlanDraft, ScoutedPlace } from '@/lib/plan-store';
@@ -41,8 +42,22 @@ export function BriefOptions({ brief, draft, setDraft }: { brief: CreativeBrief;
   const [shown, setShown] = useState<string | null>(draft.scoutCity ?? null); // the city the results are in
   const [places, setPlaces] = useState<ScoutedPlace[] | null>(null);
   const [busy, setBusy] = useState(false);
+  const [aiOn, setAiOn] = useState(false);
+  const [libCity, setLibCity] = useState<string>('all');
+  const locNeed = brief.needs?.location ?? `${brief.setting} ${brief.settingNote}`;
+  const library = useMemo(() => rankLocations(locNeed, { city: libCity === 'all' ? undefined : libCity }).slice(0, 6), [locNeed, libCity]);
+  const libCities = useMemo(() => [...new Set(LOCATIONS.map((l) => baseCity(l)))], []);
+  const pick = (l: EuLocation) => {
+    const pl: ScoutedPlace = {
+      name: l.name, why: l.look, from: `${l.city}, ${l.country} · fly into ${l.airport_iata}`, shootNote: l.permit_notes, description: l.look,
+      image: l.image_url, lat: l.lat, lng: l.lng, url: l.source_url, mapsUrl: `https://maps.google.com/?q=${l.lat},${l.lng}`, city: baseCity(l),
+    };
+    const on = draft.place?.url === pl.url;
+    setDraft({ ...draft, place: on ? null : pl, scoutCity: on ? draft.scoutCity : pl.city });
+  };
   const text = `${brief.garment}. ${brief.summary} Location: ${brief.needs?.location ?? brief.settingNote}. Light: ${brief.lighting}.`;
   useEffect(() => {
+    if (!aiOn) return;
     let off = false;
     setBusy(true);
     fetch('/api/scout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ brief: text, city }) })
@@ -55,7 +70,7 @@ export function BriefOptions({ brief, draft, setDraft }: { brief: CreativeBrief;
       })
       .finally(() => !off && setBusy(false));
     return () => { off = true; };
-  }, [city, brief.summary]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [city, brief.summary, aiOn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="mt-10 space-y-12">
@@ -125,42 +140,74 @@ export function BriefOptions({ brief, draft, setDraft }: { brief: CreativeBrief;
         </div>
       </section>
 
-      {/* Places */}
+      {/* Places: instant from the location library, AI scout on request */}
       <section>
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h3 className="text-[26px] font-light tracking-[-0.02em]">Places that fit{places?.[0]?.city ? `, near ${places[0].city}` : ''}</h3>
-            <p className="mt-1 text-[14px] text-neutral-500">Real places, chosen for the location in your references. Tap one to build the shoot around it.</p>
-          </div>
-        </div>
+        <h3 className="text-[26px] font-light tracking-[-0.02em]">Places that fit</h3>
+        <p className="mt-1 text-[14px] text-neutral-500">Looking for: {locNeed}. From our checked library of {LOCATIONS.length} shoot locations in Europe, each with permits, best light and a studio backup for bad weather.</p>
         <div className="mt-4 flex flex-wrap gap-1.5">
-          {CITIES.map((c) => (
-            <button key={c} onClick={() => { setCity(c); setDraft({ ...draft, scoutCity: c }); }}
-              className={`h-8 rounded-full px-3.5 text-[13px] transition-colors ${shown === c ? 'bg-neutral-950 text-white' : 'bg-white/70 text-neutral-600 hover:bg-white hover:text-neutral-900'}`}>{c}</button>
+          {['all', ...libCities].map((c) => (
+            <button key={c} onClick={() => setLibCity(c)} className={`h-8 rounded-full px-3.5 text-[13px] transition-colors ${libCity === c ? 'bg-neutral-950 text-white' : 'bg-white/70 text-neutral-600 hover:bg-white hover:text-neutral-900'}`}>{c === 'all' ? 'All Europe' : c}</button>
           ))}
         </div>
         <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {busy && Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-[300px] animate-pulse rounded-[22px] bg-neutral-200/70" />)}
-          {!busy && places?.slice(0, 6).map((pl, i) => {
-            const on = draft.place?.url === pl.url;
+          {library.map(({ l, hits }, i) => {
+            const on = draft.place?.url === l.source_url;
+            const backup = backupStudios(l)[0];
             return (
-              <motion.button key={pl.url} onClick={() => setDraft({ ...draft, place: on ? null : pl, scoutCity: pl.city ?? draft.scoutCity })} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: i * 0.06, ease }}
-                className={`group overflow-hidden rounded-[22px] bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,.04),0_14px_34px_rgba(0,0,0,.06)] ${on ? 'ring-2 ring-neutral-950' : ''}`}>
-                <div className="relative h-[180px] overflow-hidden bg-neutral-200">
-                  {pl.image && <img src={pl.image} alt={pl.name} className="size-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />}
+              <motion.button key={l.id} onClick={() => pick(l)} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: i * 0.04, ease }}
+                className={`group flex flex-col overflow-hidden rounded-[22px] bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,.04),0_14px_34px_rgba(0,0,0,.06)] ${on ? 'ring-2 ring-neutral-950' : ''}`}>
+                <div className="relative h-[190px] overflow-hidden bg-neutral-200">
+                  <img src={l.image_url} alt={l.name} className="size-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+                  <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-0.5 text-[12px] capitalize">{l.type}</span>
                   {on && <span className="absolute right-3 top-3 flex size-7 items-center justify-center rounded-full bg-neutral-950 text-white"><Check className="size-4" /></span>}
                 </div>
                 <div className="p-4">
-                  <div className="text-[16px] font-medium">{pl.name}</div>
-                  {pl.from && <div className="mt-0.5 flex items-center gap-1 text-[12px] text-neutral-500"><MapPin className="size-3" /> {pl.from}</div>}
-                  <p className="mt-2 text-[13px] leading-5 text-neutral-700">{pl.why}</p>
-                  {pl.shootNote && <p className="mt-1.5 text-[12px] leading-5 text-neutral-500">{pl.shootNote}</p>}
+                  <div className="text-[16px] font-medium">{l.name}</div>
+                  <div className="mt-0.5 flex items-center gap-1 text-[12px] text-neutral-500"><MapPin className="size-3" /> {l.city}, {l.country} · fly into {l.airport_iata}</div>
+                  <p className="mt-2 text-[13px] leading-5 text-neutral-800">{l.look}</p>
+                  <p className="mt-1.5 text-[12px] leading-5 text-neutral-500">{l.season_light}</p>
+                  {l.permit_notes && <p className="mt-1.5 text-[12px] leading-5 text-neutral-500">Permit: {l.permit_notes}</p>}
+                  {backup && <p className="mt-1.5 text-[12px] leading-5 text-neutral-700">Rain backup: {backup.name}, {backup.day_rate_listed}</p>}
+                  {hits.length > 0 && <div className="mt-2 text-[12px] text-emerald-700">Fits: {hits.slice(0, 3).join(', ')}</div>}
+                  <p className="mt-2 text-[10px] leading-4 text-neutral-400">Photo: {l.image_author}, {l.image_licence}</p>
                 </div>
               </motion.button>
             );
           })}
-          {!busy && places && !places.length && <p className="text-[14px] text-neutral-500">Nothing that fits near {shown ?? city}. Try another city.</p>}
         </div>
+
+        {!aiOn ? (
+          <button onClick={() => setAiOn(true)} className="mt-5 inline-flex h-11 items-center rounded-full bg-white px-5 text-[14px] shadow-[inset_0_0_0_1px_rgba(0,0,0,.1)] hover:bg-neutral-50">Search further: find more real places for this look</button>
+        ) : (
+          <div className="mt-8">
+            <div className="text-[17px] font-medium">More places{shown ? ` near ${shown}` : ''}</div>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {CITIES.map((c) => (
+                <button key={c} onClick={() => { setCity(c); setDraft({ ...draft, scoutCity: c }); }}
+                  className={`h-8 rounded-full px-3.5 text-[13px] transition-colors ${shown === c ? 'bg-neutral-950 text-white' : 'bg-white/70 text-neutral-600 hover:bg-white hover:text-neutral-900'}`}>{c}</button>
+              ))}
+            </div>
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {busy && Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-[260px] animate-pulse rounded-[22px] bg-neutral-200/70" />)}
+              {!busy && places?.slice(0, 6).map((pl) => {
+                const on = draft.place?.url === pl.url;
+                return (
+                  <button key={pl.url} onClick={() => setDraft({ ...draft, place: on ? null : pl, scoutCity: pl.city ?? draft.scoutCity })}
+                    className={`group flex flex-col overflow-hidden rounded-[22px] bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,.04),0_14px_34px_rgba(0,0,0,.06)] ${on ? 'ring-2 ring-neutral-950' : ''}`}>
+                    <div className="relative h-[160px] overflow-hidden bg-neutral-200">{pl.image && <img src={pl.image} alt={pl.name} className="size-full object-cover" />}{on && <span className="absolute right-3 top-3 flex size-7 items-center justify-center rounded-full bg-neutral-950 text-white"><Check className="size-4" /></span>}</div>
+                    <div className="p-4">
+                      <div className="text-[16px] font-medium">{pl.name}</div>
+                      {pl.from && <div className="mt-0.5 flex items-center gap-1 text-[12px] text-neutral-500"><MapPin className="size-3" /> {pl.from}</div>}
+                      <p className="mt-2 text-[13px] leading-5 text-neutral-700">{pl.why}</p>
+                      {pl.shootNote && <p className="mt-1.5 text-[12px] leading-5 text-neutral-500">{pl.shootNote}</p>}
+                    </div>
+                  </button>
+                );
+              })}
+              {!busy && places && !places.length && <p className="text-[14px] text-neutral-500">Nothing that fits near {shown ?? city}. Try another city.</p>}
+            </div>
+          </div>
+        )}
       </section>
       {viewing && roster.people.find((x) => x.id === viewing) && (() => {
         const v = roster.people.find((x) => x.id === viewing)!;

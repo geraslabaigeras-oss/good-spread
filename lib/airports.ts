@@ -14,4 +14,8 @@ export const AIRPORTS: Record<string, { name: string; lat: number; lon: number }
   ARN: { name: 'Stockholm Arlanda', lat: 59.6498, lon: 17.9238 },
   CPH: { name: 'Copenhagen', lat: 55.618, lon: 12.656 },
   AMS: { name: 'Amsterdam', lat: 52.3105, lon: 4.7683 },
+  BCN: { name: 'Barcelona', lat: 41.2974, lon: 2.0833 },
+  TLL: { name: 'Tallinn', lat: 59.4133, lon: 24.8328 },
+  KEF: { name: 'Reykjavik Keflavik', lat: 63.985, lon: -22.6056 },
+  ATH: { name: 'Athens', lat: 37.9364, lon: 23.9445 },
 };

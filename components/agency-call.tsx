@@ -10,7 +10,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 
 const LANG: Record<string, string> = {
   Paris: 'French', Milan: 'Italian', London: 'English', Copenhagen: 'Danish', Stockholm: 'Swedish', Berlin: 'German',
-  Warsaw: 'Polish', Amsterdam: 'Dutch', Vilnius: 'Lithuanian', Riga: 'Latvian', Lisbon: 'Portuguese',
+  Warsaw: 'Polish', Amsterdam: 'Dutch', Vilnius: 'Lithuanian', Riga: 'Latvian', Lisbon: 'Portuguese', Barcelona: 'Spanish', Tallinn: 'Estonian', Reykjavik: 'Icelandic', Athens: 'Greek',
 };
 
 /** Tap a person: their pictures and details, then one button to call their agent (or them, if freelance). */
