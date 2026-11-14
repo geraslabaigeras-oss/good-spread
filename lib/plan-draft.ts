@@ -12,6 +12,7 @@ export function draftProduction(d: PlanDraft, strategy: StrategyId, picks?: Plan
     brief: d.brief ?? { ...DEMO_BRIEF, title: d.title, brand: d.brand }, deliverables: d.deliverables, cap: d.cap, startISO: d.startISO,
   });
   if (p.dna) p.dna = p.dna.map((x) => (x.id in d.dnaPreserve ? { ...x, preserve: d.dnaPreserve[x.id] } : x));
+  if (d.place) p.studio = { ...p.studio, name: d.place.name, address: d.place.description ?? d.place.name, mapsUrl: d.place.mapsUrl };
   return p;
 }
 

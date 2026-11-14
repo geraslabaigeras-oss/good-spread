@@ -99,6 +99,19 @@ function BoardInner({ slug }: { slug: string }) {
   );
 
   if (!data) {
+    if (error && String(error.message).includes('404')) {
+      try { if (localStorage.getItem('gs-last-slug') === slug) localStorage.removeItem('gs-last-slug'); } catch {}
+      return (
+        <div className="flex h-dvh flex-col items-center justify-center px-6 text-center">
+          <p className="text-[22px] font-medium">This shoot isn&rsquo;t here</p>
+          <p className="mt-2 max-w-sm text-[15px] text-grey-1">It was created somewhere else or has been removed. Start a new shoot from a reference, or open the sample shoot.</p>
+          <div className="mt-6 flex gap-3">
+            <a href="/new" className="g-btn">Start a shoot</a>
+            <a href="/board/jacket-campaign" className="g-btn-ghost">Open the sample</a>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="flex h-dvh items-center justify-center text-grey-1">
         {error ? `Could not load the board: ${String(error.message)}` : 'Loading production…'}

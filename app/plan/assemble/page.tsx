@@ -89,7 +89,7 @@ export default function Assemble() {
       const r = await fetch('/api/plan/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ strategy, picks, brief: p.brief, deliverables: draft!.deliverables, cap: draft!.cap, startISO: draft!.startISO, dnaPreserve: draft!.dnaPreserve }),
+        body: JSON.stringify({ strategy, picks, brief: p.brief, deliverables: draft!.deliverables, cap: draft!.cap, startISO: draft!.startISO, dnaPreserve: draft!.dnaPreserve, place: draft!.place ?? null }),
       });
       const j = await r.json();
       if (!r.ok || j.error) throw new Error(j.error ?? `HTTP ${r.status}`);

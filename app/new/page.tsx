@@ -7,6 +7,7 @@ import type { CreativeBrief } from '@/lib/types';
 import { defaultDna, defaultLooks } from '@/lib/engine';
 import { useDraft, thumb } from '@/lib/plan-store';
 import { VoiceBrief } from '@/components/voice';
+import { Scout } from '@/components/scout';
 import { Stage, TopBar } from '@/components/glass/Stage';
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
@@ -193,6 +194,7 @@ export default function NewBrief() {
                     </div>
                   </LayoutGroup>
                 </div>
+                <Scout brief={b} chosen={d.place} onChoose={(pl) => setDraft({ ...d, place: pl })} />
                 <button onClick={() => router.push('/plan')} className="g-btn mt-7 w-full">See three ways to produce it →</button>
               </motion.div>
             )}

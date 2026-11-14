@@ -31,6 +31,7 @@ const Body = z.object({
   cap: z.number().int().min(500).max(1000000),
   startISO: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   dnaPreserve: z.record(z.string(), z.boolean()).optional(),
+  place: z.object({ name: z.string().max(120), lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180), description: z.string().max(200).nullable().optional() }).nullable().optional(),
 });
 
 /** Moment 3 → 4: build the production from the chosen strategy and picks, and open it on the board. */
@@ -51,6 +52,8 @@ export async function POST(req: Request) {
       slug, title: b.brief.title, brand: b.brief.brand, strategy: b.strategy, picks: b.picks,
       brief: b.brief, deliverables: b.deliverables, cap: b.cap, startISO: b.startISO,
     });
+    // AI-scouted real location chosen on the Brief page
+    if (b.place) p.studio = { ...p.studio, name: b.place.name, address: b.place.description ?? b.place.name, mapsUrl: `https://maps.google.com/?q=${b.place.lat},${b.place.lng}` };
     if (b.dnaPreserve && p.dna) p.dna = p.dna.map((d) => (d.id in b.dnaPreserve! ? { ...d, preserve: b.dnaPreserve![d.id] } : d));
     const id = await resetProduction(slug, false, p);
     await logEvent(id, 'created', { text: `Production created: ${b.strategy} plan` });
