@@ -53,9 +53,15 @@ export function MessageThread({ messages, title, autoKey }: { messages: Msg[]; t
               </button>
             ))}
           </div>
-          {!sentAt && <button onClick={() => setSentAt(Date.now())} className="h-10 rounded-full bg-neutral-950 px-5 text-[14px] font-medium text-white">Send to everyone</button>}
+          {!sentAt && <button data-demo="send-all" onClick={() => setSentAt(Date.now())} className="h-10 rounded-full bg-neutral-950 px-5 text-[14px] font-medium text-white">Send to everyone</button>}
         </div>
       </div>
+      {sentAt && seen === messages.length && messages.length > 0 && (
+        <div className="mt-4 flex items-center gap-3 rounded-2xl bg-emerald-50 px-4 py-3 text-emerald-800 animate-in fade-in slide-in-from-top-1 duration-500">
+          <CheckCheck className="size-5" />
+          <span className="text-[15px]"><span className="font-medium">Everyone has seen it.</span> {messages.length} of {messages.length} · no one typed a message.</span>
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-x-8 gap-y-5 pt-5 md:grid-cols-2">
         {messages.map((m, i) => {
           const st = status(i);

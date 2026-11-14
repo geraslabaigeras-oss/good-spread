@@ -112,7 +112,7 @@ export function CallRun({ open, onClose, targets, mode, onResults }: { open: boo
                     : mode.kind === 'update' ? 'The assistant calls each person whose day changed and tells them the new time.' : 'The assistant asks each agent about the date, the day rate and usage.'}
                 </p>
               </div>
-              <button onClick={onClose} className="inline-flex h-11 items-center gap-2 rounded-full bg-neutral-950 px-5 text-[15px] font-medium text-white">{done ? <><Check className="size-4" /> Done</> : <><X className="size-4" /> Close</>}</button>
+              <button data-demo={done ? 'calls-done' : undefined} onClick={onClose} className="inline-flex h-11 items-center gap-2 rounded-full bg-neutral-950 px-5 text-[15px] font-medium text-white">{done ? <><Check className="size-4" /> Done</> : <><X className="size-4" /> Close</>}</button>
             </div>
             <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               {targets.map((t, i) => <CallCard key={t.id} t={t} mode={mode} delay={i * 900} onDone={(id, r) => setRes((x) => ({ ...x, [id]: r }))} />)}

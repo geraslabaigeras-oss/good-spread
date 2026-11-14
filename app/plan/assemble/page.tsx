@@ -170,7 +170,7 @@ export default function Assemble() {
             {(conflicts.length > 0 || broken.length > 0) && (
               <div className="rounded-2xl bg-red-50 p-4 text-[13px] text-red-700">{conflicts.map((c, i) => <div key={i}>{c.message}</div>)}{broken.map((x) => <div key={x.id}>Changes the brief: {x.label}</div>)}</div>
             )}
-            <button onClick={create} disabled={busy || conflicts.length > 0} className="h-14 rounded-full bg-neutral-950 text-[16px] font-medium text-white disabled:opacity-40">{busy ? 'Creating…' : 'Create the production →'}</button>
+            <button data-demo="create" onClick={create} disabled={busy || conflicts.length > 0} className="h-14 rounded-full bg-neutral-950 text-[16px] font-medium text-white disabled:opacity-40">{busy ? 'Creating…' : 'Create the production →'}</button>
             {err && <p className="text-[13px] text-red-600">{err}</p>}
           </div>
         </div>

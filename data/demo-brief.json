@@ -1,0 +1,62 @@
+{
+ "references": [
+  {
+   "index": 1,
+   "usedFor": "model look",
+   "note": "low angle, tousled blonde hair, motion blur, relaxed attitude"
+  },
+  {
+   "index": 2,
+   "usedFor": "whole mood",
+   "note": "wind-blown hair, cool teal sky, graded cinematic color"
+  },
+  {
+   "index": 3,
+   "usedFor": "setting",
+   "note": "riveted steel bridge, red brick, overcast wet street"
+  }
+ ],
+ "garment": "Autumn outerwear: oversized coat and jacket",
+ "summary": "Autumn outerwear shot on an industrial steel bridge under soft overcast light, with a cool cinematic grade. Oversized layered coats, wind in the hair and a relaxed, direct model attitude.",
+ "aesthetic": [
+  "Editorial",
+  "Utilitarian",
+  "Moody",
+  "Cinematic",
+  "Layered"
+ ],
+ "palette": [
+  "Teal",
+  "Charcoal",
+  "Stone beige",
+  "Brick red",
+  "Slate grey"
+ ],
+ "paletteHex": [
+  "#3f6b73",
+  "#2b2e2f",
+  "#cdb89a",
+  "#8a4a3a",
+  "#8b929a"
+ ],
+ "lighting": "Soft overcast daylight, no hard shadows, cool teal grade with muted contrast. Optional black and white variants for low-angle frames.",
+ "setting": "urban",
+ "settingNote": "Riveted steel bridge, red brick warehouses and wet asphalt, with barriers and open sky kept in frame.",
+ "styling": "Oversized coats over tailored layers: trench, tweed-look jacket, belted utility jacket. Black trousers or long skirt, a white roll neck and slate blazer as base layers. Minimal jewellery, loose natural hair.",
+ "casting": "One or two female models, editorial, natural hair, direct or distant gaze, comfortable moving in oversized outerwear",
+ "shotList": [
+  "Full-length leaning on steel beam, hand in coat pocket",
+  "Waist-up portrait, direct gaze, belted jacket detail",
+  "Low-angle hero shot looking up, coat open, hand in trouser pocket",
+  "Walking across bridge, coat moving in the wind",
+  "Detail of collar, buttons and pocket texture"
+ ],
+ "needs": {
+  "model": "editorial, long loose hair, natural look, moody, strong gaze",
+  "photographer": "cinematic color grade, natural overcast light, urban editorial, outerwear",
+  "location": "steel bridge, red brick, industrial, wet street, overcast sky"
+ },
+ "title": "Autumn outerwear",
+ "brand": "Demo brand",
+ "source": "ai"
+}

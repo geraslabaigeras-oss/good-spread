@@ -81,6 +81,15 @@ export function BriefOptions({ brief, draft, setDraft }: { brief: CreativeBrief;
 
   return (
     <div className="mt-10 space-y-12">
+      {/* demo guide helper: shortlist the best fits in one go */}
+      <button data-demo="auto-pick" className="hidden" onClick={() => {
+        const ids = [...models.slice(0, 3), ...photogs.slice(0, 1), ...crew.slice(0, 1)].map((x) => x.p.id);
+        const best = library[0]?.l;
+        if (best) {
+          const pl: ScoutedPlace = { name: best.name, why: best.look, from: `${best.city}, ${best.country} · fly into ${best.airport_iata}`, shootNote: best.permit_notes, description: best.look, image: best.image_url, lat: best.lat, lng: best.lng, url: best.source_url, mapsUrl: `https://maps.google.com/?q=${best.lat},${best.lng}`, city: baseCity(best) };
+          setDraft({ ...draft, shortlist: ids, place: pl, scoutCity: pl.city });
+        } else setDraft({ ...draft, shortlist: ids });
+      }} />
       {/* Price filter for all people rows */}
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-[14px] text-neutral-500">Price</span>
@@ -173,7 +182,7 @@ export function BriefOptions({ brief, draft, setDraft }: { brief: CreativeBrief;
           <div className="sticky bottom-5 z-40 mx-auto flex max-w-[760px] items-center gap-4 rounded-full bg-neutral-950 p-2 pl-5 text-white shadow-[0_20px_50px_rgba(0,0,0,.25)]">
             <div className="flex -space-x-2">{people.slice(0, 6).map((x) => x.photo ? <img key={x.id} src={x.photo} alt="" className="size-9 rounded-full object-cover object-top ring-2 ring-neutral-950" /> : <span key={x.id} className="flex size-9 items-center justify-center rounded-full bg-neutral-700 text-[13px] ring-2 ring-neutral-950">{x.name[0]}</span>)}</div>
             <span className="min-w-0 flex-1 truncate text-[15px]">{people.length} shortlisted · {people.filter((x) => x.availability === 'available').length} confirmed available</span>
-            <button onClick={() => setCalling(true)} className="h-11 shrink-0 rounded-full bg-white px-5 text-[15px] font-medium text-neutral-950">Call all {people.length} with AI</button>
+            <button data-demo="call-all" onClick={() => setCalling(true)} className="h-11 shrink-0 rounded-full bg-white px-5 text-[15px] font-medium text-neutral-950">Call all {people.length} with AI</button>
           </div>
         );
       })()}

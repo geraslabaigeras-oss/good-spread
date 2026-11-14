@@ -12,6 +12,9 @@ import { DevicePhone } from '@/components/device-phone';
 import { MessagesScreen } from '@/components/messages-screen';
 import { BrandLogo } from '@/components/brand-logo';
 import { HeroDrop } from '@/components/hero-drop';
+import { startDemo } from '@/components/demo-guide';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { PlansChange } from './PlansChange';
 import { flagUrl } from '@/lib/agencies';
 import { AnimatedList } from '@/components/ui/animated-list';
@@ -119,6 +122,9 @@ function Bubble({ children, tone }: { children: React.ReactNode; tone: 'alert' |
 }
 
 export function Landing({ cap, stills, routes, best, people, moment }: Props) {
+  const router = useRouter();
+  // a direct link that starts the guided demo: /?demo=start
+  useEffect(() => { if (typeof window !== 'undefined' && window.location.search.includes('demo=start')) startDemo(router.push); }, [router]);
   const steps = [
     { k: 'Brief', t: 'Drop a reference. You get the look, palette, light and shot list.' },
     { k: 'Plans', t: `${routes.length} ways to make it, each costed against the €${cap.toLocaleString('en-US')} cap.` },
@@ -139,21 +145,31 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
           </nav>
         </header>
 
-        <div className="relative z-20 mx-auto max-w-4xl px-6 pt-14 text-center">
-          <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.2, 0.7, 0.2, 1] }} className="text-5xl font-normal leading-[1.02] tracking-[-0.04em] text-neutral-950 md:text-[84px]">
-            Stay creative.<br /><span className="text-neutral-400">Production&rsquo;s handled.</span>
-          </motion.h1>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.6 }} className="mx-auto mt-6 max-w-xl text-[17px] leading-7 text-neutral-600">
-            Drop your references. We find the models, crew and places, call their agents, plan the day and the budget, and keep everyone updated when something changes.
-          </motion.p>
-          <div className="mt-9 flex items-center justify-center gap-3 text-[15px]">
-            <Link href="/new" className="rounded-full bg-neutral-950 px-7 py-3.5 text-white">Start a shoot</Link>
-            <Link href="/people" className="rounded-full bg-white px-7 py-3.5 text-neutral-900 shadow-[inset_0_0_0_1px_rgba(0,0,0,.1)]">Add your people</Link>
+        <div className="relative z-20 mx-auto grid max-w-[1320px] grid-cols-1 items-center gap-12 px-6 pt-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.3fr)]">
+          <div>
+            <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.2, 0.7, 0.2, 1] }} className="text-5xl font-normal leading-[1.02] tracking-[-0.04em] text-neutral-950 md:text-[72px]">
+              Stay creative.<br /><span className="text-neutral-400">Production&rsquo;s handled.</span>
+            </motion.h1>
+            <p className="mt-6 max-w-md text-[17px] leading-7 text-neutral-600">
+              For producers of fashion shoots. Drop your references: we find the models, crew and places, call their agents, plan the day and the budget, and keep everyone updated when something changes.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-3 text-[15px]">
+              <button onClick={() => startDemo(router.push)} className="rounded-full bg-neutral-950 px-7 py-3.5 font-medium text-white">Try the demo</button>
+              <a href="#start" className="rounded-full bg-white px-7 py-3.5 text-neutral-900 shadow-[inset_0_0_0_1px_rgba(0,0,0,.1)]">Use your own references</a>
+            </div>
+            <p className="mt-4 text-[13px] text-neutral-500">Two minutes, guided. Nothing to type.</p>
           </div>
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15, ease: [0.2, 0.7, 0.2, 1] }} className="relative">
+            <div className="overflow-hidden rounded-[16px] bg-white shadow-[0_0_0_0.5px_rgba(0,0,0,.12),0_40px_90px_rgba(20,40,90,.18)]">
+              <div className="flex h-8 items-center gap-1.5 border-b border-black/5 bg-[#f7f7f7] px-3"><span className="size-2.5 rounded-full bg-neutral-300" /><span className="size-2.5 rounded-full bg-neutral-300" /><span className="size-2.5 rounded-full bg-neutral-300" /><span className="ml-3 text-[11px] text-neutral-400">good spread · shoot day</span></div>
+              <img src="/screens/board-delay.jpg" alt="The shoot-day board: a flight is late, three priced fixes" className="block w-full" />
+            </div>
+          </motion.div>
         </div>
 
         {/* the stage is the reference drop: drop or pick, and the analysis starts */}
-        <div className="relative mx-auto mt-14 max-w-5xl px-6">
+        <div id="start" className="relative mx-auto mt-20 max-w-5xl scroll-mt-10 px-6">
+          <p className="mb-4 text-center text-[15px] text-neutral-600">Or start with your own references</p>
           <HeroDrop />
         </div>
       </section>

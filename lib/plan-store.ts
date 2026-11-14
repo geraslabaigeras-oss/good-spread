@@ -24,6 +24,7 @@ export type PlanDraft = {
   scoutCity?: string; // base city the scout chose for this brief
   shootISO?: string; // shoot date the producer picked
   shootDays?: number; // consecutive shoot days
+  demo?: boolean; // guided demo is running
 };
 
 const KEY = 'gs-plan-draft';

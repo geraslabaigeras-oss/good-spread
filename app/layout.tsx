@@ -1,3 +1,4 @@
+import { DemoGuide } from '@/components/demo-guide';
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono, Host_Grotesk, Instrument_Serif, Schibsted_Grotesk } from 'next/font/google';
 import { Providers } from '@/components/providers';
@@ -24,7 +25,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html lang="en" className={`${serif.variable} ${sans.variable} ${mono.variable} ${inter.variable} ${schibsted.variable}`}>
       <body className="bg-paper text-ink font-sans antialiased">
-        <Providers>{children}</Providers>
+        <Providers>{children}<DemoGuide /></Providers>
       </body>
     </html>
   );

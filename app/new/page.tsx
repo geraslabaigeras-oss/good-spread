@@ -28,6 +28,7 @@ const refUrl = (id: string, w: number) => `https://images.unsplash.com/${id}?fm=
 import { Scout } from '@/components/scout';
 import { BriefOptions } from '@/components/brief-options';
 import { ShootDate } from '@/components/shoot-date';
+import DEMO_READ from '@/data/demo-brief.json';
 import { Stage, TopBar } from '@/components/glass/Stage';
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
@@ -43,6 +44,20 @@ export default function NewBrief() {
   const [editing, setEditing] = useState(false);
   const [stage, setStage] = useState<{ image: string; brief: CreativeBrief | null } | null>(null);
   const input = useRef<HTMLInputElement>(null);
+
+  // Guided demo (?demo=1): the references were read once already; show the reading, then the brief.
+  useEffect(() => {
+    if (!draft || draft.brief || typeof window === 'undefined' || !window.location.search.includes('demo=1')) return;
+    window.history.replaceState(null, '', '/new');
+    setStage({ image: draft.refImages[0], brief: null });
+    const t = setTimeout(() => {
+      const b = { ...(DEMO_READ as unknown as CreativeBrief), title: draft.title, brand: draft.brand, source: 'cache' as const };
+      setStage({ image: draft.refImages[0], brief: b });
+      setDraft({ ...draft, brief: b, briefVia: 'cache', dnaPreserve: {} });
+    }, 3800);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft?.refImages?.[0]]);
 
   // Arriving from the hero drop (?auto=1): read the stored reference straight away.
   useEffect(() => {
@@ -303,7 +318,7 @@ export default function NewBrief() {
               const away = d.scoutCity && d.scoutCity !== 'Vilnius' && d.place;
               setDraft({ ...d, strategy: away ? 'destination' : 'local', picks: undefined });
               router.push('/plan/assemble');
-            }} className="g-btn h-14 px-10 text-[16px]">Build the team →</button>
+            }} data-demo="build-team" className="g-btn h-14 px-10 text-[16px]">Build the team →</button>
           </div>
         </div>
       )}

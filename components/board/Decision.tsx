@@ -166,6 +166,7 @@ function FixCard({
       </div>
       <Button
         variant={recommended ? 'primary' : 'secondary'}
+        data-demo={recommended ? 'approve' : undefined}
         className="mt-4 w-full"
         disabled={busy || state !== 'idle'}
         onClick={async (e) => {

@@ -415,3 +415,8 @@
 .board-dark .section .section-head span.label:first-child { all: unset; display: inline; font: 300 22px/1.2 var(--font-inter), var(--font-sans); letter-spacing: -0.01em; color: #0d0d0d; text-transform: none; white-space: nowrap; }
 .board-dark .section-head > span:last-child { white-space: normal; font-size: 12px; }
 .board-dark { --after-hours: rgb(251 191 36 / 0.14); }
+
+/* Guided demo: the button the guide is talking about */
+.demo-pulse { position: relative; z-index: 1; animation: demo-pulse 1.6s cubic-bezier(.4,0,.2,1) infinite; }
+@keyframes demo-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(13,13,13,.35); } 50% { box-shadow: 0 0 0 8px rgba(13,13,13,0); } }
+@media (prefers-reduced-motion: reduce) { .demo-pulse { animation: none; box-shadow: 0 0 0 3px rgba(13,13,13,.4); } }

@@ -237,7 +237,7 @@ function BoardInner({ slug }: { slug: string }) {
           <div className="flex items-center gap-4">
             <span className={`border-b-2 pb-0.5 text-[17px] tabular-nums ${b.remaining < 0 ? 'border-red-600 text-red-600' : 'border-neutral-950'}`}>{fmtEur(Math.round(b.total))} <span className="text-neutral-400">/ {fmtEur(b.cap)}</span></span>
             {p.travel.length > 0 && !data.pending && (
-              <button onClick={simulateDelay} className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-4 text-[14px] shadow-[inset_0_0_0_1px_rgba(0,0,0,.1)] hover:bg-neutral-50">✈ Simulate a flight delay</button>
+              <button data-demo="simulate-delay" onClick={simulateDelay} className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-4 text-[14px] shadow-[inset_0_0_0_1px_rgba(0,0,0,.1)] hover:bg-neutral-50">✈ Simulate a flight delay</button>
             )}
             <a href="#messages" className="inline-flex h-11 items-center rounded-full bg-neutral-950 px-5 text-[15px] font-medium text-white">Call sheet</a>
           </div>
