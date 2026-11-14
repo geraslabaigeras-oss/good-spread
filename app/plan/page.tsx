@@ -62,8 +62,8 @@ export default function Strategies() {
             {draft.deliverables.stills} stills · {draft.deliverables.motion} motion · due {fmtDate(draft.deliverables.deadlineISO)}. Totals are calculated from line items.
           </p>
           {active && (
-            <motion.div key={active.s.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 font-mono text-[12px] uppercase tracking-[0.14em] text-grey-1">
-              {active.s.name} · shoot in {active.s.city}{globe.arcs.length ? ` · ${globe.arcs.map((a) => `${a.label} flies from ${a.from}`).join(' · ')}` : ' · no flights'}
+            <motion.div key={active.s.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 text-[14px] text-grey-1">
+              {active.s.name} plan, shooting in {active.s.city}.{globe.arcs.length ? ` ${globe.arcs.map((a) => `${a.label} travels from ${a.from}`).join(', ')}.` : ' Nobody needs to fly.'}
             </motion.div>
           )}
         </div>

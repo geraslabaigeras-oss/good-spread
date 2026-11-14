@@ -2,11 +2,10 @@
 
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
-import { BackgroundGradientAnimation } from '@/components/ui/background-gradient-animation';
+import LiquidEther from '@/components/LiquidEther';
+import Grainient from '@/components/Grainient';
 import { TextAnimate } from '@/components/ui/text-animate';
-import { Marquee } from '@/components/ui/marquee';
 import { Card, Carousel } from '@/components/ui/apple-cards-carousel';
-import { BRAND, BrandLogo, type Brand } from '@/components/brand-logo';
 
 type Props = {
   cap: number;
@@ -49,6 +48,16 @@ function Pill({ children, dark }: { children: React.ReactNode; dark?: boolean })
   );
 }
 
+function Panel({ pill, title, children }: { pill: string; title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-[28px] bg-white/45 p-7 shadow-[inset_0_0_0_1px_rgba(255,255,255,.7),0_18px_48px_rgba(80,60,40,.07)] backdrop-blur-xl">
+      <Pill>{pill}</Pill>
+      <h3 className="mb-4 mt-5 text-2xl font-light tracking-[-0.02em]">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
 export function Landing({ cap, routes, best, people, moment }: Props) {
   const steps = [
     { k: 'Brief', t: 'Drop a reference. You get the look, palette, light and shot list.' },
@@ -59,22 +68,16 @@ export function Landing({ cap, routes, best, people, moment }: Props) {
 
   return (
     <div className="bg-[#efeee9] font-sans text-neutral-900">
-      {/* Hero: Rawdose blurred core + Trelli blurred wordmark, on Aceternity's gradient animation in greys */}
-      <BackgroundGradientAnimation
-        containerClassName="!h-[100svh] !w-full"
-        gradientBackgroundStart="rgb(239, 238, 233)"
-        gradientBackgroundEnd="rgb(206, 213, 217)"
-        firstColor="196, 196, 196"
-        secondColor="214, 220, 224"
-        thirdColor="120, 120, 120"
-        fourthColor="230, 228, 222"
-        fifthColor="178, 190, 198"
-        pointerColor="150, 150, 150"
-        blendingValue="normal"
-        size="70%"
-      >
-        <Grain />
-        <header className="absolute inset-x-0 top-0 z-[60] mx-auto flex h-20 max-w-7xl items-center justify-between px-6 text-[13px] text-neutral-700">
+      {/* Hero: React Bits Grainient (moving grainy fog) + LiquidEther (liquid you can stir) behind a blur */}
+      <section className="relative h-[100svh] w-full overflow-hidden">
+        <div className="absolute inset-0">
+          <Grainient colors={['#efeee9', '#cfd7dc', '#9fadb7', '#e6e3dc']} lightMode grainAnimated grainAmount={0.12} speed={0.25} softness={0.9} />
+        </div>
+        <div className="absolute inset-0 blur-[36px]">
+          <LiquidEther colors={['#1f1f1f', '#55606a', '#9aa7b0']} lightMode autoDemo autoSpeed={0.35} autoIntensity={1.8} mouseForce={22} cursorSize={140} resolution={0.5} />
+        </div>
+
+        <header className="absolute inset-x-0 top-0 z-30 mx-auto flex h-20 max-w-7xl items-center justify-between px-6 text-[13px] text-neutral-700">
           <span className="font-medium text-neutral-900">good spread®</span>
           <nav className="flex items-center gap-7">
             <a href="#how" className="hidden hover:text-neutral-950 md:inline">How it works</a>
@@ -83,87 +86,52 @@ export function Landing({ cap, routes, best, people, moment }: Props) {
           </nav>
         </header>
 
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-[30%] z-[2] select-none whitespace-nowrap text-center text-[17vw] font-light leading-none tracking-[-0.06em] text-white/70 blur-[18px]">
-          good spread
-        </div>
-
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center px-6 text-center">
-          <TextAnimate animation="blurIn" by="word" as="h1" className="text-3xl font-light tracking-[-0.02em] text-neutral-800 md:text-5xl">
-            Producers plan it. Talent lives it.
+        <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center px-6 text-center">
+          <TextAnimate animation="blurIn" by="word" as="h1" className="max-w-4xl text-4xl font-light leading-[1.05] tracking-[-0.03em] text-neutral-900 md:text-6xl">
+            The production planner for fashion shoots.
           </TextAnimate>
-          <TextAnimate animation="blurIn" by="word" delay={0.4} as="p" className="mt-5 max-w-md text-[15px] leading-6 text-neutral-600">
-            One shoot plan. When a flight, a model or the budget changes, everyone on set gets their new day.
+          <TextAnimate animation="blurIn" by="word" delay={0.35} as="p" className="mt-6 max-w-xl text-[16px] leading-7 text-neutral-600">
+            Turn a reference into a costed shoot plan with your team. When a flight, a model or the budget changes, it prices three fixes, and after you approve one, everyone on set gets their new call time.
           </TextAnimate>
-          <div className="mt-9 flex items-center gap-3 text-[13px]">
+          <div className="pointer-events-auto mt-9 flex items-center gap-3 text-[13px]">
             <Link href="/new" className="rounded-full bg-neutral-900 px-5 py-2.5 text-white">Start a shoot</Link>
             <Link href="/people" className="rounded-full bg-white/50 px-5 py-2.5 text-neutral-800 shadow-[inset_0_0_0_1px_rgba(255,255,255,.7)] backdrop-blur-md">Add your people</Link>
           </div>
-        </div>
-      </BackgroundGradientAnimation>
-
-      {/* Logos: Magic UI Marquee, official marks via Simple Icons */}
-      <section className="py-10">
-        <Marquee pauseOnHover className="[--duration:32s]">
-          {(['whatsapp', 'imessage', 'twilio', 'elevenlabs', 'claude', 'googlemaps', 'supabase', 'vercel', 'unsplash'] as Brand[]).map((b) => (
-            <span key={b} className="mx-7 inline-flex items-center gap-2.5 text-[15px] text-neutral-600">
-              <BrandLogo name={b} size={20} />{BRAND[b].name}
-            </span>
-          ))}
-        </Marquee>
-      </section>
-
-      {/* BYSN roadmap card */}
-      <section id="how" className="px-4 md:px-10">
-        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[36px] bg-[linear-gradient(180deg,#f3f2ec_0%,#f1efe8_48%,#dfe2e0_72%,#b9c4cb_100%)] px-8 pb-36 pt-8 md:px-14">
-          <Grain />
-          <div className="relative z-[2] flex items-center justify-between">
-            <Pill>How it works</Pill>
-            <span className="text-[13px] font-medium">good spread®</span>
-          </div>
-          <div className="relative z-[2] mt-20 grid gap-10 md:grid-cols-4">
-            <div aria-hidden className="absolute left-1 right-0 top-[44px] hidden h-px bg-neutral-900/20 md:block" />
-            {steps.map((s, i) => (
-              <div key={s.k}>
-                <Pill>Step {i + 1}</Pill>
-                <span className="relative mb-5 mt-[13px] block size-[9px] rounded-full bg-white shadow-[0_0_0_1px_rgba(28,28,28,.35),0_0_0_4px_rgba(28,28,28,.06)]" />
-                <h3 className="text-[14px] font-medium uppercase tracking-[0.04em]">{s.k}</h3>
-                <p className="mt-2 max-w-[22em] text-[13.5px] leading-[1.45] text-neutral-600">{s.t}</p>
-              </div>
-            ))}
-          </div>
+          <p className="mt-6 text-[12px] text-neutral-500">Producers plan it. Talent lives it.</p>
         </div>
       </section>
 
-      {/* BYSN dark fog card with the real figures */}
-      <section className="mt-6 px-4 md:px-10">
-        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[36px] bg-[linear-gradient(180deg,#c3c5c6_0%,#8a8c8c_28%,#3d3e3c_62%,#262624_100%)] px-8 pb-16 pt-8 text-white md:px-14">
-          <Grain />
-          <div className="relative z-[2] flex items-center justify-between">
-            <Pill dark>Same brief, three plans</Pill>
-            <span className="text-[13px] font-medium">good spread®</span>
-          </div>
-          <div className="relative z-[2] mt-14 grid gap-10 md:grid-cols-4">
-            {routes.map((r, i) => (
-              <div key={r.name} className="relative pl-5" style={{ marginTop: `${(routes.length - i) * 34}px` }}>
-                <span aria-hidden className="absolute bottom-0 left-0 top-1 w-px bg-white/30" />
-                <span aria-hidden className="absolute -left-[3px] top-0 size-[7px] rounded-full bg-white/80" />
-                <Pill dark>{r.name}</Pill>
-                <div className="mt-4 text-[34px] font-light leading-none tracking-[-0.03em]">{eur(r.total)}</div>
-                <div className="mt-1 text-[13px] text-white/60">{r.overCap ? `${eur(r.total - cap)} over the cap` : `${eur(cap - r.total)} under the cap`}{r.name === best.name ? ' · recommended' : ''}</div>
-              </div>
-            ))}
-            <div className="relative pl-5">
-              <span aria-hidden className="absolute bottom-0 left-0 top-1 w-px bg-white/30" />
-              <span aria-hidden className="absolute -left-[3px] top-0 size-[7px] rounded-full bg-white/80" />
-              <Pill dark>Shoot day</Pill>
-              <div className="mt-4 text-[13px] text-white/60">{moment.who} lands {moment.lands}</div>
-              {moment.fixes.map((f) => (
-                <div key={f.label} className="mt-2 flex items-baseline justify-between gap-3 text-[14px]">
-                  <span className={f.best ? 'text-white' : 'text-white/60'}>{f.label}</span>
-                  <span className="font-light tabular-nums">{delta(f.cost)}</span>
+      {/* What it does: our own content, with the fog + grain + frosted-pill treatment */}
+      <section id="how" className="relative overflow-hidden bg-[linear-gradient(180deg,#efeee9_0%,#e9ebea_45%,#d3dbe0_100%)] px-4 py-28 md:px-10">
+        <Grain />
+        <div className="relative z-[2] mx-auto max-w-6xl">
+          <h2 className="max-w-2xl text-4xl font-light leading-[1.05] tracking-[-0.03em] md:text-6xl">From one reference to everyone&rsquo;s day.</h2>
+          <div className="mt-14 grid gap-4 md:grid-cols-3">
+            <Panel pill="Plan" title={`${routes.length} plans, each costed`}>
+              {routes.map((r) => (
+                <div key={r.name} className="flex items-baseline justify-between border-t border-neutral-900/10 py-2.5 text-[15px]">
+                  <span className={r.name === best.name ? 'text-neutral-900' : 'text-neutral-500'}>{r.name}{r.name === best.name ? ' · recommended' : ''}</span>
+                  <span className={`tabular-nums ${r.overCap ? 'text-neutral-400 line-through' : ''}`}>{eur(r.total)}</span>
                 </div>
               ))}
-            </div>
+              <p className="mt-3 text-[13px] text-neutral-500">Against a {eur(cap)} cap. Code does the sums, not AI.</p>
+            </Panel>
+            <Panel pill="Change" title={`${moment.who} lands ${moment.lands}`}>
+              <p className="text-[13px] text-neutral-500">Misses {moment.call} hair and makeup. Three fixes:</p>
+              {moment.fixes.map((f) => (
+                <div key={f.label} className="flex items-baseline justify-between border-t border-neutral-900/10 py-2.5 text-[15px]">
+                  <span className={f.best ? 'text-neutral-900' : 'text-neutral-500'}>{f.label}</span>
+                  <span className="tabular-nums">{delta(f.cost)}</span>
+                </div>
+              ))}
+            </Panel>
+            <Panel pill="Everyone" title={`${people} phones update`}>
+              <div className="flex items-baseline gap-3">
+                <span className="text-[15px] text-neutral-400 line-through">{moment.call}</span>
+                <span className="text-6xl font-light tracking-[-0.04em] tabular-nums">{moment.newCall}</span>
+              </div>
+              <p className="mt-3 text-[13px] text-neutral-500">Each person gets their new call time by text and taps Got it. You see who has seen it. Nobody types a message.</p>
+            </Panel>
           </div>
         </div>
       </section>
@@ -188,10 +156,9 @@ export function Landing({ cap, routes, best, people, moment }: Props) {
       <section className="px-4 pb-10 md:px-10">
         <div className="relative mx-auto flex h-[70vh] max-w-7xl flex-col items-center justify-center overflow-hidden rounded-[36px] bg-[linear-gradient(180deg,#d4d3d1_0%,#8e8e8b_38%,#3a3a37_72%,#1f1f1d_100%)] text-center text-white">
           <Grain />
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-[12%] z-[2] select-none whitespace-nowrap text-[16vw] font-light leading-none tracking-[-0.06em] text-white/60 blur-[16px]">good spread</div>
-          <div className="relative z-[3] text-[13px] leading-6">
-            <p className="font-medium">good spread®</p>
-            <p className="mt-4 text-white/80">Plan your next shoot.<br />Start with one reference image.</p>
+          <div className="relative z-[3]">
+            <p className="text-4xl font-light tracking-[-0.03em] md:text-6xl">Plan your next shoot.</p>
+            <p className="mt-4 text-[15px] text-white/70">Start with one reference image.</p>
             <Link href="/new" className="mt-6 inline-block rounded-full bg-white px-5 py-2.5 text-neutral-900">Start a shoot</Link>
           </div>
         </div>

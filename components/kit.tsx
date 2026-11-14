@@ -93,7 +93,7 @@ export function SectionHead({ label, meta, className }: { label: string; meta?: 
 export function Wordmark({ demo }: { demo?: boolean }) {
   return (
     <span className="whitespace-nowrap text-[15px] font-medium leading-[22px] tracking-[-0.15px] text-ink">
-      good spread{demo && <span className="font-normal text-grey-1"> · demo</span>}
+      good spread
     </span>
   );
 }

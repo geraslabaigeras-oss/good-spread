@@ -13,7 +13,8 @@ export const RosterInput = z.object({
   email: z.string().trim().max(120).optional().nullable(),
   profileUrl: z.string().trim().max(300).url().optional().nullable().or(z.literal('')),
   notes: z.string().trim().max(300).optional().nullable(),
-  photo: z.string().max(400_000).regex(/^data:image\/(jpeg|png|webp);base64,/).optional().nullable(),
+  // an uploaded image (data URL) or the https image from a profile link preview
+  photo: z.string().max(400_000).regex(/^(data:image\/(jpeg|png|webp);base64,|https:\/\/)/).optional().nullable(),
   flightCost: z.number().int().min(0).max(5000).optional().nullable(),
 });
 export type RosterInput = z.infer<typeof RosterInput>;

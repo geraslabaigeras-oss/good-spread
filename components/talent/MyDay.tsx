@@ -1,6 +1,7 @@
 'use client';
 
 import useSWR from 'swr';
+import { ListenButton } from '@/components/voice';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, Check } from 'lucide-react';
@@ -193,6 +194,15 @@ function MyDayInner({ token }: { token: string }) {
               {data.changedNow && data.lastChange && (
                 <p className="mt-2 text-[16px] leading-6">{data.lastChange.text}</p>
               )}
+              <div className="mt-4">
+                <ListenButton text={[
+                  `${data.person?.name ?? 'Hi'}, your call time is ${data.call ?? 'not set yet'}.`,
+                  data.travel ? `You land at ${data.travel.lands}, then ${data.travel.transferMin} minutes by car to the studio.` : data.leaveBy ? `Leave by ${data.leaveBy}.` : '',
+                  `The shoot is at ${data.studio.name}.`,
+                  data.looks.length ? `Your looks: ${data.looks.map((l) => l.garment).join(', ')}.` : '',
+                  data.changedNow && data.lastChange ? data.lastChange.text : '',
+                ].filter(Boolean).join(' ')} />
+              </div>
               {data.lateReported && (
                 <p className="mt-2 text-[16px] leading-6 text-grey-1">
                   {data.lateReported === 'unavailable' ? 'You told the producer you can’t make it.' : `You told the producer you’re ready at ${data.lateReported}.`}

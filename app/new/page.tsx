@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import type { CreativeBrief } from '@/lib/types';
 import { defaultDna, defaultLooks } from '@/lib/engine';
 import { useDraft, thumb } from '@/lib/plan-store';
+import { VoiceBrief } from '@/components/voice';
 import { Stage, TopBar } from '@/components/glass/Stage';
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
@@ -118,7 +119,7 @@ export default function NewBrief() {
                   <F label="Motion assets"><input className="glass-input font-mono" type="number" value={d.deliverables.motion} onChange={(e) => setDel('motion', Number(e.target.value) || 0)} /></F>
                   <F label="Usage"><input className="glass-input" value={d.deliverables.usage} onChange={(e) => setDel('usage', e.target.value)} /></F>
                   <F label="Usage months"><input className="glass-input font-mono" type="number" value={d.deliverables.usageMonths} onChange={(e) => setDel('usageMonths', Number(e.target.value) || 0)} /></F>
-                  <F label="Notes for the AI" span><input className="glass-input" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="must feel like a Baltic autumn" /></F>
+                  <F label="Notes for the AI" span><input className="glass-input" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="must feel like a Baltic autumn" /><div className="mt-2"><VoiceBrief onText={(t) => setNotes((n) => (n ? `${n} ${t}` : t).slice(0, 1000))} /></div></F>
                 </div>
                 <button onClick={read} disabled={busy} className="g-btn mt-7 w-full">
                   {busy ? 'Reading the reference…' : files.length ? 'Read the reference' : 'Use the demo reference'}
@@ -128,7 +129,7 @@ export default function NewBrief() {
             ) : (
               <motion.div key="brief" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.7, ease }} className="glass p-8">
                 <div className="flex items-center justify-between">
-                  <span className="g-label">Creative brief · {d.briefVia === 'ai' ? 'read by AI' : d.briefVia === 'cache' ? 'read by AI · cached' : 'demo'}</span>
+                  <span className="text-[13px] text-grey-1">{d.briefVia === 'ai' || d.briefVia === 'cache' ? 'Brief read from your reference' : 'Example brief: upload a reference to read yours'}</span>
                   <button onClick={() => setEditing(true)} className="text-[12px] text-grey-1 underline underline-offset-4 hover:text-ink">Edit the job</button>
                 </div>
                 <motion.p initial={{ opacity: 0, filter: 'blur(8px)' }} animate={{ opacity: 1, filter: 'blur(0px)' }} transition={{ duration: 0.9, delay: 0.15 }} className="mt-4 font-serif text-[30px] leading-[1.15] tracking-[-0.01em]">
