@@ -42,7 +42,7 @@ export type Applied = { version: number; label: string; receipt: Receipt; at: st
 
 export function Board({ slug }: { slug: string }) {
   return (
-    <Stage voice={false}>
+    <Stage voice={false} still>
       <ToastProvider position="bottom-right">
         <BoardInner slug={slug} />
       </ToastProvider>

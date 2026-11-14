@@ -41,7 +41,7 @@ export function StormSky({ storm }: { storm: boolean }) {
     const clouds = Array.from({ length: 9 }, () => ({ x: Math.random() * w, y: 20 + Math.random() * h * 0.45, r: 120 + Math.random() * 160, v: 6 + Math.random() * 10, a: 0.6 + Math.random() * 0.4, c: 110 + Math.round(Math.random() * 40) }));
     const drops = Array.from({ length: 170 }, () => ({ x: Math.random() * w, y: Math.random() * h, v: 620 + Math.random() * 380, l: 9 + Math.random() * 12, w: 0.6 + Math.random() * 0.7, a: 0.35 + Math.random() * 0.45, k: Math.random() }));
     let level = target.current, last = performance.now(), raf = 0, flashAt = -1e9, bolt: number[][][] | null = null, nextFlash = performance.now() + 2500;
-    let visible = true;
+    let visible = true; let idle: ReturnType<typeof setTimeout> | undefined;
     const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: 0.2 });
     io.observe(cv);
     const frame = (now: number) => {
@@ -76,11 +76,12 @@ export function StormSky({ storm }: { storm: boolean }) {
         ctx.strokeStyle = `rgba(255,255,255,${Math.min(1, f * 1.1)})`; ctx.lineWidth = 1.4; ctx.lineJoin = 'round';
         for (const pl of bolt) { ctx.beginPath(); pl.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.stroke(); ctx.lineWidth = 0.8; }
       }
-      if (!reduce && visible && !document.hidden) raf = requestAnimationFrame(frame);
-      else raf = requestAnimationFrame(() => { last = performance.now(); frame(last); });
+      const settledCalm = target.current === 0 && level < 0.01;
+      if (reduce || settledCalm || !visible || document.hidden) { raf = 0; idle = setTimeout(() => { last = performance.now(); raf = requestAnimationFrame(frame); }, settledCalm ? 400 : 250); }
+      else raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
-    return () => { cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); };
+    return () => { cancelAnimationFrame(raf); if (idle) clearTimeout(idle); ro.disconnect(); io.disconnect(); };
   }, []);
   return <canvas ref={ref} className="absolute inset-0 size-full" />;
 }
