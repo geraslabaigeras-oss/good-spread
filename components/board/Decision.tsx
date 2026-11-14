@@ -1,9 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { Globe } from '@/components/glass/Globe';
-import { pinsFor } from '@/lib/plan-draft';
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Check, TriangleAlert } from 'lucide-react';
 import type { Production } from '@/lib/types';
 import type { PublicFix, PublicPending } from '@/lib/server/views';
@@ -13,12 +11,6 @@ import { APPROVE, conflictBar, conflictLine, fixCard, fixList, revealItem, rippl
 import { Button, CreativeChip, OvertimeChip, RecommendedBadge, SectionHead } from '@/components/kit';
 import { cn } from '@/lib/utils';
 import type { Applied, Approving } from './Board';
-
-function TeamGlobe({ p }: { p: Production }) {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const { pins, arcs } = useMemo(() => pinsFor(p), [p.version, p.id]);
-  return <Globe pins={pins} arcs={arcs} focus={p.city ?? 'Vilnius'} hub={p.city ?? 'Vilnius'} height="100%" altitude={0.9} spread={3.2} />;
-}
 
 export function Decision({
   production: p, pending, approving, applied, countUp, onApprove,
@@ -65,7 +57,6 @@ export function Decision({
           )}
           {state === 'empty' && (
             <motion.div key="empty" className="relative h-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <div className="absolute inset-0 -mx-4 -mb-4"><TeamGlobe p={p} /></div>
               <div className="pointer-events-none relative max-w-[260px] pt-1">
                 <div className="font-serif text-[30px] leading-8 tracking-[-0.03em]">All clear.</div>
                 <p className="mt-1 text-[13px] leading-5 text-grey-1">No conflicts. Drop a flight change, screenshot or email into the inbox.</p>

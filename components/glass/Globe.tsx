@@ -2,7 +2,6 @@
 
 import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import * as THREE from 'three';
 import type { GlobeMethods } from 'react-globe.gl';
 
 const ReactGlobe = dynamic(() => import('react-globe.gl'), { ssr: false });
@@ -62,11 +61,6 @@ export function Globe({ pins, arcs, focus, hub, onPin, height = 560, altitude = 
   const box = useRef<HTMLDivElement>(null);
   const [w, setW] = useState(800);
   const [h, setH] = useState(typeof height === 'number' ? height : 560);
-  const [countries, setCountries] = useState<object[]>([]);
-
-  useEffect(() => {
-    fetch('/globe/countries.geojson').then((r) => r.json()).then((g) => setCountries(g.features)).catch(() => {});
-  }, []);
 
   useEffect(() => {
     if (!box.current) return;
@@ -82,10 +76,6 @@ export function Globe({ pins, arcs, focus, hub, onPin, height = 560, altitude = 
     ref.current.pointOfView({ lat: c.lat - 8 * altitude / 1.55, lng: c.lng - 6 * (1.55 - altitude), altitude }, 1600);
   }, [focus, w, altitude]);
 
-  const material = useMemo(
-    () => new THREE.MeshPhongMaterial({ color: '#e4e2de', emissive: '#d9d6d1', emissiveIntensity: 0.6, shininess: 4 }),
-    [],
-  );
 
   const placed = useMemo(() => place(pins, spread), [pins, spread]);
   const arcData = useMemo(
@@ -103,24 +93,20 @@ export function Globe({ pins, arcs, focus, hub, onPin, height = 560, altitude = 
         width={w}
         height={h}
         backgroundColor="rgba(0,0,0,0)"
-        globeMaterial={material}
+        globeImageUrl="/globe/earth-blue-marble.jpg"
+        bumpImageUrl="/globe/earth-topology.png"
         showAtmosphere
-        atmosphereColor="#ffffff"
-        atmosphereAltitude={0.14}
-        hexPolygonsData={countries}
-        hexPolygonResolution={3}
-        hexPolygonMargin={0.62}
-        hexPolygonUseDots
-        hexPolygonColor={() => 'rgba(13, 13, 13, 0.42)'}
+        atmosphereColor="#9fc3e8"
+        atmosphereAltitude={0.18}
         arcsData={arcData}
-        arcColor={() => ['rgba(13,13,13,0.12)', '#0d0d0d', '#0d0d0d']}
-        arcStroke={0.55}
+        arcColor={() => ['rgba(255,255,255,0.2)', '#ffffff', '#ffd27a']}
+        arcStroke={0.8}
         arcAltitudeAutoScale={0.45}
         arcDashLength={0.45}
         arcDashGap={0.25}
         arcDashAnimateTime={1800}
         ringsData={rings}
-        ringColor={() => (t: number) => `rgba(13,13,13,${0.6 * (1 - t)})`}
+        ringColor={() => (t: number) => `rgba(255,210,122,${0.9 * (1 - t)})`}
         ringMaxRadius={5}
         ringPropagationSpeed={2.2}
         ringRepeatPeriod={1100}

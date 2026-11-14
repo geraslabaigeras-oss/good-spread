@@ -12,7 +12,6 @@ import { fmtDate, fmtEur } from '@/lib/format';
 import { useDraft } from '@/lib/plan-store';
 import { draftProduction, pinsFor } from '@/lib/plan-draft';
 import { BudgetLine, CAT_COLOR, Stage, Tilt, TopBar } from '@/components/glass/Stage';
-import { Globe } from '@/components/glass/Globe';
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
 const CATS = ['talent', 'crew', 'studio', 'travel', 'post', 'usage'] as const;
@@ -55,7 +54,7 @@ export default function Strategies() {
     <Stage backdrop={draft.refImages[0]}>
       <TopBar step={2} right={<span className="font-mono text-[12px] text-grey-1">cap {fmtEur(draft.cap)}</span>} />
       <div className="relative mx-auto max-w-[1440px] px-8">
-        <div className="pointer-events-none absolute left-8 top-6 z-10 max-w-[520px]">
+        <div className="max-w-[640px] pb-10 pt-6">
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }} className="font-serif text-[60px] leading-[0.95] tracking-[-0.03em]">
             Three plans
           </motion.h1>
@@ -67,9 +66,6 @@ export default function Strategies() {
               {active.s.name} · shoot in {active.s.city}{globe.arcs.length ? ` · ${globe.arcs.map((a) => `${a.label} flies from ${a.from}`).join(' · ')}` : ' · no flights'}
             </motion.div>
           )}
-        </div>
-        <div className="-mx-8 -mb-40">
-          <Globe pins={globe.pins} arcs={globe.arcs} focus={active?.s.city ?? 'Vilnius'} hub={active?.s.city} height="62vh" />
         </div>
 
         <div className="relative z-10 grid grid-cols-1 gap-5 pb-14 md:grid-cols-3">
