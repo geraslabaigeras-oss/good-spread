@@ -2,11 +2,12 @@
 
 import { AnimatePresence, motion } from 'motion/react';
 import { useState } from 'react';
-import { ArrowUpRight, MessageCircle, Search, Trash2, Upload } from 'lucide-react';
+import { ArrowUpRight, Search, Trash2, Upload } from 'lucide-react';
 import { CITIES, type City } from '@/data/catalog';
 import { availabilityText, imessageLink, modelsComSearch, ROLE_LABEL, whatsappLink, type RosterInput, type RosterPerson } from '@/lib/roster';
 import { useRoster } from '@/lib/use-roster';
 import { thumb } from '@/lib/plan-store';
+import { BrandLogo } from '@/components/brand-logo';
 import { Stage, TopBar } from '@/components/glass/Stage';
 
 type Role = RosterInput['role'];
@@ -158,8 +159,8 @@ function PersonCard({ p, onRemove }: { p: RosterPerson; onRemove: () => void }) 
         <div className="mt-3 flex flex-wrap gap-1.5">
           {p.phone && (
             <>
-              <a href={whatsappLink(p.phone, text)} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-full bg-ink px-3 text-[12px] font-medium text-white"><MessageCircle size={13} strokeWidth={1.75} /> WhatsApp</a>
-              <a href={imessageLink(p.phone, text)} className="inline-flex h-8 items-center rounded-full px-3 text-[12px] font-medium shadow-[inset_0_0_0_1px_rgb(13_13_13/0.14)]">iMessage</a>
+              <a href={whatsappLink(p.phone, text)} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[#25D366] px-3 text-[12px] font-medium text-white"><BrandLogo name="whatsapp" size={14} color="#fff" /> WhatsApp</a>
+              <a href={imessageLink(p.phone, text)} className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[#34DA50] px-3 text-[12px] font-medium text-white"><BrandLogo name="imessage" size={14} color="#fff" /> iMessage</a>
             </>
           )}
           {p.profileUrl && (

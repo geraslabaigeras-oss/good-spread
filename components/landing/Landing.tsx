@@ -3,7 +3,13 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
 import { motion } from 'motion/react';
-import { ImagesSlider } from '@/components/ui/images-slider';
+import { BackgroundGradientAnimation } from '@/components/ui/background-gradient-animation';
+import { ThreeDMarquee } from '@/components/ui/3d-marquee';
+import { ContainerTextFlip } from '@/components/ui/container-text-flip';
+import { AuroraText } from '@/components/ui/aurora-text';
+import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
+import { Marquee } from '@/components/ui/marquee';
+import { BRAND, BrandLogo, type Brand } from '@/components/brand-logo';
 import { Card, Carousel } from '@/components/ui/apple-cards-carousel';
 import { Timeline } from '@/components/ui/timeline';
 
@@ -32,6 +38,13 @@ const PHOTOS = {
   red: { src: u('photo-1654409848415-9e0a9b0a9c8d', 1200), by: 'Negar Nikkhah' },
 };
 
+const MARQUEE = [
+  'photo-1550872199-63f4382fe925', 'photo-1762605135012-56a59a059e60', 'photo-1603189343302-e603f7add05a', 'photo-1733322980454-62a1d5727460',
+  'photo-1739808914849-01ba195c4f93', 'photo-1613915617430-8ab0fd7c6baf', 'photo-1692180142575-c31fcd106b5b', 'photo-1508964801641-4b2410705b73',
+  'photo-1590972381381-c863cbbf9dd2', 'photo-1635262090780-2ed9e994fff4', 'photo-1654409848415-9e0a9b0a9c8d', 'photo-1645561305502-63a9ba09ab09',
+  'photo-1645561305577-4cb5be67a40a', 'photo-1647957866343-87662a2daaad', 'photo-1550872199-63f4382fe925', 'photo-1603189343302-e603f7add05a',
+].map((id) => u(id, 600));
+
 const eur = (n: number) => (n === 0 ? '€0' : n > 0 ? `+€${Math.round(n)}` : `−€${Math.round(-n)}`);
 
 export function Landing({ cap, routes, best, moment }: Props) {
@@ -52,32 +65,66 @@ export function Landing({ cap, routes, best, moment }: Props) {
   ];
 
   return (
-    <div className="bg-white">
-      <header className="absolute inset-x-0 top-0 z-[60]">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 text-white">
-          <span className="text-lg font-semibold tracking-tight">good spread</span>
-          <nav className="hidden items-center gap-8 text-sm text-white/80 md:flex">
-            <a href="#how" className="hover:text-white">How it works</a>
-            <a href="#day" className="hover:text-white">The shoot day</a>
-            <Link href="/people" className="hover:text-white">Your people</Link>
-          </nav>
-          <Link href="/new" className="rounded-full bg-white px-4 py-2 text-sm font-medium text-black">Start a shoot</Link>
-        </div>
-      </header>
+    <div className="bg-gradient-to-b from-[#f1efe8] via-[#e8ebec] to-[#d6dee4]">
+      {/* Aceternity Background Gradient Animation, tuned to blue-grey off-white */}
+      <BackgroundGradientAnimation
+        containerClassName="!h-[100svh] !w-full"
+        gradientBackgroundStart="rgb(241, 239, 232)"
+        gradientBackgroundEnd="rgb(214, 222, 228)"
+        firstColor="184, 195, 202"
+        secondColor="226, 222, 214"
+        thirdColor="196, 208, 220"
+        fourthColor="235, 232, 226"
+        fifthColor="170, 184, 196"
+        pointerColor="200, 210, 220"
+        blendingValue="normal"
+        size="90%"
+      >
+        <header className="absolute inset-x-0 top-0 z-[60]">
+          <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
+            <span className="text-lg font-semibold tracking-tight text-neutral-900">good spread</span>
+            <nav className="hidden items-center gap-8 text-sm text-neutral-600 md:flex">
+              <a href="#how" className="hover:text-neutral-950">How it works</a>
+              <a href="#day" className="hover:text-neutral-950">The shoot day</a>
+              <Link href="/people" className="hover:text-neutral-950">Your people</Link>
+            </nav>
+            <Link href="/new"><InteractiveHoverButton className="text-sm">Start a shoot</InteractiveHoverButton></Link>
+          </div>
+        </header>
 
-      {/* Aceternity Images Slider */}
-      <ImagesSlider className="h-[100svh] bg-neutral-950" images={[PHOTOS.brownCoat.src, PHOTOS.beigeStairs.src, PHOTOS.silhouette.src, PHOTOS.runway.src, PHOTOS.snow.src]}>
-        <motion.div initial={{ opacity: 0, y: -80 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="z-50 flex flex-col items-center justify-center px-6">
-          <motion.p className="text-center text-sm uppercase tracking-[0.3em] text-neutral-200">Production planning for fashion shoots</motion.p>
-          <motion.p className="bg-gradient-to-b from-neutral-50 to-neutral-400 bg-clip-text py-4 text-center text-5xl font-bold text-transparent md:text-8xl">
-            Producers plan it. <br /> Talent lives it.
-          </motion.p>
-          <Link href="/new" className="relative mx-auto mt-4 rounded-full border border-white/30 bg-white/10 px-6 py-3 text-center text-white backdrop-blur-sm">
-            <span>Start a shoot →</span>
-            <div className="absolute inset-x-0 -bottom-px mx-auto h-px w-3/4 bg-gradient-to-r from-transparent via-white to-transparent" />
-          </Link>
-        </motion.div>
-      </ImagesSlider>
+        <div className="absolute inset-0 z-50 mx-auto flex max-w-7xl items-center px-6 pt-20">
+          <div className="pointer-events-auto relative z-10 w-full max-w-2xl">
+            <h1 className="text-5xl font-semibold leading-[1.02] tracking-tighter text-neutral-900 md:text-7xl xl:text-8xl">
+              Producers plan it.<br />
+              <AuroraText colors={['#0f172a', '#64748b', '#94a3b8', '#334155']} speed={0.8}>Talent lives it.</AuroraText>
+            </h1>
+            <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-2 text-xl text-neutral-600 md:text-2xl">
+              <span>When</span>
+              <ContainerTextFlip words={['a flight lands late', 'a model gets sick', 'the budget gets cut', 'the shoot runs over']} className="!text-xl md:!text-2xl" />
+            </div>
+            <p className="mt-2 text-xl text-neutral-600 md:text-2xl">everyone&rsquo;s day updates. Nobody types a message.</p>
+            <div className="mt-10 flex flex-wrap items-center gap-3">
+              <Link href="/new"><InteractiveHoverButton className="bg-neutral-950 text-white">Start a shoot</InteractiveHoverButton></Link>
+              <Link href="/people" className="rounded-full border border-neutral-300 bg-white/50 px-6 py-2.5 text-sm text-neutral-800 backdrop-blur">Add your people</Link>
+            </div>
+          </div>
+          {/* Aceternity 3D Marquee of fashion photography */}
+          <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[52%] overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_25%)] lg:block">
+            <ThreeDMarquee images={MARQUEE} className="h-full w-full rounded-none bg-transparent" />
+          </div>
+        </div>
+      </BackgroundGradientAnimation>
+
+      {/* Magic UI Marquee of the services it runs on (official logos via Simple Icons) */}
+      <section className="border-y border-neutral-300/50 py-8">
+        <Marquee pauseOnHover className="[--duration:30s]">
+          {(['whatsapp', 'imessage', 'twilio', 'elevenlabs', 'claude', 'googlemaps', 'supabase', 'vercel', 'unsplash'] as Brand[]).map((b) => (
+            <span key={b} className="mx-6 inline-flex items-center gap-2.5 text-lg font-medium text-neutral-700">
+              <BrandLogo name={b} size={24} />{BRAND[b].name}
+            </span>
+          ))}
+        </Marquee>
+      </section>
 
       {/* Aceternity Apple Cards Carousel */}
       <section id="how" className="w-full py-20">
