@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
 import { useState } from 'react';
-import { ArrowUpRight, Link2, Loader2, Plus, Search, Trash2, Upload } from 'lucide-react';
+import { ArrowUpRight, Check, Link2, Loader2, Plus, Search, Sparkles, Trash2, Upload } from 'lucide-react';
 import { CITIES, type City } from '@/data/catalog';
 import { availabilityText, imessageLink, modelsComSearch, ROLE_LABEL, whatsappLink, type RosterInput, type RosterPerson } from '@/lib/roster';
 import { useRoster } from '@/lib/use-roster';
@@ -17,6 +17,9 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AGENCIES } from '@/lib/agencies';
+import { useDraft } from '@/lib/plan-store';
+import type { LookAnalysis } from '@/lib/ai/look';
 
 type Role = RosterInput['role'];
 const ROLES: Role[] = ['model', 'photographer', 'mua', 'stylist'];
@@ -33,6 +36,11 @@ export default function People() {
   const [note, setNote] = useState<string | null>(null);
   const [findCity, setFindCity] = useState<City>('Vilnius');
   const [filter, setFilter] = useState<string>('all');
+  const [found, setFound] = useState<string[]>([]);
+  const [gallery, setGallery] = useState<string[]>([]);
+  const [look, setLook] = useState<LookAnalysis | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [draft] = useDraft();
   const set = <K extends keyof typeof empty>(k: K, v: (typeof empty)[K]) => setF((x) => ({ ...x, [k]: v }));
 
   async function importLink() {
@@ -47,9 +55,27 @@ export default function People() {
         return;
       }
       setF((x) => ({ ...x, name: x.name || (j.title ?? '').split(/[|–-]/)[0].trim(), photo: x.photo || j.image || '', agency: x.agency || j.site || '' }));
-      setNote(`Imported from ${j.site}.`);
+      setFound(j.images ?? []);
+      setGallery((j.images ?? []).slice(0, 6));
+      setNote(j.images?.length ? `Imported from ${j.site}. ${j.images.length} images found: tap to keep or drop, double-tap to make one the main photo.` : `Imported from ${j.site}. No images on that page; upload a photo instead.`);
     } finally {
       setImporting(false);
+    }
+  }
+
+  async function analyze() {
+    const images = (gallery.length ? gallery : f.photo ? [f.photo] : []).slice(0, 6);
+    if (!images.length) return;
+    setAnalyzing(true);
+    try {
+      const b = draft?.brief;
+      const brief = b ? `${b.summary} Look: ${b.aesthetic.join(', ')}. Casting: ${b.casting}. Palette: ${b.palette.join(', ')}.` : undefined;
+      const r = await fetch('/api/people/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ images, brief }) });
+      const j = await r.json();
+      if (!r.ok) { setNote(j.error === 'anthropic_not_configured' ? 'Add ANTHROPIC_API_KEY to analyse looks.' : 'Could not analyse these images.'); return; }
+      setLook(j.analysis);
+    } finally {
+      setAnalyzing(false);
     }
   }
 
@@ -61,12 +87,16 @@ export default function People() {
         name: f.name, role: f.role, city: f.city, dayRate: Number(f.dayRate) || 0,
         agency: f.agency || null, commissionPct: f.agency ? Number(f.commissionPct) || 20 : null,
         phone: f.phone || null, profileUrl: f.profileUrl || null, photo: f.photo || null,
+        gallery: gallery.length ? gallery : null, look,
       };
       const r = await fetch('/api/people', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const j = await r.json();
       if (!r.ok) throw new Error(j.issues?.[0] ?? j.error ?? 'Could not save');
       setF({ ...empty, role: f.role, city: f.city });
       setNote(null);
+      setFound([]);
+      setGallery([]);
+      setLook(null);
       setOpen(false);
       await mutate();
     } catch (x) {
@@ -126,6 +156,15 @@ export default function People() {
           </div>
         </div>
 
+        <div className="mt-5 flex flex-wrap items-center gap-2 text-sm">
+          <span className="mr-1 text-neutral-500">Agencies</span>
+          {AGENCIES.map((ag) => (
+            <a key={ag.name} href={ag.url} target="_blank" rel="noreferrer" title={ag.cities} className="inline-flex items-center gap-1 rounded-full bg-white/70 px-3 py-1 text-neutral-700 shadow-[inset_0_0_0_1px_rgba(0,0,0,.06)] transition-colors hover:bg-white hover:text-neutral-950">
+              {ag.name} <ArrowUpRight className="size-3" />
+            </a>
+          ))}
+        </div>
+
         <div className="mt-6 overflow-hidden rounded-2xl bg-white/70 shadow-[inset_0_0_0_1px_rgba(255,255,255,.7),0_18px_48px_rgba(80,60,40,.06)] backdrop-blur-xl">
           {ready && !shown.length && (
             <div className="flex flex-col items-center px-6 py-20 text-center">
@@ -153,6 +192,40 @@ export default function People() {
               </div>
               {note && <p className="text-xs text-neutral-500">{note}</p>}
             </div>
+            {found.length > 0 && (
+              <div className="space-y-2">
+                <Label>Polaroids and portfolio</Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {found.map((src) => {
+                    const on = gallery.includes(src);
+                    return (
+                      <button key={src} type="button" onClick={() => setGallery((g) => (on ? g.filter((x) => x !== src) : [...g, src].slice(0, 8)))} onDoubleClick={() => set('photo', src)}
+                        className={`relative aspect-[3/4] overflow-hidden rounded-lg ${on ? 'ring-2 ring-neutral-900' : 'opacity-50'}`}>
+                        <img src={src} alt="" className="size-full object-cover" referrerPolicy="no-referrer" />
+                        {f.photo === src && <span className="absolute left-1 top-1 rounded-full bg-white px-1.5 text-[10px] font-medium">Main</span>}
+                        {on && <Check className="absolute bottom-1 right-1 size-4 rounded-full bg-neutral-900 p-0.5 text-white" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {(gallery.length > 0 || f.photo) && (
+              <div className="space-y-3 rounded-xl bg-neutral-50 p-4">
+                <Button variant="outline" className="w-full bg-white" disabled={analyzing} onClick={analyze}>
+                  {analyzing ? <Loader2 className="animate-spin" /> : <Sparkles />} {look ? 'Analyse again' : draft?.brief ? 'Analyse look against your brief' : 'Analyse look'}
+                </Button>
+                {look && (
+                  <div className="space-y-2 text-sm">
+                    <p>{look.look}</p>
+                    <p className="text-neutral-500">Hair: {look.hair}</p>
+                    <div className="flex flex-wrap gap-1.5">{[...look.vibe, ...look.features].map((t) => <Badge key={t} variant="secondary" className="font-normal">{t}</Badge>)}</div>
+                    {look.bookShows.length > 0 && <p className="text-neutral-500">Book shows: {look.bookShows.join(', ')}</p>}
+                    {look.fitNotes && <p className="rounded-lg bg-white p-3 text-neutral-700">{look.fitNotes}</p>}
+                  </div>
+                )}
+              </div>
+            )}
             <Separator />
             <div className="flex items-center gap-4">
               <label className="cursor-pointer">
@@ -210,6 +283,10 @@ function Row({ p, last, onRemove }: { p: RosterPerson; last: boolean; onRemove: 
           {p.agency && <Badge variant="secondary" className="font-normal">{p.agency}{p.commissionPct ? ` · ${p.commissionPct}%` : ''}</Badge>}
         </div>
         <div className="text-sm text-neutral-500">{ROLE_LABEL[p.role]} · {p.city} · €{p.dayRate}/day</div>
+        {p.look && <div className="mt-1 truncate text-xs text-neutral-500">{[...p.look.vibe, ...p.look.bookShows].join(' · ')}</div>}
+        {p.gallery && p.gallery.length > 1 && (
+          <div className="mt-2 flex gap-1">{p.gallery.slice(0, 6).map((g) => <img key={g} src={g} alt="" referrerPolicy="no-referrer" className="h-12 w-9 rounded object-cover" />)}</div>
+        )}
       </div>
       <div className="flex items-center gap-1.5">
         {p.phone && (

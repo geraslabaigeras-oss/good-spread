@@ -16,6 +16,11 @@ export const RosterInput = z.object({
   // an uploaded image (data URL) or the https image from a profile link preview
   photo: z.string().max(400_000).regex(/^(data:image\/(jpeg|png|webp);base64,|https:\/\/)/).optional().nullable(),
   flightCost: z.number().int().min(0).max(5000).optional().nullable(),
+  gallery: z.array(z.string().max(1000).regex(/^https:\/\//)).max(8).optional().nullable(),
+  look: z.object({
+    look: z.string().max(400), hair: z.string().max(120), features: z.array(z.string().max(60)).max(6),
+    vibe: z.array(z.string().max(40)).max(5), bookShows: z.array(z.string().max(40)).max(6), fitNotes: z.string().max(600),
+  }).optional().nullable(),
 });
 export type RosterInput = z.infer<typeof RosterInput>;
 export type RosterPerson = RosterInput & { id: string; createdAt: string };
