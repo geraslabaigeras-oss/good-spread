@@ -139,7 +139,7 @@ function BoardInner({ slug }: { slug: string }) {
               <h1 className="truncate font-serif text-[28px] leading-8 tracking-[-0.01em]">{p.title}</h1>
               <span className="inline-flex h-[22px] items-center rounded-full border border-hairline-strong px-2 font-mono text-[12px] leading-4 num">v{p.version}</span>
             </div>
-            <div className="truncate font-mono text-[12px] uppercase leading-4 text-grey-1 num">
+            <div className="truncate font-mono text-[12px] leading-4 text-grey-1 num">
               {fmtDate(p.dateISO)} · {p.studio.name} · cap {fmtEur(p.budget.cap)}
             </div>
           </div>

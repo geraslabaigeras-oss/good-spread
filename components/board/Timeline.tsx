@@ -86,12 +86,12 @@ export function Timeline({ production: p, conflicts }: { production: Production;
           <div className="shrink-0" style={{ width: 'var(--label-w)' }} />
           <div className="relative h-full flex-1">
             {hours.slice(0, -1).filter((h) => h < booked || h >= booked + 120).map((h) => (
-              <span key={h} className="absolute top-0.5 pl-1 font-mono text-[11px] leading-[14px] tracking-[0.02em] text-grey-1 num" style={{ left: `${x(h)}%` }}>
+              <span key={h} className="absolute top-0.5 pl-1 font-mono text-[11px] leading-[14px] text-grey-1 num" style={{ left: `${x(h)}%` }}>
                 {fmt(h).slice(0, 2)}
               </span>
             ))}
             <span
-              className="absolute top-0.5 whitespace-nowrap bg-after-hours pl-1 font-mono text-[10px] font-medium uppercase leading-[14px] tracking-[0.06em] text-ink"
+              className="absolute top-0.5 whitespace-nowrap bg-after-hours pl-1 font-mono text-[10px] font-medium leading-[14px] text-ink"
               style={{ left: `${x(booked)}%` }}
             >
               Booked until {fmt(booked)}
@@ -116,7 +116,7 @@ export function Timeline({ production: p, conflicts }: { production: Production;
                   {t && t.arriveMin > START && (
                     <>
                       <span
-                        className="absolute top-0 whitespace-nowrap font-mono text-[10px] uppercase leading-3 text-grey-1 num"
+                        className="absolute top-0 whitespace-nowrap font-mono text-[10px] leading-3 text-grey-1 num"
                         style={{ left: `${x(Math.max(t.departMin, START))}%` }}
                       >
                         {t.number} · lands {fmt(t.arriveMin)}

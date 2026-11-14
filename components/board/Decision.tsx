@@ -122,7 +122,7 @@ function ConflictLines({ p, pending }: { p: Production; pending: PublicPending }
         {c.message}
         {pending.conflicts.length > 1 && <span className="font-normal"> · +{pending.conflicts.length - 1} more</span>}
       </span>
-      <span className="shrink-0 font-mono text-[13px] uppercase leading-5 num">{conflictMeta(p, c)}</span>
+      <span className="shrink-0 font-mono text-[13px] leading-5 num">{conflictMeta(p, c)}</span>
     </motion.div>
   );
 }
@@ -163,7 +163,7 @@ function FixCard({
         />
       )}
       <div className="flex h-[22px] items-center justify-between">
-        <span className="font-mono text-[11px] font-medium uppercase leading-4 tracking-[0.08em] text-grey-1">Option {index + 1}</span>
+        <span className="font-mono text-[11px] font-medium leading-4 text-grey-1">Option {index + 1}</span>
         {recommended && <RecommendedBadge />}
       </div>
       <div className="mt-3 font-serif text-[24px] leading-7 tracking-[-0.01em]">{f.label}</div>
@@ -229,7 +229,7 @@ function ReceiptView({ applied, countUp, p }: { applied: Applied; countUp: boole
       >
         <Check size={16} strokeWidth={1.5} />
         <span className="flex-1 truncate text-[14px] font-medium leading-5">Fix applied: {applied.label}</span>
-        <span className="font-mono text-[12px] uppercase leading-4 num">v{applied.version} · {clock(applied.at)}</span>
+        <span className="font-mono text-[12px] leading-4 num">v{applied.version} · {clock(applied.at)}</span>
       </motion.div>
       <div className="grid min-h-0 grid-cols-4 gap-3" style={{ height: 'min(104px, 100%)' }}>
         <Metric label="People updated" value={r.peopleUpdated} i={0} countUp={countUp} k={applied.version} />

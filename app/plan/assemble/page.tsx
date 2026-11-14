@@ -162,7 +162,7 @@ export default function Assemble() {
                 {tab === 'location' && !draft.brief && locs.filter((l) => !l.id.startsWith('open-')).map((l) => (
                   <Tilt key={l.id} onClick={() => setPicks({ ...picks, location: l.id })} selected={picks.location === l.id} className="glass-soft cursor-pointer overflow-hidden">
                     <div className="relative h-44 overflow-hidden" style={{ background: l.photo ? `url(${l.photo}) center 20%/cover` : (l.natural ? '#d8c8b4' : '#e4e1dc') }}>
-                      <span className="absolute bottom-2 left-3 font-mono text-[10px] uppercase tracking-wider text-ink/70">{l.tags.join(' · ')}</span>
+                      <span className="absolute bottom-2 left-3 font-mono text-[10px] tracking-wider text-ink/70">{l.tags.join(' · ')}</span>
                     </div>
                     <div className="p-3">
                       <div className="font-serif text-[20px] leading-6">{l.name.split(',')[0]}</div>
@@ -219,7 +219,7 @@ function CompCard({ c, selected, onClick, travel }: { c: CatalogPerson; selected
           <span className="font-mono text-[12px] text-ink">{fmtEur(c.dayRate)}</span>
         </div>
         {c.stats ? (
-          <div className="mt-1 font-mono text-[10px] uppercase tracking-wide text-grey-1">
+          <div className="mt-1 font-mono text-[10px] tracking-wide text-grey-1">
             {c.stats.height} · {c.stats.bust}/{c.stats.waist}/{c.stats.hips} · shoe {c.stats.shoe}
             <br />{c.stats.hair} · {c.stats.eyes} eyes
           </div>

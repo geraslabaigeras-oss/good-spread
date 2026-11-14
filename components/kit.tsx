@@ -59,7 +59,7 @@ export function StatusChip({ status }: { status: Status }) {
 
 /* ---------- Chips (§4.4) ---------- */
 export function SourceChip({ source }: { source: string }) {
-  const base = 'inline-flex h-[18px] items-center rounded-[4px] px-1.5 font-mono text-[10px] font-medium uppercase leading-3 tracking-[0.06em]';
+  const base = 'inline-flex h-[18px] items-center rounded-[4px] px-1.5 font-mono text-[10px] font-medium leading-3';
   if (source === 'rate_card') return <span className={cn(base, 'bg-grey-3 text-ink')}>Rate card</span>;
   if (source === 'quote') return <span className={cn(base, 'border border-hairline-strong text-ink')}>Quote</span>;
   return <span className={cn(base, 'border border-dashed border-hairline-strong text-grey-1')}>Estimate</span>;

@@ -63,7 +63,7 @@ export function AgencyCall({ person, open, onOpenChange, onAnswer }: {
                     <div className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 ${l.who === 'agent' ? 'rounded-br-md bg-white text-neutral-900' : 'rounded-bl-md border border-white/40 bg-white/10 text-white'}`}>
                       <p className="text-[14px] leading-5">{l.text}</p>
                       <p className={`mt-1 text-[12px] leading-4 ${l.who === 'agent' ? 'text-neutral-500' : 'text-white/70'}`}>{l.english}</p>
-                      {l.who === 'agency' && <p className="mt-1 text-[10px] uppercase tracking-wide text-white/50">likely reply</p>}
+                      {l.who === 'agency' && <p className="mt-1 text-[10px] tracking-wide text-white/50">likely reply</p>}
                     </div>
                   </div>
                 ))}

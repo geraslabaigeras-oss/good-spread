@@ -41,7 +41,7 @@ export default async function WrapPage({ params }: PageProps<'/wrap/[slug]'>) {
           <a href={`/board/${slug}`} className="text-[14px] leading-5 text-grey-1 underline underline-offset-2">Back to board</a>
         </div>
         <h1 className="mt-6 font-serif text-[44px] leading-[48px] tracking-[-0.02em]">Wrap</h1>
-        <div className="mt-1 font-mono text-[12px] uppercase leading-4 text-grey-1 num">
+        <div className="mt-1 font-mono text-[12px] leading-4 text-grey-1 num">
           {p.title} · {fmtDate(p.dateISO)} · v{p.version}
         </div>
 

@@ -198,7 +198,7 @@
 
 @layer utilities {
   .num { font-variant-numeric: tabular-nums lining-nums; }
-  .label { font-family: var(--font-mono); font-size: 11px; line-height: 16px; letter-spacing: 0.08em; font-weight: 500; text-transform: uppercase; color: var(--grey-1); }
+  .label { font-family: var(--font-sans); font-size: 12px; line-height: 16px; font-weight: 500; color: var(--grey-1); }
   .section { border-top: 1px solid var(--hairline); }
   .section-head { height: 28px; display: flex; align-items: center; justify-content: space-between; }
   .scroll-thin { scrollbar-width: thin; scrollbar-color: var(--hairline-strong) transparent; }
@@ -288,7 +288,7 @@
 .glass-input::placeholder { color: var(--g-faint); }
 .g-label { font-family: var(--font-sans); font-weight: 500; font-size: 13px; color: var(--g-dim); }
 /* eyebrow pill (BYSN roadmap tag) */
-.g-eyebrow { display: inline-flex; align-items: center; height: 28px; padding: 0 14px; border-radius: 999px; background: rgb(28 28 28 / 0.06); backdrop-filter: blur(12px) saturate(140%); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.55); font: 500 11px var(--font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--g-fg); }
+.g-eyebrow { display: inline-flex; align-items: center; height: 28px; padding: 0 14px; border-radius: 999px; background: rgb(28 28 28 / 0.06); font: 500 13px var(--font-sans); color: var(--g-fg); }
 /* ink pill button, liquid hover */
 .g-btn {
   position: relative; overflow: hidden; isolation: isolate;
@@ -389,9 +389,8 @@
 
 /* BYSN pills for section labels */
 .board-dark .section-head .label:first-child, .g-pill {
-  display: inline-flex; align-items: center; height: 24px; padding: 0 11px; border-radius: 999px;
-  background: rgb(28 28 28 / 0.06); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.55);
-  font: 500 11px var(--font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--ink);
+  display: inline-flex; align-items: center; height: 26px; padding: 0 12px; border-radius: 999px;
+  background: rgb(28 28 28 / 0.06); font: 500 13px var(--font-sans); color: var(--ink);
 }
 /* monochrome fog bands (BYSN / Trelli), always with grain */
 .fog-dark { background: linear-gradient(180deg, #c3c5c6 0%, #7d7f7f 26%, #3d3e3c 60%, #262624 100%); color: #f4f2ee; }

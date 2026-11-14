@@ -140,7 +140,7 @@ export default function NewBrief() {
             {busy && (
               <div className="pointer-events-none absolute inset-0 bg-black/20">
                 <div className="scanline" />
-                <div className="absolute bottom-5 left-5 rounded-full bg-black/50 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] backdrop-blur">Reading light, palette, styling…</div>
+                <div className="absolute bottom-5 left-5 rounded-full bg-black/50 px-3 py-1.5 font-mono text-[11px] backdrop-blur">Reading light, palette, styling…</div>
               </div>
             )}
             <input ref={input} type="file" accept="image/*" multiple className="hidden" onChange={(e) => e.target.files && addFiles(e.target.files)} />
@@ -203,9 +203,13 @@ export default function NewBrief() {
                 </div>
                 <div className="mt-6 flex h-16 overflow-hidden rounded-2xl">
                   {b.palette.map((c, i) => (
-                    <motion.div key={c} initial={{ flexGrow: 0 }} animate={{ flexGrow: 1 }} transition={{ duration: 0.8, delay: 0.4 + i * 0.07, ease }} className="relative flex items-end p-2" style={{ background: b.paletteHex?.[i] ?? '#444', flexBasis: 0 }}>
-                      <span className="font-mono text-[10px] uppercase tracking-wider mix-blend-difference">{c}</span>
+                    <motion.div key={c} initial={{ flexGrow: 0 }} animate={{ flexGrow: 1 }} transition={{ duration: 0.8, delay: 0.4 + i * 0.07, ease }} title={c} className="relative" style={{ background: b.paletteHex?.[i] ?? '#444', flexBasis: 0 }}>
                     </motion.div>
+                  ))}
+                </div>
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                  {b.palette.map((c, i) => (
+                    <span key={c} className="inline-flex items-center gap-1.5 text-[13px] text-neutral-700"><span className="size-2.5 rounded-full ring-1 ring-black/10" style={{ background: b.paletteHex?.[i] ?? '#444' }} />{c.charAt(0).toUpperCase() + c.slice(1).toLowerCase()}</span>
                   ))}
                 </div>
                 <button onClick={() => router.push('/plan')} className="g-btn mt-7 w-full">See the plans →</button>
