@@ -58,7 +58,7 @@ export function PlansChange() {
   const chat = delay ? 'Call sheet v3: Talent 01 call moved to 13:15. Exterior first at 11:00.' : rain ? 'Rain at 14:00. Exterior moves to 11:00, studio after lunch.' : budget ? 'Budget now €4,000. Retouching cut to 10 images, nothing else changes.' : talent ? 'Talent 02 is out. Talent 05 confirmed for Look 02, same call time.' : 'Call sheet v2 is ready. Look 02 moved to 13:15.';
 
   return (
-    <section id="changes" className="relative bg-[#f7f7f7] px-6 py-28">
+    <section id="changes" className="relative z-[1] bg-white/35 px-6 py-28">
       <div className="gs-grain" />
       <div className="relative mx-auto max-w-[1280px]">
         <div className="flex flex-wrap items-end justify-between gap-6">

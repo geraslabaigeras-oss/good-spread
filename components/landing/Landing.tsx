@@ -13,6 +13,7 @@ import { MessagesScreen } from '@/components/messages-screen';
 import { BrandLogo } from '@/components/brand-logo';
 import { HeroDrop } from '@/components/hero-drop';
 import { startDemo } from '@/components/demo-guide';
+import { HeroMoment } from './HeroMoment';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { PlansChange } from './PlansChange';
@@ -133,9 +134,12 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
   ];
 
   return (
-    <div className="bg-[#fafafa] font-sans text-neutral-900">
+    <div className="relative bg-[#f4f7fb] font-sans text-neutral-900">
+      {/* one slow blue liquid behind the whole page, grain on top */}
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-80"><Grainient colors={['#f6f9fc', '#dbe6f3', '#b7cbe3', '#eef3f9']} lightMode grainAnimated={false} grainAmount={0.08} speed={0.14} flow={1.25} softness={0.95} dpr={0.75} /></div>
+      <div className="pointer-events-none fixed inset-0 z-0"><div className="gs-grain" /></div>
       {/* Hero: headline, then one living stage (Grainient, our fog palette) with the product's moments floating out in 3D */}
-      <section className="relative overflow-hidden bg-[#fafafa] pb-24">
+      <section className="relative z-[1] overflow-hidden pb-24">
         <header className="relative z-30 mx-auto flex h-20 max-w-7xl items-center justify-between px-6 text-[14px] text-neutral-700">
           <Wordmark className="h-[24px]" />
           <nav className="flex items-center gap-8">
@@ -160,10 +164,7 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
             <p className="mt-4 text-[13px] text-neutral-500">Two minutes, guided. Nothing to type.</p>
           </div>
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15, ease: [0.2, 0.7, 0.2, 1] }} className="relative">
-            <div className="overflow-hidden rounded-[16px] bg-white shadow-[0_0_0_0.5px_rgba(0,0,0,.12),0_40px_90px_rgba(20,40,90,.18)]">
-              <div className="flex h-8 items-center gap-1.5 border-b border-black/5 bg-[#f7f7f7] px-3"><span className="size-2.5 rounded-full bg-neutral-300" /><span className="size-2.5 rounded-full bg-neutral-300" /><span className="size-2.5 rounded-full bg-neutral-300" /><span className="ml-3 text-[11px] text-neutral-400">good spread · shoot day</span></div>
-              <img src="/screens/board-delay.jpg" alt="The shoot-day board: a flight is late, three priced fixes" className="block w-full" />
-            </div>
+            <HeroMoment />
           </motion.div>
         </div>
 
@@ -175,7 +176,7 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
       </section>
 
       {/* ElevenLabs-style: framed column, grainy gradient cards, the agency call as bubbles */}
-      <section id="agent" className="bg-[#fafafa]">
+      <section id="agent" className="relative z-[1]">
         <div className="mx-auto max-w-6xl border-x border-neutral-200/80 px-6 py-24 md:px-10">
           <div className="flex flex-wrap items-end justify-between gap-6">
             <h2 className="font-[family-name:var(--font-inter)] text-4xl font-light tracking-[-0.035em] text-neutral-950 md:text-5xl">Before the shoot. <span className="text-neutral-400">The agent does the legwork.</span></h2>
@@ -234,7 +235,7 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
       <PlansChange />
 
       {/* Close: light, the drop is the call to action */}
-      <section className="relative bg-[#f7f7f7] px-6 py-28">
+      <section className="relative z-[1] px-6 py-28">
         <div className="gs-grain" />
         <div className="gs-paper relative mx-auto grid max-w-[1280px] grid-cols-1 items-center gap-10 rounded-[16px] bg-white p-10 shadow-[0_0_0_0.5px_rgba(0,0,0,.08),0_14px_40px_rgba(0,0,0,.05)] md:grid-cols-2">
           <div>
@@ -249,7 +250,7 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
         </div>
       </section>
 
-      <footer className="mx-auto max-w-7xl px-6 pb-12 pt-4 text-[12.5px] text-neutral-500 md:px-10">
+      <footer className="relative z-[1] mx-auto max-w-7xl px-6 pb-12 pt-4 text-[12.5px] text-neutral-500 md:px-10">
         <p><span className="text-neutral-900">good spread®</span> · Built at Unfair Weekend Vilnius, 2026</p>
         <p className="mt-1.5">Photography from Unsplash by {PHOTOS.map((p) => p.by).join(', ')}.</p>
       </footer>
