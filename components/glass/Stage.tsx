@@ -93,25 +93,11 @@ export const CAT_COLOR: Record<string, string> = {
   talent: '#0d0d0d', crew: '#4a4744', studio: '#8a8580', travel: '#aaa59f', post: '#c8c3bd', usage: '#ddd8d1',
 };
 
-/** Tilt-on-hover wrapper for cards. */
+/** Card wrapper (was a 3D tilt; now a light lift on hover for performance). */
 export function Tilt({ children, className, onClick, selected }: { children: React.ReactNode; className?: string; onClick?: () => void; selected?: boolean }) {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const rx = useTransform(y, [-0.5, 0.5], [6, -6]);
-  const ry = useTransform(x, [-0.5, 0.5], [-8, 8]);
   return (
-    <motion.div
-      onClick={onClick}
-      onMouseMove={(e) => {
-        const r = e.currentTarget.getBoundingClientRect();
-        x.set((e.clientX - r.left) / r.width - 0.5);
-        y.set((e.clientY - r.top) / r.height - 0.5);
-      }}
-      onMouseLeave={() => { x.set(0); y.set(0); }}
-      whileTap={{ scale: 0.98 }}
-      style={{ rotateX: rx, rotateY: ry, transformPerspective: 900 }}
-      className={`${className ?? ''} ${selected ? 'ring-2 ring-ink' : ''}`}
-    >
+    <motion.div onClick={onClick} whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}
+      className={`${className ?? ''} ${selected ? 'ring-2 ring-ink' : ''}`}>
       {children}
     </motion.div>
   );

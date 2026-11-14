@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Picks } from '@/lib/types';
 import { computeBudget, detectConflicts, dnaViolations, evaluateDna, fmt, summarize } from '@/lib/engine';
-import { candidates, locationCandidates, strategyDef, type CatalogPerson, rosterGaps, catalogPerson } from '@/data/catalog';
+import { candidates, locationCandidates, strategyDef, type CatalogPerson, rosterGaps, catalogPerson, isOpenSlot } from '@/data/catalog';
 import { useRoster } from '@/lib/use-roster';
 import Link from 'next/link';
 import { fmtDate, fmtEur } from '@/lib/format';
@@ -14,6 +14,8 @@ import { draftProduction, pinsFor } from '@/lib/plan-draft';
 import { BudgetLine, CAT_COLOR, Stage, Tilt, TopBar } from '@/components/glass/Stage';
 import { type GlobePin } from '@/components/glass/Globe';
 import { FlightGlobe } from '@/components/flight-globe';
+import { AgencyCall } from '@/components/agency-call';
+import { OFFICES, flagUrl, type Office } from '@/lib/agencies';
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
 const CATS = ['talent', 'crew', 'studio', 'travel', 'post', 'usage'] as const;
@@ -23,6 +25,7 @@ export default function Assemble() {
   const router = useRouter();
   const [draft, setDraft] = useDraft();
   const [tab, setTab] = useState<Tab>('models');
+  const [calling, setCalling] = useState<Office | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -152,9 +155,9 @@ export default function Assemble() {
           <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
             <AnimatePresence mode="wait">
               <motion.div key={tab} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.3 }} className="grid grid-cols-2 gap-3">
-                {tab === 'models' && models.map((c) => <CompCard key={c.id} c={c} selected={picks.models.includes(c.id)} onClick={() => toggleModel(c.id)} travel={travel(c)} />)}
-                {tab === 'photographer' && photos.map((c) => <CompCard key={c.id} c={c} selected={picks.photographer === c.id} onClick={() => setPicks({ ...picks, photographer: c.id })} travel={travel(c)} />)}
-                {tab === 'location' && locs.map((l) => (
+                {tab === 'models' && models.filter((c) => !isOpenSlot(c.id)).map((c) => <CompCard key={c.id} c={c} selected={picks.models.includes(c.id)} onClick={() => toggleModel(c.id)} travel={travel(c)} />)}
+                {tab === 'photographer' && photos.filter((c) => !isOpenSlot(c.id)).map((c) => <CompCard key={c.id} c={c} selected={picks.photographer === c.id} onClick={() => setPicks({ ...picks, photographer: c.id })} travel={travel(c)} />)}
+                {tab === 'location' && locs.filter((l) => !l.id.startsWith('open-')).map((l) => (
                   <Tilt key={l.id} onClick={() => setPicks({ ...picks, location: l.id })} selected={picks.location === l.id} className="glass-soft cursor-pointer overflow-hidden">
                     <div className="relative h-44 overflow-hidden" style={{ background: l.photo ? `url(${l.photo}) center 20%/cover` : (l.natural ? '#d8c8b4' : '#e4e1dc') }}>
                       <span className="absolute bottom-2 left-3 font-mono text-[10px] uppercase tracking-wider text-ink/70">{l.tags.join(' · ')}</span>
@@ -168,9 +171,34 @@ export default function Assemble() {
                 ))}
               </motion.div>
             </AnimatePresence>
+            {(tab === 'models' || tab === 'photographer') && (
+              <div className="mt-6">
+                <div className="text-[15px] font-medium">Request options from agencies</div>
+                <p className="mt-0.5 text-[13px] text-grey-1">Your voice agent calls the agency in its language and asks for {tab === 'models' ? 'models' : 'photographers'} that fit the brief.</p>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {OFFICES.map((o) => (
+                    <button key={o.agency + o.city} onClick={() => setCalling(o)} className="flex items-center gap-3 rounded-2xl bg-white/80 p-3 text-left shadow-[inset_0_0_0_1px_rgba(0,0,0,.06)] transition-colors hover:bg-white">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={flagUrl(o.cc)} alt="" className="h-6 w-8 rounded object-cover" />
+                      <span className="min-w-0 flex-1"><span className="block truncate text-[14px] font-medium">{o.agency} {o.city}</span><span className="text-[12px] text-grey-1">{o.language}</span></span>
+                      <span className="text-[12px] text-grey-1">Call</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </motion.div>
       </div>
+      {calling && (
+        <AgencyCall
+          key={calling.agency + calling.city + tab}
+          person={{ id: 'request', name: tab === 'models' ? `${def.modelSlots} models that fit our brief` : 'a photographer who fits our brief', role: tab === 'models' ? 'model' : 'photographer', city: def.city, dayRate: 0, createdAt: '', agency: `${calling.agency} ${calling.city}` }}
+          open={!!calling}
+          onOpenChange={(o) => !o && setCalling(null)}
+          onAnswer={async () => setCalling(null)}
+        />
+      )}
     </Stage>
   );
 }

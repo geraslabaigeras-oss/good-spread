@@ -14,7 +14,7 @@ export function FlightGlobe({ from, to, label, height = 520 }: { from?: string |
     const pts = [to, ...(from && from !== to ? [from] : [])].map((c) => CITY[c] ?? CITY.Vilnius);
     return {
       width: 800, height: 800, onRender: () => {}, devicePixelRatio: 2,
-      phi: 0, theta: 0.35, dark: 0, diffuse: 1.1, mapSamples: 14000, mapBrightness: 5,
+      phi: 0, theta: 0.35, dark: 0, diffuse: 1.1, mapSamples: 9000, mapBrightness: 5,
       baseColor: [0.86, 0.9, 0.97], markerColor: [0.16, 0.35, 0.95], glowColor: [0.72, 0.82, 1],
       markers: pts.map((p, i) => ({ location: [p.lat, p.lng] as [number, number], size: i === 0 ? 0.09 : 0.06 })),
     };
