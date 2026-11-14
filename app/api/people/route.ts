@@ -1,10 +1,10 @@
 import { addPerson, listPeople } from '@/lib/server/db';
 import { handle, ok, parseJson } from '@/lib/server/http';
 import { RosterInput } from '@/lib/roster';
-import { europeCrew, talentBookPeople } from '@/lib/server/talent-book';
+import { europeCrew, sampleCast, talentBookPeople } from '@/lib/server/talent-book';
 
 export async function GET() {
-  return handle(async () => ok({ people: [...(await listPeople()), ...talentBookPeople(), ...europeCrew()] }));
+  return handle(async () => ok({ people: [...(await listPeople()), ...talentBookPeople(), ...europeCrew(), ...sampleCast()] }));
 }
 
 export async function POST(req: Request) {

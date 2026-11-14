@@ -20,7 +20,8 @@ type Entry = {
 type State = Record<string, { availability?: 'available' | 'hold' | 'unavailable' | null; availabilityNote?: string | null }>;
 
 const statePath = path.join(DIR, 'state.json');
-const readState = (): State => { try { return JSON.parse(fs.readFileSync(statePath, 'utf8')); } catch { return {}; } };
+const MEM: State = {}; // public site: answers kept in memory (read-only file system)
+const readState = (): State => { if (!talentBookEnabled()) return MEM; try { return JSON.parse(fs.readFileSync(statePath, 'utf8')); } catch { return {}; } };
 
 /** Day rates are not public: estimates by agency level, shown as estimates until the agent confirms. */
 const TOP = /(next|elite|storm|select|viva model management|women|img|oui|why not|webber|streeters|art \+ commerce|art partner|camilla lowther|management artists|bryant|lalaland|ag agency)/i;
@@ -56,7 +57,7 @@ export function talentBookImages(id: string): { url: string; label: string }[] {
 }
 
 export function setTalentAvailability(id: string, availability: 'available' | 'hold' | 'unavailable' | null, note?: string | null) {
-  if (!talentBookEnabled()) return false;
+  if (!talentBookEnabled()) { if (!/^sample-/.test(id)) return false; MEM[id] = { availability, availabilityNote: note ?? null }; return true; }
   const s = readState();
   s[id] = { availability, availabilityNote: note ?? null };
   fs.writeFileSync(statePath, JSON.stringify(s, null, 1));
@@ -97,4 +98,29 @@ export function europeCrew(): RosterPerson[] {
       availability: state[`eu-${c.id}`]?.availability ?? null, availabilityNote: state[`eu-${c.id}`]?.availabilityNote ?? null,
     };
   });
+}
+
+/* ---------- Sample cast for the public site: licensed Unsplash photography, role labels only, no real people's data. ---------- */
+const SAMPLE_PHOTOS = ['photo-1613915617430-8ab0fd7c6baf', 'photo-1692180142575-c31fcd106b5b', 'photo-1508964801641-4b2410705b73', 'photo-1590972381381-c863cbbf9dd2', 'photo-1635262090780-2ed9e994fff4', 'photo-1550872199-63f4382fe925', 'photo-1603189343302-e603f7add05a', 'photo-1733322980454-62a1d5727460', 'photo-1739808914849-01ba195c4f93', 'photo-1645561305502-63a9ba09ab09'];
+const sp = (id: string) => `https://images.unsplash.com/${id}?fm=jpg&q=70&w=700&auto=format&fit=crop`;
+const SAMPLE_CITIES: City[] = ['London', 'Paris', 'Milan', 'Copenhagen', 'Berlin', 'Lisbon', 'Stockholm', 'Vilnius'];
+const LOOKS = ['editorial, cool, minimal, tailoring', 'natural, relaxed, lifestyle, coastal', 'strong features, editorial, runway', 'fresh, sunlit, beauty close-up', 'moody, film, androgynous', 'polished, campaign, classic'];
+export function sampleCast(): RosterPerson[] {
+  if (talentBookEnabled()) return [];
+  const state = readState();
+  const mk = (i: number, role: 'model' | 'photographer' | 'stylist' | 'mua', label: string, photo: string | null, tier: 'top' | 'mid') => {
+    const id = `sample-${role}-${i}`;
+    const look = LOOKS[i % LOOKS.length];
+    return {
+      id, createdAt: '2026-11-14T00:00:00Z', source: 'talent-book' as const, name: label, role, city: SAMPLE_CITIES[i % SAMPLE_CITIES.length],
+      dayRate: rateFor(role, tier === 'top' ? 'NEXT' : 'Studio'), rateIsEstimate: true, tier, agency: tier === 'top' ? 'Sample agency (top board)' : 'Sample agency', commissionPct: 20,
+      profileUrl: null, instagram: null, photo, gallery: photo ? [photo] : [], notes: `Sample profile. ${look}.`,
+      look: { look: `Sample profile: ${look}.`, hair: '', features: [], vibe: look.split(', '), bookShows: ['editorial', 'campaign'], fitNotes: '' },
+      availability: state[id]?.availability ?? null, availabilityNote: null,
+    } as RosterPerson;
+  };
+  const models = SAMPLE_PHOTOS.slice(0, 8).map((p, i) => mk(i, 'model', `Talent ${String(i + 1).padStart(2, '0')}`, sp(p), i % 3 === 0 ? 'top' : 'mid'));
+  const photogs = SAMPLE_PHOTOS.slice(8).map((p, i) => mk(i, 'photographer', `Photographer ${String(i + 1).padStart(2, '0')}`, sp(p), i === 0 ? 'top' : 'mid'));
+  const crew = [0, 1].flatMap((i) => [mk(i, 'stylist', `Stylist ${String(i + 1).padStart(2, '0')}`, null, i === 0 ? 'top' : 'mid'), mk(i, 'mua', `Make-up ${String(i + 1).padStart(2, '0')}`, null, i === 0 ? 'top' : 'mid')]);
+  return [...models, ...photogs, ...crew];
 }
