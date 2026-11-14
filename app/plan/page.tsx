@@ -1,150 +1,182 @@
 'use client';
 
-import { motion } from 'motion/react';
-import { useMemo, useState } from 'react';
+/* eslint-disable @next/next/no-img-element */
+import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ArrowUp, ChevronDown, Loader2, Plane } from 'lucide-react';
 import type { StrategyId } from '@/lib/types';
-import { dnaViolations, evaluateDna, summarize, type StrategySummary } from '@/lib/engine';
-import { rosterGaps, stillToBook, STRATEGIES } from '@/data/catalog';
-import { useRoster } from '@/lib/use-roster';
-import Link from 'next/link';
+import { dnaViolations, evaluateDna, summarize } from '@/lib/engine';
+import { catalogLocation, stillToBook, STRATEGIES } from '@/data/catalog';
 import { fmtDate, fmtEur } from '@/lib/format';
 import { useDraft } from '@/lib/plan-store';
-import { draftProduction, pinsFor } from '@/lib/plan-draft';
-import { BudgetLine, CAT_COLOR, Stage, Tilt, TopBar } from '@/components/glass/Stage';
+import { useRoster } from '@/lib/use-roster';
+import { draftProduction } from '@/lib/plan-draft';
+import { Stage, TopBar } from '@/components/glass/Stage';
 
-const ease = [0.2, 0.8, 0.2, 1] as const;
+const ease = [0.16, 1, 0.3, 1] as const;
 const CATS = ['talent', 'crew', 'studio', 'travel', 'post', 'usage'] as const;
+type Advice = { verdict: 'good' | 'mixed' | 'bad'; answer: string; suggestion: string };
+
+/** City photo from Wikipedia (free, real). */
+function useCityPhotos(cities: string[]) {
+  const [photos, setPhotos] = useState<Record<string, string>>({});
+  useEffect(() => {
+    cities.forEach((c) => {
+      fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(c)}`)
+        .then((r) => r.json())
+        .then((j) => { const src = j.originalimage?.source ?? j.thumbnail?.source; if (src) setPhotos((p) => ({ ...p, [c]: src })); })
+        .catch(() => {});
+    });
+  }, [cities.join('|')]); // eslint-disable-line react-hooks/exhaustive-deps
+  return photos;
+}
 
 export default function Strategies() {
   const router = useRouter();
   const [draft, setDraft] = useDraft();
-  const [hover, setHover] = useState<StrategyId | null>(null);
-
   const roster = useRoster();
-  const gapsFor = useMemo(() => Object.fromEntries(STRATEGIES.map((s) => [s.id, roster.ready ? rosterGaps(s.id) : []])), [roster.ready, roster.key]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [open, setOpen] = useState<StrategyId | null>(null);
+  const [q, setQ] = useState('');
+  const [asking, setAsking] = useState(false);
+  const [advice, setAdvice] = useState<(Advice & { q: string }) | null>(null);
+
   const rows = useMemo(() => {
     if (!draft || !roster.ready) return [];
-    const ok = STRATEGIES.filter((s) => !gapsFor[s.id].length);
-    if (!ok.length) return [];
-    const base = draftProduction(draft, ok[0].id);
-    return ok.map((s) => {
+    const base = draftProduction(draft, STRATEGIES[0].id);
+    return STRATEGIES.map((s) => {
       const p = draftProduction(draft, s.id);
       const sum = summarize(p);
       const broken = dnaViolations(evaluateDna(base, p)).filter((x) => !['casting', 'photographer', 'studio', 'schedule'].includes(x.id));
       return { s, p, sum, broken };
     });
-  }, [draft, roster.ready, gapsFor]);
-  const blocked = STRATEGIES.filter((s) => gapsFor[s.id]?.length);
+  }, [draft, roster.ready, roster.key]); // eslint-disable-line react-hooks/exhaustive-deps
+  const cityPhotos = useCityPhotos(STRATEGIES.map((s) => s.city));
 
   if (!draft) return <Stage><div /></Stage>;
-
   const recommended = rows
     .filter((r) => !r.sum.overCap && r.sum.fitsDeadline && r.sum.physical === 'full' && !r.broken.length)
     .sort((a, b) => a.sum.total - b.sum.total)[0]?.s.id;
-  const active = rows.find((r) => r.s.id === (hover ?? recommended ?? 'local')) ?? rows[0];
-  const globe = active ? pinsFor(active.p) : { pins: [], arcs: [] };
 
   function choose(id: StrategyId) {
     setDraft({ ...draft!, strategy: id, picks: undefined });
     router.push('/plan/assemble');
   }
 
+  async function ask(question = q) {
+    if (!question.trim() || !draft) return;
+    setAsking(true);
+    try {
+      const b = draft.brief;
+      const r = await fetch('/api/advisor', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+        question,
+        brief: b ? `${b.garment}. ${b.summary} Light: ${b.lighting}. Setting: ${b.setting}.` : 'Fashion campaign',
+        date: rows[0] ? fmtDate(rows[0].sum.shootISO) : '',
+        plans: rows.map((x) => ({ name: x.s.name, city: x.s.city, total: x.sum.total, cap: x.sum.cap, flights: x.sum.travellers })),
+      }) });
+      const j = await r.json();
+      if (r.ok) setAdvice({ ...j, q: question });
+    } finally {
+      setAsking(false);
+    }
+  }
+
+  const photoFor = (city: string, kind: string) => (draft.place?.image && kind !== 'Destination' ? draft.place.image : cityPhotos[city]);
+
   return (
-    <Stage backdrop={draft.refImages[0]}>
-      <TopBar step={2} right={<span className="font-mono text-[12px] text-grey-1">cap {fmtEur(draft.cap)}</span>} />
-      <div className="relative mx-auto max-w-[1440px] px-8">
-        <div className="max-w-[640px] pb-10 pt-6">
-          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }} className="font-serif text-[60px] leading-[0.95] tracking-[-0.03em]">
-            Three plans
-          </motion.h1>
-          <p className="mt-4 text-[15px] text-grey-1">
-            {draft.deliverables.stills} stills · {draft.deliverables.motion} motion · due {fmtDate(draft.deliverables.deadlineISO)}. Totals are calculated from line items.
-          </p>
-          {active && (
-            <motion.div key={active.s.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 text-[14px] text-grey-1">
-              {active.s.name} plan, shooting in {active.s.city}.{globe.arcs.length ? ` ${globe.arcs.map((a) => `${a.label} travels from ${a.from}`).join(', ')}.` : ' Nobody needs to fly.'}
-            </motion.div>
-          )}
+    <Stage>
+      <TopBar step={2} right={<span className="text-[13px] text-grey-1">Cap {fmtEur(draft.cap)}</span>} />
+      <div className="mx-auto max-w-[1280px] px-8 pb-16">
+        <div className="flex flex-wrap items-end justify-between gap-6 pt-6">
+          <h1 className="font-[family-name:var(--font-instrument)] text-[56px] leading-[0.95] tracking-[-0.02em]">Three ways to make it.</h1>
+          {/* Ask the producer assistant */}
+          <form onSubmit={(e) => { e.preventDefault(); ask(); }} className="flex w-full max-w-[460px] items-center gap-2 rounded-full bg-white/80 p-1.5 pl-5 shadow-[inset_0_0_0_1px_rgba(0,0,0,.08),0_10px_30px_rgba(0,0,0,.06)]">
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ask: what about London? somewhere warmer?" className="flex-1 bg-transparent text-[15px] outline-none placeholder:text-neutral-400" />
+            <button disabled={asking || !q.trim()} className="flex size-10 items-center justify-center rounded-full bg-neutral-950 text-white disabled:opacity-30" aria-label="Ask">
+              {asking ? <Loader2 className="size-4 animate-spin" /> : <ArrowUp className="size-4" />}
+            </button>
+          </form>
+        </div>
+        <div className="mt-3 flex flex-wrap justify-end gap-2">
+          {['Shoot in London?', 'Somewhere warmer?', 'Cheaper option?'].map((s) => (
+            <button key={s} onClick={() => { setQ(s); ask(s); }} className="rounded-full bg-white/60 px-3 py-1 text-[13px] text-neutral-600 hover:bg-white hover:text-neutral-900">{s}</button>
+          ))}
         </div>
 
-        <div className="relative z-10 grid grid-cols-1 gap-5 pb-14 md:grid-cols-3">
-          {rows.map(({ s, sum, broken }, i) => (
-            <motion.div key={s.id} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.25 + i * 0.12, ease }} onMouseEnter={() => setHover(s.id)} onMouseLeave={() => setHover(null)}>
-              <Tilt className={`glass flex h-full flex-col p-6 ${s.id === recommended ? 'ring-1 ring-ink/25' : ''}`}>
-                <div className="flex items-center justify-between">
-                  <span className="g-label">{s.city}</span>
-                  {s.id === recommended && <span className="rounded-full bg-ink px-2.5 py-1 text-[11px] font-medium text-white">Recommended</span>}
-                </div>
-                <div className="mt-1 font-serif text-[40px] leading-[1.05] tracking-[-0.02em]">{s.name}</div>
-                <div className="text-[13px] text-grey-1">{s.tagline}</div>
-
-                <div className="mt-5 space-y-4">
-                  <BudgetLine size="sm" total={sum.total} cap={sum.cap} segments={CATS.map((c) => ({ value: sum.byCategory[c], color: CAT_COLOR[c] }))} />
-                  <div className="flex-1 space-y-1">
-                    {CATS.filter((c) => sum.byCategory[c] > 0).map((c) => (
-                      <div key={c} className="flex items-center gap-2 text-[12px]">
-                        <span className="flex-1 capitalize text-grey-1">{c}</span>
-                        <span className="font-mono text-ink num">{fmtEur(sum.byCategory[c])}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <DayStrip sum={sum} deadline={draft.deliverables.deadlineISO} start={draft.startISO} />
-
-                <div className="mt-4 flex flex-wrap gap-1.5 text-[11px]">
-                  {stillToBook(s.id).length > 0 && <Chip>To book: {stillToBook(s.id).join(', ')} (estimated)</Chip>}
-                  <Chip>{sum.physical === 'full' ? 'Full shoot' : 'Partial · composited'}</Chip>
-                  <Chip>{sum.travel ? `${sum.travellers} flies in` : 'No flights'}</Chip>
-                  <Chip tone={sum.overCap ? 'bad' : 'good'}>{sum.overCap ? `${fmtEur(sum.total - sum.cap)} over cap` : `${fmtEur(sum.cap - sum.total)} under cap`}</Chip>
-                  <Chip tone={broken.length ? 'bad' : 'good'}>{broken.length ? `Breaks ${broken.map((x) => x.label).join(', ')}` : 'Brief kept'}</Chip>
-                </div>
-
-                <button onClick={() => choose(s.id)} className={`${s.id === recommended ? 'g-btn' : 'g-btn-ghost h-[52px]'} mt-6 w-full`}>Build the {s.name.toLowerCase()} team →</button>
-              </Tilt>
+        <AnimatePresence>
+          {advice && (
+            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="ml-auto mt-4 max-w-[560px] rounded-[22px] rounded-tr-md bg-white p-5 shadow-[0_14px_40px_rgba(0,0,0,.08)]">
+              <div className="flex items-center gap-2 text-[13px] text-neutral-500">
+                <span className={`size-2 rounded-full ${advice.verdict === 'good' ? 'bg-emerald-500' : advice.verdict === 'mixed' ? 'bg-amber-500' : 'bg-red-500'}`} />
+                {advice.q} · {advice.verdict === 'good' ? 'Good idea' : advice.verdict === 'mixed' ? 'Could work' : 'Not for this one'}
+              </div>
+              <p className="mt-2 text-[15px] leading-6 text-neutral-800">{advice.answer}</p>
+              <p className="mt-2 text-[14px] text-neutral-500">{advice.suggestion}</p>
             </motion.div>
-          ))}
-          {blocked.map((s) => (
-            <div key={s.id} className="glass flex h-full flex-col p-6">
-              <span className="g-label">{s.city}</span>
-              <div className="mt-1 font-serif text-[40px] leading-[1.05] tracking-[-0.02em] text-grey-1">{s.name}</div>
-              <div className="text-[13px] text-grey-1">{s.tagline}</div>
-              <p className="mt-6 text-[15px] leading-6">To plan this, add {gapsFor[s.id].join(', ')} to your people.</p>
-              <Link href="/people" className="g-btn-ghost mt-auto w-full">Add people →</Link>
-            </div>
-          ))}
+          )}
+        </AnimatePresence>
+
+        <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-3">
+          {rows.map(({ s, p, sum, broken }, i) => {
+            const team = p.people.filter((x) => x.role !== 'producer');
+            const loc = p.picks ? catalogLocation(p.picks.location) : null;
+            const img = loc?.photo ?? photoFor(s.city, s.name);
+            const toBook = stillToBook(s.id);
+            const isRec = s.id === recommended;
+            return (
+              <motion.div key={s.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: i * 0.1, ease }}
+                className={`overflow-hidden rounded-[28px] bg-white shadow-[0_1px_2px_rgba(0,0,0,.04),0_20px_50px_rgba(0,0,0,.07)] ${isRec ? 'ring-2 ring-neutral-950' : ''}`}>
+                <div className="relative h-60 bg-neutral-200">
+                  {img && <img src={img} alt="" className="size-full object-cover" />}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/0 to-black/0" />
+                  <div className="absolute bottom-4 left-5 text-white">
+                    <div className="text-[13px] opacity-80">{s.city}{loc && !loc.id.startsWith('open-') ? ` · ${loc.name.split(',')[0]}` : ''}</div>
+                    <div className="font-[family-name:var(--font-instrument)] text-[40px] leading-none">{s.name}</div>
+                  </div>
+                  {isRec && <span className="absolute right-4 top-4 rounded-full bg-white px-3 py-1 text-[12px] font-medium">Recommended</span>}
+                </div>
+
+                <div className="p-5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex -space-x-2">
+                      {team.map((x) => x.photo
+                        ? <img key={x.id} src={x.photo} alt={x.name} title={x.name} className="size-10 rounded-full object-cover object-top ring-2 ring-white" />
+                        : <span key={x.id} title={x.name} className={`flex size-10 items-center justify-center rounded-full text-[12px] ring-2 ring-white ${x.id.startsWith('open-') ? 'border border-dashed border-neutral-400 bg-white text-neutral-400' : 'bg-neutral-200 text-neutral-600'}`}>{x.name[0]}</span>)}
+                    </div>
+                    {sum.travellers > 0 && <span className="inline-flex items-center gap-1 text-[13px] text-neutral-500"><Plane className="size-3.5" /> {sum.travellers} fly in</span>}
+                  </div>
+
+                  <div className="mt-5 flex items-baseline justify-between">
+                    <span className={`text-[40px] font-light leading-none tracking-[-0.03em] tabular-nums ${sum.overCap ? 'text-red-600' : ''}`}>{fmtEur(Math.round(sum.total))}</span>
+                    <span className="text-[13px] text-neutral-500">{sum.overCap ? `${fmtEur(Math.round(sum.total - sum.cap))} over` : `${fmtEur(Math.round(sum.cap - sum.total))} left`}</span>
+                  </div>
+                  <p className="mt-2 text-[14px] text-neutral-600">{s.tagline} Delivered {fmtDate(sum.deliveryISO).slice(4, 10)}.</p>
+                  {(toBook.length > 0 || broken.length > 0) && (
+                    <p className="mt-1 text-[13px] text-neutral-400">{broken.length ? `Changes ${broken.map((x) => x.label.toLowerCase()).join(', ')}. ` : ''}{toBook.length ? `Still to book: ${toBook.join(', ').toLowerCase()}.` : ''}</p>
+                  )}
+
+                  <button onClick={() => setOpen(open === s.id ? null : s.id)} className="mt-3 inline-flex items-center gap-1 text-[13px] text-neutral-500 hover:text-neutral-900">
+                    Costs <ChevronDown className={`size-3.5 transition-transform ${open === s.id ? 'rotate-180' : ''}`} />
+                  </button>
+                  <AnimatePresence>
+                    {open === s.id && (
+                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                        <div className="mt-2 space-y-1 text-[13px]">
+                          {CATS.filter((c) => sum.byCategory[c] > 0).map((c) => (
+                            <div key={c} className="flex justify-between"><span className="capitalize text-neutral-500">{c}</span><span className="tabular-nums">{fmtEur(Math.round(sum.byCategory[c]))}</span></div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <button onClick={() => choose(s.id)} className={`mt-5 h-12 w-full rounded-full text-[15px] font-medium ${isRec ? 'bg-neutral-950 text-white' : 'bg-neutral-100 text-neutral-900 hover:bg-neutral-200'}`}>Build this team</button>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </Stage>
-  );
-}
-
-function Chip({ children, tone }: { children: React.ReactNode; tone?: 'good' | 'bad' }) {
-  const c = tone === 'good' ? 'text-seen border-seen/30' : tone === 'bad' ? 'text-conflict border-conflict/30' : 'text-grey-1 border-hairline-strong';
-  return <span className={`rounded-full border px-2.5 py-1 ${c}`}>{children}</span>;
-}
-
-/** Prep / shoot / post laid out on a calendar from today to the deadline. */
-function DayStrip({ sum, deadline, start }: { sum: StrategySummary; deadline: string; start: string }) {
-  const day = (iso: string) => Math.round((new Date(`${iso}T00:00:00Z`).getTime() - new Date(`${start}T00:00:00Z`).getTime()) / 86400000);
-  const span = Math.max(day(deadline), sum.totalDays) + 1;
-  const pct = (n: number) => `${(n / span) * 100}%`;
-  return (
-    <div className="mt-5">
-      <div className="flex justify-between font-mono text-[10px] uppercase tracking-wider text-grey-2">
-        <span>{sum.totalDays} days</span>
-        <span>delivered {fmtDate(sum.deliveryISO).slice(4)}</span>
-      </div>
-      <div className="relative mt-1.5 h-3 rounded-full bg-ink/[0.06]">
-        <motion.div initial={{ width: 0 }} animate={{ width: pct(sum.prepDays) }} transition={{ duration: 0.8, ease }} className="absolute left-0 top-0 h-full rounded-l-full bg-[var(--g-sand)]" />
-        <motion.div initial={{ width: 0 }} animate={{ width: pct(1) }} transition={{ duration: 0.4, delay: 0.6 }} className="absolute top-0 h-full bg-ink" style={{ left: pct(sum.prepDays) }} />
-        <motion.div initial={{ width: 0 }} animate={{ width: pct(sum.postDays) }} transition={{ duration: 0.8, delay: 0.8, ease }} className="absolute top-0 h-full rounded-r-full bg-[var(--g-mist)]" style={{ left: pct(sum.prepDays + 1) }} />
-        <div className="absolute -top-1 h-5 w-px bg-[var(--g-warm)]" style={{ left: pct(day(deadline)) }} />
-      </div>
-      <div className="mt-1 flex gap-3 font-mono text-[10px] text-grey-2">
-        <span>prep {sum.prepDays}d</span><span>shoot {fmtDate(sum.shootISO).slice(4, 10)}</span><span>post {sum.postDays}d</span><span className="ml-auto text-[var(--g-warm)]">deadline</span>
-      </div>
-    </div>
   );
 }

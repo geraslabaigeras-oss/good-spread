@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { motion } from 'motion/react';
 import { TextAnimate } from '@/components/ui/text-animate';
 import { Card, Carousel } from '@/components/ui/apple-cards-carousel';
+import { Safari } from '@/components/ui/safari';
+import { Iphone } from '@/components/ui/iphone';
+import { BrandLogo } from '@/components/brand-logo';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { NumberTicker } from '@/components/ui/number-ticker';
 import { BorderBeam } from '@/components/ui/border-beam';
@@ -144,41 +147,30 @@ export function Landing({ cap, stills, routes, best, people, moment }: Props) {
         </div>
       </section>
 
-      {/* What it does: our own content, with the fog + grain + frosted-pill treatment */}
-      <section id="how" className="relative overflow-hidden bg-[linear-gradient(180deg,#efeee9_0%,#e9ebea_45%,#d3dbe0_100%)] px-4 py-28 md:px-10">
+      {/* How it works, shown: the real board on a laptop and the real crew page on a phone (Magic UI Safari + iPhone frames) */}
+      <section id="how" className="relative overflow-hidden bg-[linear-gradient(180deg,#f7f6f3_0%,#eceeed_55%,#d6dee3_100%)] px-4 py-24 md:px-10">
         <Grain />
         <div className="relative z-[2] mx-auto max-w-6xl">
-          <h2 className="max-w-2xl text-4xl font-light leading-[1.05] tracking-[-0.03em] md:text-6xl">From one reference to everyone&rsquo;s day.</h2>
-          <div className="mt-14 grid gap-4 md:grid-cols-3">
-            <Panel pill="Plan" title={`${routes.length} plans, each costed`} beam>
-              {routes.map((r) => (
-                <div key={r.name} className="flex items-baseline justify-between border-t border-neutral-900/10 py-2.5 text-[15px]">
-                  <span className={r.name === best.name ? 'text-neutral-900' : 'text-neutral-500'}>{r.name}{r.name === best.name ? ' · recommended' : ''}</span>
-                  <span className={`tabular-nums ${r.overCap ? 'text-neutral-400 line-through' : ''}`}>€<NumberTicker value={Math.round(r.total)} className="text-inherit" /></span>
-                </div>
-              ))}
-              <p className="mt-3 text-[13px] text-neutral-500">Against a {eur(cap)} cap. Code does the sums, not AI.</p>
-            </Panel>
-            <Panel pill="Change" title={`${moment.who} lands ${moment.lands}`}>
-              <div className="relative h-[220px] overflow-hidden">
-                <AnimatedList delay={1400}>
-                  {[
-                    <Bubble key="c" tone="alert">Misses {moment.call} hair and makeup</Bubble>,
-                    ...moment.fixes.map((f) => <Bubble key={f.label} tone={f.best ? 'best' : 'plain'}>{f.label} <b className="ml-auto pl-3 tabular-nums">{delta(f.cost)}</b></Bubble>),
-                  ]}
-                </AnimatedList>
-              </div>
-            </Panel>
-            <Panel pill="Everyone" title={`${people} phones update`}>
-              <div className="flow !bg-transparent">
-                <div className="text-6xl font-light tracking-[-0.04em]"><RollChange old={moment.call} now={moment.newCall} /></div>
-              </div>
-              <div className="relative mt-4 h-[150px] overflow-hidden">
-                <AnimatedList delay={1100}>
-                  {['Model', 'Photographer', 'Hair & makeup', 'Stylist', 'Model 2'].map((r) => <Bubble key={r} tone="ok">{r} tapped Got it</Bubble>)}
-                </AnimatedList>
-              </div>
-            </Panel>
+          <div className="grid items-end gap-6 md:grid-cols-2">
+            <h2 className="font-[family-name:var(--font-instrument)] text-5xl leading-[1] tracking-[-0.02em] md:text-6xl">A flight lands late.<br /><span className="italic text-neutral-500">Everyone knows in seconds.</span></h2>
+            <p className="max-w-md text-[16px] leading-7 text-neutral-600 md:justify-self-end">You see the clash and three priced fixes on your board. Approve one, and each person gets a text and their new call time on their phone.</p>
+          </div>
+
+          <div className="relative mt-14">
+            <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.9 }} className="md:mr-[22%]">
+              <Safari url="good-spread.app/board" imageSrc="/screens/board.jpg" className="w-full drop-shadow-[0_30px_60px_rgba(0,0,0,.18)]" />
+              <p className="mt-3 text-[13px] text-neutral-500">Your board: the clash in red, three fixes with their exact cost.</p>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, y: 60 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.9, delay: 0.25 }} className="relative mx-auto mt-10 w-[260px] md:absolute md:-bottom-10 md:right-0 md:mt-0 md:w-[300px]">
+              <Iphone src="/screens/myday.jpg" className="drop-shadow-[0_30px_60px_rgba(0,0,0,.25)]" />
+              <motion.div initial={{ opacity: 0, y: -20, scale: 0.9 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 1.1, type: 'spring' }}
+                className="absolute -left-10 top-16 w-[280px] rounded-2xl bg-white/90 p-3 shadow-[0_18px_40px_rgba(0,0,0,.18)] backdrop-blur-xl md:-left-24">
+                <div className="flex items-center gap-2 text-[11px] text-neutral-500"><BrandLogo name="imessage" size={14} /> Messages · now</div>
+                <p className="mt-1 text-[13px] leading-[18px] text-neutral-900"><b>good spread:</b> Your call moved {moment.call} → {moment.newCall}. Tap to confirm.</p>
+              </motion.div>
+              <p className="mt-3 text-center text-[13px] text-neutral-500">Their phone: new call time, where to be, Got it.</p>
+            </motion.div>
           </div>
         </div>
       </section>

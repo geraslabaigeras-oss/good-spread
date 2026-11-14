@@ -125,16 +125,6 @@ export default function Assemble() {
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }} className="glass -mt-16 grid grid-cols-1 items-center gap-6 p-6 md:grid-cols-[auto_1fr_auto]">
             <div className="w-[260px]"><BudgetLine total={budget.total} cap={budget.cap} segments={CATS.map((c) => ({ value: budget.byCategory[c], color: CAT_COLOR[c] }))} /></div>
             <div>
-              <div className="g-label">Call times · {fmtDate(sum.shootISO)} · {p.studio.name.split(',')[0]}</div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                <AnimatePresence mode="popLayout">
-                  {sum.callTimes.map((x) => (
-                    <motion.span layout key={x.name} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className="rounded-full border border-hairline-strong bg-white/60 px-3 py-1 text-[12px]">
-                      {x.name} <span className="font-mono text-grey-1">{x.call != null ? fmt(x.call) : '—'}</span>
-                    </motion.span>
-                  ))}
-                </AnimatePresence>
-              </div>
               <div className="mt-3 text-[13px]">
                 {ok && <span className="text-[var(--g-good)]">No conflicts · brief kept · within budget · delivered {fmtDate(sum.deliveryISO)}</span>}
                 {sum.overCap && <div className="text-[var(--g-bad)]">Over the {fmtEur(budget.cap)} cap</div>}
