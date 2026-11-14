@@ -16,7 +16,7 @@ export default function Home() {
   const changed = applyUpdate(seed, { kind: 'travel', personId: traveller.id, arriveMin: 645, source: 'flight_change.pdf' }, '2026-11-14T08:00:00Z');
   const pending = buildPending(changed, { inboxId: 'landing', source: 'flight_change.pdf', createdAt: '2026-11-14T08:00:00Z' })!;
   const best = pending.fixes.find((f) => f.id === pending.recommendedFixId)!;
-  const roleName = (id: string) => { const x = seed.people.find((y) => y.id === id)!; return x.role === 'model' ? `Model ${seed.people.filter((y) => y.role === 'model').indexOf(x) + 1}` : x.role === 'mua' ? 'Hair & makeup' : x.role[0].toUpperCase() + x.role.slice(1); };
+  const roleName = (id: string) => { const x = seed.people.find((y) => y.id === id)!; return x.role === 'model' ? 'Your model' : x.role === 'mua' ? 'Hair & makeup' : x.role[0].toUpperCase() + x.role.slice(1); };
   const moment = {
     lands: fmt(645),
     call: fmt(callTime(seed, traveller.id)!),
