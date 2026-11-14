@@ -14,7 +14,7 @@ import { useDraft } from '@/lib/plan-store';
 import { draftProduction, pinsFor } from '@/lib/plan-draft';
 import { BudgetLine, CAT_COLOR, Stage, Tilt, TopBar } from '@/components/glass/Stage';
 import { type GlobePin } from '@/components/glass/Globe';
-import { FlightGlobe } from '@/components/flight-globe';
+import { TeamSlots } from '@/components/team-slots';
 import { Scout } from '@/components/scout';
 import { AgencyCall } from '@/components/agency-call';
 import { OFFICES, flagUrl, type Office } from '@/lib/agencies';
@@ -128,7 +128,7 @@ export default function Assemble() {
             <h1 className="mt-1 font-serif text-[52px] leading-[0.95] tracking-[-0.03em]">Build the team</h1>
             <p className="mt-2 max-w-[420px] text-[14px] text-grey-1">{needs ? <>Looking for: <span className="text-ink">{needs.model}</span></> : 'Pick from the list. The cost updates with each pick.'}</p>
           </div>
-          <div className="pt-28"><FlightGlobe from={chosen.arcs[0]?.from ?? null} to={def.city} label={chosen.arcs[0] ? `${chosen.arcs[0].label} flies in` : 'no flights'} height="56vh" /></div>
+          <div className="pt-36 pb-20"><TeamSlots p={p} place={draft.place ? { name: draft.place.name, image: draft.place.image } : null} /></div>
 
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }} className="glass -mt-16 grid grid-cols-1 items-center gap-6 p-6 md:grid-cols-[auto_1fr_auto]">
             <div className="w-[260px]"><BudgetLine total={budget.total} cap={budget.cap} segments={CATS.map((c) => ({ value: budget.byCategory[c], color: CAT_COLOR[c] }))} /></div>
