@@ -209,6 +209,9 @@ export function BriefOptions({ brief, draft, setDraft }: { brief: CreativeBrief;
           targets={shortlist.map((id) => roster.people.find((x) => x.id === id)).filter((x): x is NonNullable<typeof x> => !!x).map((x) => ({ id: x.id, name: x.name, role: x.role, agency: x.agency, photo: x.photo, dayRate: x.dayRate, email: x.email }))}
           mode={{ kind: 'book', date: draft.shootISO ? new Date(`${draft.shootISO}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }) : 'the shoot day' }}
           onResults={async (r: Record<string, CallResult>) => {
+            const answers = { ...(draft.answers ?? {}) };
+            for (const [id, x] of Object.entries(r)) if (x !== 'confirmed') answers[id] = x;
+            setDraft({ ...draft, answers });
             await Promise.all(Object.entries(r).map(([id, ans]) => {
               const v = roster.people.find((x) => x.id === id);
               if (!v || ans === 'confirmed') return null;

@@ -9,7 +9,7 @@ import { fmtEur } from '@/lib/format';
 const ROLE: Record<string, string> = { model: 'Model', photographer: 'Photographer', mua: 'Hair & makeup', stylist: 'Stylist' };
 
 /** The team being built: one row per role, filled or waiting to be picked. */
-export function TeamSlots({ p, place, onSlot }: { p: Production; place?: { name: string; image: string | null } | null; onSlot?: (role: string, open: boolean) => void }) {
+export function TeamSlots({ p, place, onSlot, answers }: { p: Production; place?: { name: string; image: string | null } | null; onSlot?: (role: string, open: boolean) => void; answers?: Record<string, string> }) {
   const city = p.city ?? 'Vilnius';
   const people = p.people.filter((x) => x.role !== 'producer');
   let modelN = 0;
@@ -21,6 +21,7 @@ export function TeamSlots({ p, place, onSlot }: { p: Production; place?: { name:
         const open = x.id.startsWith('open-');
         const label = x.role === 'model' ? `Model ${++modelN}` : ROLE[x.role] ?? x.role;
         const away = c && c.city !== city;
+        const av = answers?.[x.id] ?? c?.availability ?? null;
         return (
           <button type="button" key={x.id} onClick={() => onSlot?.(x.role, open)} className="group flex w-full items-center gap-3 rounded-2xl border-b border-black/5 px-2 py-3 text-left transition-colors last:border-0 hover:bg-neutral-50">
             {open ? (
@@ -38,8 +39,8 @@ export function TeamSlots({ p, place, onSlot }: { p: Production; place?: { name:
             {!open && (
               <div className="flex shrink-0 flex-col items-end gap-1">
                 <span className="text-[13px] tabular-nums text-neutral-700">{fmtEur(x.dayRate)}/day</span>
-                <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${c?.availability === 'available' ? 'bg-emerald-50 text-emerald-700' : c?.availability === 'hold' ? 'bg-amber-50 text-amber-700' : c?.availability === 'unavailable' ? 'bg-red-50 text-red-700' : 'bg-neutral-100 text-neutral-500'}`}>
-                  {c?.availability === 'available' ? 'Available' : c?.availability === 'hold' ? 'On hold' : c?.availability === 'unavailable' ? 'Not available' : 'Not checked'}
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${av === 'available' ? 'bg-emerald-50 text-emerald-700' : av === 'hold' ? 'bg-amber-50 text-amber-700' : av === 'unavailable' ? 'bg-red-50 text-red-700' : 'bg-neutral-100 text-neutral-500'}`}>
+                  {av === 'available' ? 'Available' : av === 'hold' ? 'On hold' : av === 'unavailable' ? 'Not available' : 'Not called yet'}
                 </span>
               </div>
             )}

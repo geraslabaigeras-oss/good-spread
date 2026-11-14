@@ -16,6 +16,7 @@ import { BudgetLine, CAT_COLOR, Stage, Tilt, TopBar } from '@/components/glass/S
 import { TeamSlots } from '@/components/team-slots';
 import { QuickAdd } from '@/components/quick-add';
 import { StepLoader } from '@/components/step-loader';
+import { CallRun, type CallResult } from '@/components/call-run';
 import { Scout } from '@/components/scout';
 import { AgencyCall } from '@/components/agency-call';
 import { modelsComSearch } from '@/lib/roster';
@@ -35,6 +36,7 @@ export default function Assemble() {
   const [qModel, setQModel] = useState<string | null>(null);
   const [qPhoto, setQPhoto] = useState<string | null>(null);
   const [checking, setChecking] = useState<string | null>(null);
+  const [callingAll, setCallingAll] = useState(false);
   const [adding, setAdding] = useState<'model' | 'photographer' | 'mua' | 'stylist' | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -118,12 +120,24 @@ export default function Assemble() {
         <p className="mt-2 text-[15px] text-neutral-600">{fmtDate(sum.shootISO)} · {draft.place?.name ?? def.city} · {fmtEur(Math.round(budget.total))} of {fmtEur(budget.cap)}</p>
 
         <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
-          <TeamSlots p={p} place={draft.place ? { name: draft.place.name, image: draft.place.image } : null} onSlot={(role, open) => {
+          <div>
+          <TeamSlots answers={draft.answers} p={p} place={draft.place ? { name: draft.place.name, image: draft.place.image } : null} onSlot={(role, open) => {
             if (role === 'location') { router.push('/new'); return; }
             if (open) { setAdding(role as 'model'); return; }
             const person = p.people.find((x) => x.role === role && !isOpenSlot(x.id));
             if (person) setChecking(person.id);
           }} />
+          {(() => {
+            const crew = p.people.filter((x) => x.role !== 'producer' && !isOpenSlot(x.id));
+            const told = crew.filter((x) => draft.answers?.[x.id]).length;
+            return (
+              <div className="mt-4 flex items-center justify-between gap-4 rounded-[20px] bg-neutral-950 p-2 pl-5 text-white">
+                <span className="text-[15px]">{told === crew.length && crew.length ? `All ${crew.length} called. ${crew.filter((x) => draft.answers?.[x.id] === 'available').length} available.` : `${crew.length - told} not called yet`}</span>
+                <button data-demo="call-team" onClick={() => setCallingAll(true)} className="h-11 rounded-full bg-white px-5 text-[15px] font-medium text-neutral-950">{told ? 'Call again with AI' : `Call all ${crew.length} with AI`}</button>
+              </div>
+            );
+          })()}
+          </div>
 
           <div className="flex flex-col gap-5">
             {/* Travel and stay */}
@@ -137,7 +151,7 @@ export default function Assemble() {
                   <div className="text-[17px] font-medium">Travel and stay</div>
                   {away.length === 0 ? <p className="mt-2 text-[14px] text-neutral-500">Everyone is based in {def.city}. No flights, no hotel.</p> : (
                     <>
-                      <p className="mt-1 text-[14px] text-neutral-500">{away.length} {away.length === 1 ? 'person flies' : 'people fly'} in the day before and {away.length === 1 ? 'needs' : 'need'} one night.</p>
+                      <p className="mt-1 text-[14px] text-neutral-500">{away.length} {away.length === 1 ? 'person flies' : 'people fly'} in on the morning, landing 07:10 with a car to set. Book a night before if you want a safer start.</p>
                       <div className="mt-3 flex -space-x-2">{away.map((x) => x.photo ? <img key={x.id} src={x.photo} alt={x.name} title={x.name} className="size-9 rounded-full object-cover object-top ring-2 ring-white" /> : <span key={x.id} className="flex size-9 items-center justify-center rounded-full bg-neutral-200 text-[13px] ring-2 ring-white">{x.name[0]}</span>)}</div>
                       <div className="mt-4 grid grid-cols-2 gap-2">
                         <a href={`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(def.city)}&checkin=${before}&checkout=${sum.shootISO}&group_adults=${n}&no_rooms=${n}`} target="_blank" rel="noreferrer" className="rounded-2xl bg-[#f3f5f8] p-3 hover:bg-[#eceff3]">
@@ -190,7 +204,18 @@ export default function Assemble() {
           }}
         />
       )}
-      <StepLoader open={busy} title="Making your production." steps={['Locking the team and the place', 'Building call times and the day', 'Pricing travel, stay and overtime', 'Writing everyone\'s call sheet', 'Opening the board']} />
+      <StepLoader open={busy} title="Making your production." faces={p.people.filter((x) => x.role !== 'producer').map((x) => x.photo)} image={draft.place?.image} steps={['Locking the team and the place', 'Building call times and the day', 'Pricing travel, stay and overtime', 'Writing everyone\'s call sheet', 'Opening the board']} />
+      {callingAll && (
+        <CallRun open onClose={() => setCallingAll(false)}
+          targets={p.people.filter((x) => x.role !== 'producer' && !isOpenSlot(x.id)).map((x) => ({ id: x.id, name: x.name, role: x.role, agency: roster.people.find((r) => r.id === x.id)?.agency, photo: x.photo, dayRate: x.dayRate }))}
+          mode={{ kind: 'book', date: new Date(`${sum.shootISO}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }) }}
+          onResults={async (r: Record<string, CallResult>) => {
+            const answers = { ...(draft.answers ?? {}) };
+            for (const [id, a] of Object.entries(r)) if (a !== 'confirmed') answers[id] = a;
+            setDraft({ ...draft, answers });
+            await Promise.all(Object.entries(r).map(([id, a]) => a === 'confirmed' ? null : fetch(`/api/people/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ availability: a }) }).catch(() => null)));
+          }} />
+      )}
       {adding && (
         <QuickAdd
           key={adding}

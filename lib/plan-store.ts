@@ -25,6 +25,7 @@ export type PlanDraft = {
   shootISO?: string; // shoot date the producer picked
   shootDays?: number; // consecutive shoot days
   demo?: boolean; // guided demo is running
+  answers?: Record<string, 'available' | 'hold' | 'unavailable'>; // what the agents said, kept with the plan
 };
 
 const KEY = 'gs-plan-draft';
