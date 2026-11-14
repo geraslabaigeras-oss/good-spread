@@ -292,7 +292,12 @@ export default function NewBrief() {
         <div className="mx-auto max-w-[1200px] px-8 pb-24">
           <BriefOptions brief={b} draft={d} setDraft={setDraft} />
           <div className="mt-12 flex justify-center">
-            <button onClick={() => router.push('/plan')} className="g-btn h-14 px-10 text-[16px]">{d.shortlist?.length || d.place ? 'Build the plans with these →' : 'See the plans →'}</button>
+            <button onClick={() => {
+              // one plan, built from what was picked: on location away from home if the place is elsewhere
+              const away = d.scoutCity && d.scoutCity !== 'Vilnius' && d.place;
+              setDraft({ ...d, strategy: away ? 'destination' : 'local', picks: undefined });
+              router.push('/plan/assemble');
+            }} className="g-btn h-14 px-10 text-[16px]">Build the team →</button>
           </div>
         </div>
       )}

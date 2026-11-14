@@ -14,6 +14,7 @@ export type Travel = {
   number: string; from: string; to: string;
   departMin: number; arriveMin: number; transferMin: number;
   source: string;                             // e.g. "seed" or file name
+  scheduledArriveMin?: number;                // first planned arrival, kept when a change comes in
 };
 
 export type Late = { personId: string; readyMin: number; reportedAt: string };

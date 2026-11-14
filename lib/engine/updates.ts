@@ -87,6 +87,8 @@ export function applyUpdate(p: Production, u: Update, nowISO: string): Productio
       arriveMin: u.arriveMin,
       transferMin: prev?.transferMin ?? 30,
       source: u.source,
+      // the first arrival we planned around, so the board can show "was 07:40"
+      scheduledArriveMin: prev?.scheduledArriveMin ?? prev?.arriveMin,
     } as const;
     next.travel = next.travel.filter((x) => x.personId !== u.personId).concat({ ...t });
   } else if (u.kind === 'cap') {

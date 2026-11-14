@@ -211,7 +211,7 @@ export const strategyDef = (id: StrategyId): StrategyDef => {
     ...base,
     defaultPicks: {
       models: (() => { const m = [...sl, ...pickFrom(MODELS.filter((x) => !sl.includes(x.id)), base.city, base.modelSlots)].slice(0, base.modelSlots); while (m.length < base.modelSlots) m.push(`open-model${m.length ? `-${m.length + 1}` : ''}`); return m; })(),
-      photographer: pickFrom(PHOTOGRAPHERS, base.city, 1)[0] ?? 'open-photographer',
+      photographer: (PREFS.shortlist ?? []).find((x) => PHOTOGRAPHERS.some((p) => p.id === x)) ?? pickFrom(PHOTOGRAPHERS, base.city, 1)[0] ?? 'open-photographer',
       location: LOCATIONS.find((l) => l.city === base.city && base.locationKinds.includes(l.kind) && !!l.photo)?.id ?? (base.locationKinds.includes('location') ? 'open-location' : 'open-studio'),
     },
     crew: {

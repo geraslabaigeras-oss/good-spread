@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { Link2, Loader2, Upload } from 'lucide-react';
 import { CITIES, type City } from '@/data/catalog';
 import { ROLE_LABEL, type RosterInput } from '@/lib/roster';
+import type { LookAnalysis } from '@/lib/ai/look';
+import { useDraft } from '@/lib/plan-store';
 import { thumb } from '@/lib/plan-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +22,31 @@ export function QuickAdd({ role, city, open, onOpenChange, onAdded }: { role: Ro
   const [busy, setBusy] = useState(false);
   const [importing, setImporting] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [gallery, setGallery] = useState<string[]>([]);
+  const [look, setLook] = useState<LookAnalysis | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [draft] = useDraft();
+
+  async function analyze(images: string[]) {
+    if (!images.length) return;
+    setAnalyzing(true);
+    try {
+      const b = draft?.brief;
+      const r = await fetch('/api/people/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ images: images.slice(0, 6), role, brief: b ? `${b.summary} Look: ${b.aesthetic.join(', ')}. ${b.needs ? `Looking for: ${role === 'model' ? b.needs.model : role === 'photographer' ? b.needs.photographer : b.styling}` : ''}` : undefined }) });
+      const j = await r.json();
+      if (r.ok) setLook(j.analysis); else setNote('Could not analyse these images.');
+    } finally {
+      setAnalyzing(false);
+    }
+  }
+  async function addShots(files: FileList | null) {
+    if (!files?.length) return;
+    const shots = await Promise.all([...files].slice(0, 6).map((f) => thumb(f, 900)));
+    const next = [...gallery, ...shots].slice(0, 6);
+    setGallery(next);
+    if (!f.photo) set('photo', await thumb(files[0], 480));
+    analyze(next);
+  }
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
 
   async function importLink() {
@@ -28,8 +55,16 @@ export function QuickAdd({ role, city, open, onOpenChange, onAdded }: { role: Ro
     try {
       const r = await fetch('/api/people/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: f.profileUrl }) });
       const j = await r.json();
-      if (!r.ok) { setNote(j.error === 'site_blocks_previews' ? 'This site blocks link previews. Upload their photo instead.' : 'Could not read that page.'); return; }
+      if (!r.ok) {
+        const slug = f.profileUrl.match(/models\.com\/models\/([a-z0-9-]+)/i)?.[1];
+        if (slug) setF((x) => ({ ...x, name: x.name || slug.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ') }));
+        setNote(j.error === 'site_blocks_previews' ? 'This site does not let apps read it (models.com is one). Paste their agency page instead (models.com lists it), or drop screenshots of their pictures below.' : 'Could not read that page. Drop screenshots instead.');
+        return;
+      }
       setF((x) => ({ ...x, name: x.name || (j.title ?? '').split(/[|–-]/)[0].trim(), photo: x.photo || j.image || '', agency: x.agency || j.site || '' }));
+      const imgs: string[] = (j.images ?? []).slice(0, 6);
+      setGallery(imgs);
+      analyze(imgs.length ? imgs : j.image ? [j.image] : []);
     } finally {
       setImporting(false);
     }
@@ -43,6 +78,7 @@ export function QuickAdd({ role, city, open, onOpenChange, onAdded }: { role: Ro
         name: f.name, role, city: f.city, dayRate: Number(f.dayRate) || 0,
         agency: f.agency || null, commissionPct: f.agency ? 20 : null,
         profileUrl: f.profileUrl || null, photo: f.photo || null,
+        gallery: gallery.filter((g) => g.startsWith('https://')).slice(0, 8) || null, look,
       };
       const r = await fetch('/api/people', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const j = await r.json();
@@ -65,7 +101,7 @@ export function QuickAdd({ role, city, open, onOpenChange, onAdded }: { role: Ro
         </SheetHeader>
         <div className="space-y-5 px-4">
           <div className="space-y-2">
-            <Label htmlFor="qa-link">Profile link (optional)</Label>
+            <Label htmlFor="qa-link">Link to their agency page, portfolio or website</Label>
             <div className="flex gap-2">
               <Input id="qa-link" type="url" value={f.profileUrl} onChange={(e) => set('profileUrl', e.target.value)} placeholder="https://…" />
               <Button variant="outline" disabled={!f.profileUrl || importing} onClick={importLink}>{importing ? <Loader2 className="animate-spin" /> : <Link2 />} Fill in</Button>
@@ -94,7 +130,25 @@ export function QuickAdd({ role, city, open, onOpenChange, onAdded }: { role: Ro
               <Input id="qa-rate" inputMode="numeric" value={f.dayRate} onChange={(e) => set('dayRate', e.target.value.replace(/\D/g, ''))} />
             </div>
           </div>
-          {note && <p className="text-sm text-red-600">{note}</p>}
+          <label onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); addShots(e.dataTransfer.files); }} className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-neutral-300 px-4 py-5 text-center text-sm text-neutral-600 hover:border-neutral-500">
+            Drop screenshots of their work or pictures
+            <span className="text-xs text-neutral-400">Instagram, models.com, a portfolio: anything you can screenshot</span>
+            <input type="file" multiple accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => addShots(e.target.files)} />
+          </label>
+          {gallery.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto">{gallery.map((g) => <img key={g.slice(-40)} src={g} alt="" className="h-20 w-16 shrink-0 rounded-lg object-cover" />)}</div>
+          )}
+          {analyzing && <p className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Reading {role === 'model' ? 'their look' : 'their style'}…</p>}
+          {look && !analyzing && (
+            <div className="rounded-2xl bg-[#f3f6fa] p-4">
+              <div className="text-[13px] text-neutral-500">{role === 'model' ? 'Their look' : 'Their style'}</div>
+              <p className="mt-1 text-[15px] leading-6">{look.look}</p>
+              <p className="mt-1 text-[13px] text-neutral-600">{look.hair}</p>
+              <div className="mt-2 flex flex-wrap gap-1.5">{[...look.vibe, ...look.bookShows].slice(0, 7).map((v) => <span key={v} className="rounded-full bg-white px-2.5 py-0.5 text-[12px]">{v}</span>)}</div>
+              {look.fitNotes && <p className="mt-3 text-[13px] leading-5 text-neutral-800">{look.fitNotes}</p>}
+            </div>
+          )}
+          {note && <p className="text-sm text-amber-700">{note}</p>}
         </div>
         <SheetFooter>
           <Button disabled={!f.name.trim() || busy} onClick={save} className="h-11 rounded-full">{busy ? <Loader2 className="animate-spin" /> : null} Add to the team</Button>

@@ -6,6 +6,7 @@ import { analyzeLook } from '@/lib/ai/look';
 const Body = z.object({
   images: z.array(z.string().max(400_000)).min(1).max(6),
   brief: z.string().max(800).optional(),
+  role: z.enum(['model', 'photographer', 'mua', 'stylist']).optional(),
 });
 const MAX = 5 * 1024 * 1024;
 type MT = 'image/jpeg' | 'image/png' | 'image/webp';
@@ -29,6 +30,6 @@ export async function POST(req: Request) {
       imgs.push({ mediaType: type, data: buf.toString('base64') });
     }
     if (!imgs.length) return fail(422, 'no_readable_images');
-    return ok({ analysis: await analyzeLook(imgs, parsed.data.brief) });
+    return ok({ analysis: await analyzeLook(imgs, parsed.data.brief, parsed.data.role) });
   });
 }
