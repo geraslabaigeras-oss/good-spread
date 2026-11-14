@@ -2,7 +2,6 @@
 
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
-import LiquidEther from '@/components/LiquidEther';
 import Grainient from '@/components/Grainient';
 import { TextAnimate } from '@/components/ui/text-animate';
 import { Card, Carousel } from '@/components/ui/apple-cards-carousel';
@@ -68,13 +67,10 @@ export function Landing({ cap, routes, best, people, moment }: Props) {
 
   return (
     <div className="bg-[#efeee9] font-sans text-neutral-900">
-      {/* Hero: React Bits Grainient (moving grainy fog) + LiquidEther (liquid you can stir) behind a blur */}
+      {/* Hero: React Bits Grainient, a slow-moving grainy fog (one WebGL canvas, 1x pixel ratio for smoothness) */}
       <section className="relative h-[100svh] w-full overflow-hidden">
         <div className="absolute inset-0">
-          <Grainient colors={['#efeee9', '#cfd7dc', '#9fadb7', '#e6e3dc']} lightMode grainAnimated grainAmount={0.12} speed={0.25} softness={0.9} />
-        </div>
-        <div className="absolute inset-0 blur-[36px]">
-          <LiquidEther colors={['#1f1f1f', '#55606a', '#9aa7b0']} lightMode autoDemo autoSpeed={0.35} autoIntensity={1.8} mouseForce={22} cursorSize={140} resolution={0.5} />
+          <Grainient colors={['#efeee9', '#cfd7dc', '#8f9ca6', '#e6e3dc']} lightMode grainAnimated grainAmount={0.12} speed={0.3} flow={1.2} softness={0.9} dpr={1} />
         </div>
 
         <header className="absolute inset-x-0 top-0 z-30 mx-auto flex h-20 max-w-7xl items-center justify-between px-6 text-[13px] text-neutral-700">
