@@ -137,10 +137,10 @@ export function Globe({ pins, arcs, focus, hub, onPin, height = 560, altitude = 
             <div style="display:flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:999px;
               background:${p.selected ? '#0d0d0d' : 'rgba(255,255,255,0.72)'};
               color:${p.selected ? '#fff' : '#0d0d0d'};border:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.7),0 6px 18px rgba(80,60,40,0.12);
-              backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font:500 11px/1 var(--font-schibsted),sans-serif;white-space:nowrap;
+              backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font:500 11px/1 var(--font-geist),sans-serif;white-space:nowrap;
               opacity:${p.dim ? 0.5 : 1};transition:all .25s">
               <span style="width:${p.photo ? 22 : 18}px;height:${p.photo ? 22 : 18}px;border-radius:999px;background:${p.photo ? `url(${p.photo}) center 20%/cover` : p.selected ? '#fff' : c};display:inline-flex;align-items:center;justify-content:center;
-                color:${p.selected ? '#0d0d0d' : '#fff'};font:600 10px/1 var(--font-plex-mono),monospace">${p.photo ? '' : p.label.slice(0, 1)}</span>${p.label}
+                color:${p.selected ? '#0d0d0d' : '#fff'};font:600 10px/1 var(--font-geist-mono),monospace">${p.photo ? '' : p.label.slice(0, 1)}</span>${p.label}
             </div>`;
           el.onclick = () => onPin?.(p.id);
           return el;

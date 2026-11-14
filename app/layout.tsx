@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Newsreader, Schibsted_Grotesk, IBM_Plex_Mono } from 'next/font/google';
+import { Geist, Geist_Mono, Instrument_Serif } from 'next/font/google';
 import { Providers } from '@/components/providers';
 import './globals.css';
 
-const serif = Newsreader({ subsets: ['latin', 'latin-ext'], axes: ['opsz'], variable: '--font-newsreader', display: 'swap' });
-const sans = Schibsted_Grotesk({ subsets: ['latin', 'latin-ext'], variable: '--font-schibsted', display: 'swap' });
-const inter = Inter({ subsets: ['latin', 'latin-ext'], weight: ['200', '300', '400', '500'], variable: '--font-inter', display: 'swap' });
-const mono = IBM_Plex_Mono({ subsets: ['latin', 'latin-ext'], weight: ['400', '500'], variable: '--font-plex-mono', display: 'swap' });
+// Geist (Vercel) for UI and figures, Instrument Serif for editorial display type.
+const sans = Geist({ subsets: ['latin', 'latin-ext'], variable: '--font-geist', display: 'swap' });
+const mono = Geist_Mono({ subsets: ['latin', 'latin-ext'], variable: '--font-geist-mono', display: 'swap' });
+const serif = Instrument_Serif({ subsets: ['latin', 'latin-ext'], weight: '400', style: ['normal', 'italic'], variable: '--font-instrument', display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'Good Spread',
@@ -17,7 +17,7 @@ export const viewport: Viewport = { width: 'device-width', initialScale: 1, view
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="en" className={`${serif.variable} ${sans.variable} ${mono.variable} ${inter.variable}`}>
+    <html lang="en" className={`${serif.variable} ${sans.variable} ${mono.variable}`}>
       <body className="bg-paper text-ink font-sans antialiased">
         <Providers>{children}</Providers>
       </body>
