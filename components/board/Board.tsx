@@ -294,7 +294,7 @@ function BoardInner({ slug }: { slug: string }) {
           <div className="mt-10"><Decision production={p} pending={null} approving={null} applied={applied} countUp={!!animateVersion} onApprove={approve} /></div>
         )}
 
-        {p.travel.length > 0 && !off.includes('travel') && <TravelBand p={p} />}
+        {!off.includes("travel") && <TravelBand p={p} />}
 
         {/* Today: the day as a timeline; weather and budget beside it */}
         <div className="mt-8 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
