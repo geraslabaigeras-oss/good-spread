@@ -61,7 +61,7 @@ export function PeopleStrip({ people, version, changedIds }: { people: P[]; vers
               <span className="absolute left-3 top-3">
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.span key={x.booking} variants={reduce ? chipFade : chipFlip} initial="initial" animate="animate" exit="exit"
-                    className={`inline-flex h-7 items-center gap-1.5 rounded-full bg-white/90 px-2.5 text-[12px] font-medium backdrop-blur ${x.booking === 'confirmed' ? 'text-emerald-700' : x.booking === 'delayed' ? 'text-red-700' : 'text-neutral-600'}`}>
+                    className={`inline-flex h-7 items-center gap-1.5 rounded-full bg-white px-2.5 text-[12px] font-medium ${x.booking === 'confirmed' ? 'text-emerald-700' : x.booking === 'delayed' ? 'text-red-700' : 'text-neutral-600'}`}>
                     <span className={`size-1.5 rounded-full ${x.booking === 'confirmed' ? 'bg-emerald-500' : x.booking === 'delayed' ? 'bg-red-500' : 'bg-neutral-400'}`} />
                     {x.booking === 'confirmed' ? 'Confirmed' : x.booking === 'delayed' ? 'Delayed' : 'To book'}
                   </motion.span>

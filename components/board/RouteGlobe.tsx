@@ -69,7 +69,7 @@ export function RouteGlobe({ legs, height = 460, progress = 0.6, demoLive = fals
   const { data: radar } = useSWR<{ planes: LivePlane[] } | null>(`/api/radar?airport=${dest}`, fetcher, { refreshInterval: 15_000 });
 
   useEffect(() => {
-    fetch('/geo/countries-50m.json').then((r) => r.json()).then((topo) => {
+    fetch('/geo/countries-110m.json').then((r) => r.json()).then((topo) => {
       const fc = feature(topo, topo.objects.countries) as unknown as { features: object[] };
       setCountries(fc.features);
     }).catch(() => {});
@@ -164,6 +164,8 @@ export function RouteGlobe({ legs, height = 460, progress = 0.6, demoLive = fals
         polygonSideColor={() => 'rgba(0,0,0,0)'}
         polygonStrokeColor={() => '#c3d1e2'}
         polygonAltitude={0.004}
+        polygonsTransitionDuration={0}
+        polygonCapCurvatureResolution={6}
         pathsData={routes}
         pathPoints="pts"
         pathPointLat={(p: number[]) => p[0]}
@@ -192,7 +194,8 @@ export function RouteGlobe({ legs, height = 460, progress = 0.6, demoLive = fals
         objectRotation={(o: object) => ({ z: -(o as { heading: number }).heading })}
         objectThreeObject={(o: object) => { const d = o as { id: string; team: boolean }; const m = (d.team ? teamObj : trafficObj).clone(); if (d.team) planes.current.set(d.id, m); return m; }}
         enablePointerInteraction={false}
-        onGlobeReady={() => setReady(true)}
+        rendererConfig={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
+        onGlobeReady={() => { (ref.current as unknown as { renderer?: () => { setPixelRatio: (n: number) => void } })?.renderer?.().setPixelRatio(1); setReady(true); }}
       />
     </div>
   );

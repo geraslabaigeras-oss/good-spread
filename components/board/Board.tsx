@@ -37,6 +37,12 @@ const fetcher = async (url: string) => {
   return r.json();
 };
 
+/** Ignore the server clock so an unchanged board doesn't re-render on every 2 s poll. */
+const sameState = (a?: BoardState, b?: BoardState) => {
+  if (!a || !b) return a === b;
+  return JSON.stringify({ ...a, serverTime: 0 }) === JSON.stringify({ ...b, serverTime: 0 });
+};
+
 export type Approving = { fixId: string; x: number; y: number; pending: PublicPending };
 export type Applied = { version: number; label: string; receipt: Receipt; at: string; changedIds?: string[]; changes?: Change[] };
 
@@ -51,13 +57,15 @@ export function Board({ slug }: { slug: string }) {
 }
 
 function BoardInner({ slug }: { slug: string }) {
-  const { data, error, mutate } = useSWR<BoardState>(`/api/state/${slug}`, fetcher, { refreshInterval: 2000 });
+  const { data, error, mutate } = useSWR<BoardState>(`/api/state/${slug}`, fetcher, { refreshInterval: 2000, compare: sameState });
   const toast = useToast();
   const { parent, item } = useReveal();
   const [approving, setApproving] = useState<Approving | null>(null);
   const [justApproved, setJustApproved] = useState<Applied | null>(null);
   const [telling, setTelling] = useState<Change[] | null>(null);
   const [happenOpen, setHappenOpen] = useState(false);
+  // test-only: ?off=travel,weather,thread,team to switch sections off when measuring speed
+  const [off] = useState(() => (typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('off') ?? ''));
   const busy = useRef(false);
 
   /** Runs a call; after 3 s without an answer, says so (DESIGN §4.2). */
@@ -286,7 +294,7 @@ function BoardInner({ slug }: { slug: string }) {
           <div className="mt-10"><Decision production={p} pending={null} approving={null} applied={applied} countUp={!!animateVersion} onApprove={approve} /></div>
         )}
 
-        {p.travel.length > 0 && <TravelBand p={p} />}
+        {p.travel.length > 0 && !off.includes('travel') && <TravelBand p={p} />}
 
         {/* Today: the day as a timeline; weather and budget beside it */}
         <div className="mt-8 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
@@ -323,7 +331,7 @@ function BoardInner({ slug }: { slug: string }) {
             </div>
           </div>
           <div className="flex min-w-0 flex-col gap-5">
-            {(() => { const c = CITY[p.city ?? 'Vilnius'] ?? CITY.Vilnius; const ext = p.blocks.find((b) => b.kind === 'shoot'); return <WeatherCard compact lat={c.lat} lng={c.lng} dateISO={p.dateISO} place={p.studio.name.split(',')[0]} exteriorAt={ext ? `the exterior look at ${fmt(ext.startMin)}` : undefined} />; })()}
+            {!off.includes('weather') && (() => { const c = CITY[p.city ?? 'Vilnius'] ?? CITY.Vilnius; const ext = p.blocks.find((b) => b.kind === 'shoot'); return <WeatherCard compact lat={c.lat} lng={c.lng} dateISO={p.dateISO} place={p.studio.name.split(',')[0]} exteriorAt={ext ? `the exterior look at ${fmt(ext.startMin)}` : undefined} />; })()}
             <div id="budget" className="rounded-[28px] bg-white/70 p-6 shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)]">
               <div className="flex justify-between"><span className="text-[17px] font-medium">Budget</span><span className="text-[14px] text-neutral-500">{fmtDate(p.dateISO).slice(4, 10)}</span></div>
               <div className="mt-6 flex items-baseline gap-3"><span className="text-[34px] font-light tabular-nums">{fmtEur(Math.round(b.total))}</span><span className="text-[20px] font-light text-neutral-500">of {fmtEur(b.cap)}</span></div>
@@ -338,12 +346,12 @@ function BoardInner({ slug }: { slug: string }) {
           </div>
         </div>
 
-        <MessageThread messages={messages} title={changes.length ? 'What changed, per person' : 'Call sheet'} autoKey={changes.length && applied ? `v${applied.version}` : null} />
+        {!off.includes('thread') && <MessageThread messages={messages} title={changes.length ? 'What changed, per person' : 'Call sheet'} autoKey={changes.length && applied ? `v${applied.version}` : null} />}
 
         {/* Team */}
         <section id="team" className="mt-12">
           <h2 className="mb-4 text-[26px] font-light tracking-[-0.02em]">Team</h2>
-          <PeopleStrip people={team} version={p.version} changedIds={justApproved?.version === p.version ? justApproved.changedIds ?? [] : []} />
+          {!off.includes('team') && <PeopleStrip people={team} version={p.version} changedIds={justApproved?.version === p.version ? justApproved.changedIds ?? [] : []} />}
         </section>
 
 

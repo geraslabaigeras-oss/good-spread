@@ -15,10 +15,10 @@ export function Stage({ children, backdrop, voice = false, still = false }: { ch
     <div className="stage">
       {/* living background: one slow grainy colour field (React Bits Grainient), 1x pixel ratio, no blur on top */}
       {still
-        ? <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(120%_80%_at_15%_0%,#f4f7fb_0%,#e3ecf6_45%,#cddcec_100%)]"><div className="gs-grain" /></div>
+        ? <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(120%_80%_at_15%_0%,#f4f7fb_0%,#e3ecf6_45%,#cddcec_100%)]" />
         : <div className="pointer-events-none fixed inset-0 z-0 opacity-90"><Grainient colors={['#f4f7fb', '#dce7f3', '#bccfe5', '#eef3f9']} lightMode grainAnimated={false} grainAmount={0.1} speed={0.12} flow={1} softness={0.95} dpr={0.75} /></div>}
       {backdrop && <div className="backdrop-img" style={{ backgroundImage: `url(${backdrop})` }} />}
-      <div className="grain" />
+      {!still && <div className="grain" />}
       <div className="content">{children}</div>
       {voice && <VoiceOrb />}
     </div>

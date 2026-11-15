@@ -40,12 +40,15 @@ export function StormSky({ storm, lite = false }: { storm: boolean; lite?: boole
     const ro = new ResizeObserver(size); ro.observe(cv);
     const clouds = Array.from({ length: lite ? 4 : 9 }, () => ({ x: Math.random() * w, y: 20 + Math.random() * h * 0.45, r: 120 + Math.random() * 160, v: 6 + Math.random() * 10, a: 0.6 + Math.random() * 0.4, c: 110 + Math.round(Math.random() * 40) }));
     const drops = Array.from({ length: lite ? 70 : 170 }, () => ({ x: Math.random() * w, y: Math.random() * h, v: 620 + Math.random() * 380, l: 9 + Math.random() * 12, w: 0.6 + Math.random() * 0.7, a: 0.35 + Math.random() * 0.45, k: Math.random() }));
+    const started = performance.now();
     let level = target.current, last = performance.now(), raf = 0, flashAt = -1e9, bolt: number[][][] | null = null, nextFlash = performance.now() + 2500;
     let visible = true; let idle: ReturnType<typeof setTimeout> | undefined;
     const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: 0.2 });
     io.observe(cv);
     const frame = (now: number) => {
       if (lite && now - last < 33) { raf = requestAnimationFrame(frame); return; } // ~30 fps is plenty for rain
+      if (lite && now - started > 8000 && target.current === 0) { raf = 0; return; } // calm: stop
+      if (lite && now - started > 12000) { raf = 0; return; } // board: play the weather, then hold the frame
       const dt = Math.min(50, now - last); last = now;
       level += (target.current - level) * Math.min(1, dt / 900);
       const storm = level, rain = Math.max(0, (level - 0.3) / 0.7);
@@ -105,7 +108,7 @@ export const WeatherCard = memo(function WeatherCard({ lat, lng, dateISO, place,
   const storm = !!wet;
   return (
     <div className={`relative overflow-hidden rounded-[28px] shadow-[inset_0_0_0_1px_rgba(0,0,0,.05)] ${compact ? '' : 'mt-5'}`} style={{ minHeight: compact ? 260 : 300 }}>
-      <StormSky storm={storm} lite />
+      <StormSky key={String(storm)} storm={storm} lite />
       <div className={`relative flex h-full flex-col justify-between gap-5 p-6 ${compact ? 'min-h-[260px]' : 'min-h-[300px] md:flex-row md:items-end'}`}>
         <div className="max-w-[460px]">
           <div className={`text-[13px] ${storm ? 'text-white/80' : 'text-neutral-500'}`}>Weather · {place} · {new Date(`${dateISO}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })}</div>
